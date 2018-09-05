@@ -17,9 +17,8 @@ message Metaproof {
     CUSTOM      = 0x01; // Not specified, custom client implementation needed
     BURN        = 0x02; // Address specified in burn_target
     AMOUNT      = 0x04; // Minimum tokens, specified in amount, currently held in address
-    AGE         = 0x08; // In blocks from genesis, indicated in start_block and requires non-zero amount
-    TIMEPERIOD  = 0x10; // Non-zero amount held between start block and end block
-    PROOF       = 0x20; // "Proof of proof" allows for complex proof models, uuid in proof_target
+    TIMEPERIOD  = 0x08; // In blocks from genesis, indicated in start_block and requires non-zero amount
+    PROOF  = 0x10; // Non-zero amount held between start block and end block
   }
 
   uint32 proof_type = 5;
