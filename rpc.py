@@ -1,0 +1,116 @@
+from wallet.wallet import Wallet
+import os
+import time
+from providers.cryptoid import Cryptoid
+from providers import TaoNode
+from decimal import Decimal, getcontext
+from os import listdir
+from os.path import isfile, join
+import json
+from utils.encoder import DecimalEncoder
+from params import ROOT_PATH, DATA_PATH, TEXT_PATH, TRANSACTION_PATH, INDEX_PATH, TAO_RPC
+from utils.messages import sign_and_verify, verify_message
+
+if TAO_RPC:
+    _CONNECTION = TaoNode()
+else:
+    _CONNECTION = Cryptoid('Tao')
+
+def sync(fn,passphrase, reindex=False):
+    _CONNECTION.sync(fn,passphrase,reindex)
+
+def signmessage(fn,passphrase,address,message):
+    w = Wallet(fn).fromFile(passphrase)
+    #try:
+    infiniti = address[:1]=='i'
+    for k in w.Keys:
+        if k.address(infiniti) == address:
+            sig = k.sign_msg(message)
+    return json.dumps({
+            "address":k.address(infiniti),
+            "message":message,
+            "signature":sig
+        })
+
+def verifymessage(address,message,signature):
+    infiniti = address[:1]=='i'
+    return json.dumps({ "verified" : verify_message(address, signature, message, prefix=infiniti) } )
+
+def listunspent(fn):
+    try:
+        w = Wallet(fn).fromFile('')
+        utxo = json.loads(w.get_status("utxo"))
+        info = _CONNECTION.getinfo()
+        for u in utxo:
+            u.update({ "confirmations" : str(int(info['blocks']) - int(u["height"]))})
+        return json.dumps(utxo)
+    except:
+        pass
+
+def createwallet(passphrase):
+    seed = Wallet().create_seed(TEXT_PATH)
+    w = Wallet().fromSeed(seed,passphrase,wallet_path=DATA_PATH)
+    d = {
+        "passphrase":passphrase,
+        "seed":seed,
+        "data_file":w._fn() 
+    }
+    return json.dumps(d)
+
+def addressbalance(address):
+    c = _CONNECTION
+    balance = 0
+    balance += Decimal(c.getbalance(address))
+    d = { "balance":balance }
+    return json.dumps(d,cls=DecimalEncoder)
+
+def address_in_wallet(fn,passphrase,address):
+    sync(fn,passphrase)
+    wallet = Wallet(fn).fromFile(passphrase)
+    d = { "address_in_wallet" : False }
+    for k in wallet.Keys:
+        if k.address() == address:
+            d = { "address_in_wallet" : True }
+    return json.dumps(d)
+
+def dumpaddress(fn,passphrase,address):
+    sync(fn,passphrase)
+    wallet = Wallet(fn).fromFile(passphrase)
+    for k in wallet.Keys:
+        if k.address() == address:
+            d = k.dump()
+        elif k.address(True) == address:
+            d = k.dump()
+
+    return json.dumps(d)
+
+def listaddresses(fn,passphrase):
+    sync(fn,passphrase)
+    wallet = Wallet(fn).fromFile(passphrase)
+    a = []
+    for k in wallet.Keys:
+        a.append(k.address())
+    d = { "addresses" : a }
+    return json.dumps(d)
+
+def newaddress(fn,passphrase):
+    sync(fn,passphrase)
+    wallet = Wallet(fn).fromFile(passphrase)
+    address = wallet.create_address()
+    address.save(fn)
+    d = { "new_address" : address.address() }
+    return json.dumps(d)
+
+def walletbalance(fn,passphrase):
+    sync(fn,passphrase)
+    wallet = Wallet(fn).fromFile(passphrase)
+    c = _CONNECTION
+    balance = 0
+    for k in wallet.Keys:
+        balance += Decimal(c.getbalance(k.address()))
+    d = { "balance": balance }
+    return json.dumps(d, cls=DecimalEncoder)
+
+def listwallets():
+    return [f for f in listdir(DATA_PATH) if f[:7]=="wallet_"]
+

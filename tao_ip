@@ -1,0 +1,154 @@
+from rpc import *
+import argparse
+import sys
+from utils.crypto import valid_address
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command", help="Command to execute", choices=[ "listwallets","walletbalance","newaddress",
+                                                                        "listaddresses","addressbalance", "createwallet",
+                                                                        "verifymessage","signmessage","dumpaddress",
+                                                                        "sync","listunspent","reindex"])
+    parser.add_argument("-w","--wallet", help="The wallet to use")
+    parser.add_argument("-a","--address", help="An address to use")
+    parser.add_argument("-p","--passphrase", help="The wallet passphrase")
+    parser.add_argument("-m","--message", help="The message to verify")
+    parser.add_argument("-s","--signature", help="The signature of the message to verify")
+
+    args = parser.parse_args()
+
+    if args.command == "createwallet":
+        if args.passphrase is None:
+            print "ERROR: No passphrase provided!"
+        else:
+            print createwallet(args.passphrase)
+
+    if args.command == "listwallets":
+        print listwallets()
+
+    if args.command == "walletbalance":      
+        if args.passphrase is None:
+            print "ERROR: No wallet specified!"
+        else:
+            if args.wallet is None:
+                print "ERROR: No wallet specified!"
+            else:
+                if not os.path.isdir(os.path.join(DATA_PATH, args.wallet)):
+                    print "ERROR: Wallet does not exist!"
+                else:
+                    print walletbalance(args.wallet,args.passphrase)
+
+    if args.command == "newaddress":      
+        if args.passphrase is None:
+            print "ERROR: No passphrase specified!"
+        else:
+            if args.wallet is None:
+                print "ERROR: No wallet specified!"
+            else:
+                if not os.path.isdir(os.path.join(DATA_PATH, args.wallet)):
+                    print "ERROR: Wallet does not exist!"
+                else:
+                    print newaddress(args.wallet,args.passphrase)
+
+    if args.command == "listaddresses":      
+        if args.passphrase is None:
+            print "ERROR: No passphrase specified!"
+        else:
+            if args.wallet is None:
+                print "ERROR: No wallet specified!"
+            else:
+                if not os.path.isdir(os.path.join(DATA_PATH, args.wallet)):
+                    print "ERROR: Wallet does not exist!"
+                else:
+                    print listaddresses(args.wallet,args.passphrase)
+
+    if args.command == "sync":      
+        if args.passphrase is None:
+            print "ERROR: No passphrase specified!"
+        else:
+            if args.wallet is None:
+                print "ERROR: No wallet specified!"
+            else:
+                if not os.path.isdir(os.path.join(DATA_PATH, args.wallet)):
+                    print "ERROR: Wallet does not exist!"
+                else:
+                    sync(args.wallet,args.passphrase)
+
+    if args.command == "reindex":      
+        if args.passphrase is None:
+            print "ERROR: No passphrase specified!"
+        else:
+            if args.wallet is None:
+                print "ERROR: No wallet specified!"
+            else:
+                if not os.path.isdir(os.path.join(DATA_PATH, args.wallet)):
+                    print "ERROR: Wallet does not exist!"
+                else:
+                    sync(args.wallet,args.passphrase,True)
+
+    if args.command == "dumpaddress":      
+        if args.address is None:
+            print "ERROR: No address specified!"
+        else:
+            if not valid_address(args.address):
+                print "ERROR: Address provided is not a Tao or Infiniti address"
+            else:
+                if args.passphrase is None:
+                    print "ERROR: No passphrase specified!"
+                else:
+                    if args.wallet is None:
+                        print "ERROR: No wallet specified!"
+                    else:
+                        if not os.path.isdir(os.path.join(DATA_PATH, args.wallet)):
+                            print "ERROR: Wallet does not exist!"
+                        else:
+                            print dumpaddress(args.wallet,args.passphrase,args.address)
+
+    if args.command == "signmessage":
+        if args.message is None:
+            print "ERROR: Message cannot be blank!"
+        else:      
+            if args.address is None:
+                print "ERROR: No address specified!"
+            else:
+                if not valid_address(args.address):
+                    print "ERROR: Address provided is not a Tao or Infiniti address"
+                else:
+                    if args.passphrase is None:
+                        print "ERROR: No passphrase specified!"
+                    else:
+                        if args.wallet is None:
+                            print "ERROR: No wallet specified!"
+                        else:
+                            if not os.path.isdir(os.path.join(DATA_PATH, args.wallet)):
+                                print "ERROR: Wallet does not exist!"
+                            else:
+                                print signmessage(args.wallet,args.passphrase,args.address,args.message)
+
+    if args.command == "verifymessage":
+        if args.message is None:
+            print "ERROR: Message cannot be blank!"
+        else:      
+            if args.address is None:
+                print "ERROR: No address specified!"
+            else:
+                if not valid_address(args.address):
+                    print "ERROR: Address provided is not a Tao or Infiniti address"
+                else:
+                    if args.signature is None:
+                        print "ERROR: No signature specified!"
+                    else:
+                        print verifymessage(args.address,args.message,args.signature)
+
+    if args.command == "listunspent":      
+        if args.wallet is None:
+            print "ERROR: No wallet specified!"
+        else:
+            if not os.path.isdir(os.path.join(DATA_PATH, args.wallet)):
+                print "ERROR: Wallet does not exist!"
+            else:
+                print listunspent(args.wallet)
+
+    if args.command == "addressbalance":      
+        print addressbalance(args.address)
