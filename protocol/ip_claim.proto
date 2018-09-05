@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+// Written for Infiniti by Bryce weiner (github.com/bryceweiner)
+// Claim a metaproof, requires consensus for inclusion
+message Claim {
+  uint32 version = 1;
+
+  // Name for the registered metaproof
+  string name = 2;
+  bytes uuid = 3;
+
+  bytes target_proof_uuid = 4;
+  bytes id_uuid = 4;
+  string signature = 5;  
+}
