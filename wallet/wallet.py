@@ -114,14 +114,12 @@ class Wallet(object):
         self.encrypt_entropy(sha256(passphrase).digest(),entropy_from_seed)
         self._root = HDKey.fromEntropy(entropy_from_seed, public, testnet)
         self._primary = self._root.ChildKey(0+HD_HARDEN)
-        self._filename = wallet_path + "/" + self._fn()
-        self.save(self._filename)
+        self.save()
         return self
 
     def fromEntropy(self, entropy, wallet_path = '.', public=False, testnet=False):
         self._root = HDKey.fromEntropy(entropy, public, testnet)
         self._primary = self._root.ChildKey(0+HD_HARDEN)
-        self._filename = wallet_path + "/" + self._fn()
         return self
 
     def fromEncryptedEntropy(self, passphrase, entropy, wallet_path = '.', public=False, testnet=False):
@@ -130,7 +128,6 @@ class Wallet(object):
         d = self.decrypt_entropy(p)
         self._root = HDKey.fromEntropy(d, public, testnet)
         self._primary = self._root.ChildKey(0+HD_HARDEN)
-        self._filename = wallet_path + "/" + self._fn()
         return self
 
     def fromExtendedKey(self, xkey, public=False):
@@ -142,6 +139,9 @@ class Wallet(object):
         self.load(passphrase)
         self.touch()
         return self
+
+    def filename(self):
+        return self._filename
 
     def create_address(self, save=False, child=None , change_val=0):
         """
@@ -176,7 +176,6 @@ class Wallet(object):
         db.Put(k,v)
 
     def save(self):
-        #self._filename = filename
         db = open_db(self._filename)
         db.Put("entropy",self.encrypted_entropy)
         db.Put("hmac",self._hmac)

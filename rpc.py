@@ -8,7 +8,7 @@ from os import listdir
 from os.path import isfile, join
 import json
 from utils.encoder import DecimalEncoder
-from params import ROOT_PATH, DATA_PATH, TEXT_PATH, TRANSACTION_PATH, INDEX_PATH, TAO_RPC
+from params import ROOT_PATH, DATA_PATH, TEXT_PATH, TRANSACTION_PATH, INDEX_PATH, TAO_RPC, START_HEIGHT
 from utils.messages import sign_and_verify, verify_message
 
 if TAO_RPC:
@@ -17,7 +17,11 @@ else:
     _CONNECTION = Cryptoid('Tao')
 
 def sync(fn,passphrase, reindex=False):
-    _CONNECTION.sync(fn,passphrase,reindex)
+    try:
+        _CONNECTION.sync(fn,passphrase,reindex)
+    except:
+        # core client is offline
+        pass
 
 def signmessage(fn,passphrase,address,message):
     w = Wallet(fn).fromFile(passphrase)
@@ -49,11 +53,16 @@ def listunspent(fn):
 
 def createwallet(passphrase):
     seed = Wallet().create_seed(TEXT_PATH)
-    w = Wallet().fromSeed(seed,passphrase,wallet_path=DATA_PATH)
+    wallet = Wallet().fromSeed(seed,passphrase,wallet_path=DATA_PATH)
+    wallet.update_status("height",str(START_HEIGHT))
+    wallet.update_status("utxo",json.dumps([]))
+    wallet.update_status("current","ready")
+    wallet.update_status("updated",str(0))
+
     d = {
         "passphrase":passphrase,
         "seed":seed,
-        "data_file":w._fn() 
+        "data_file":wallet._fn() 
     }
     return json.dumps(d)
 
@@ -74,7 +83,6 @@ def address_in_wallet(fn,passphrase,address):
     return json.dumps(d)
 
 def dumpaddress(fn,passphrase,address):
-    sync(fn,passphrase)
     wallet = Wallet(fn).fromFile(passphrase)
     for k in wallet.Keys:
         if k.address() == address:
@@ -94,10 +102,9 @@ def listaddresses(fn,passphrase):
     return json.dumps(d)
 
 def newaddress(fn,passphrase):
-    sync(fn,passphrase)
     wallet = Wallet(fn).fromFile(passphrase)
     address = wallet.create_address()
-    address.save(fn)
+    address.save(wallet.filename())
     d = { "new_address" : address.address() }
     return json.dumps(d)
 
