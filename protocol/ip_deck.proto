@@ -2,8 +2,7 @@ syntax = "proto3";
 
 // PeerAssets transaction data specification
 // written by hrobeers (github.com/hrobeers)
-// Modified for Infiniti by Bryce weiner (github.com/bryceweiner
-)
+// Modified for Infiniti by Bryce weiner (github.com/bryceweiner)
 // Meta-data message for the deck spawn transaction
 message DeckSpawn {
   // Protocol version number

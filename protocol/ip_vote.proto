@@ -2,8 +2,7 @@ syntax = "proto3";
 
 // PeerAssets voting protocol specification
 // written by peerchemist <peerchemist@protonmail.ch>
-// Modified for Infiniti by Bryce Weiner (github.com/bryceweiner
-)
+// Modified for Infiniti by Bryce Weiner (github.com/bryceweiner)
 // Identity message
 message Vote {
 

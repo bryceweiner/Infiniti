@@ -10,6 +10,6 @@ message Claim {
   bytes uuid = 3;
 
   bytes target_proof_uuid = 4;
-  bytes id_uuid = 4;
-  string signature = 5;  
+  bytes id_uuid = 5;
+  string signature = 6;  
 }
