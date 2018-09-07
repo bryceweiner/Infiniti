@@ -62,10 +62,11 @@ class Wallet(object):
 
     @staticmethod
     def create_seed(path):
-        return sengen.generateSentences(wordlist_file = path + '/100-0.txt', markovLength=5)
+        nonce = Random.get_random_bytes(16)
+        return sengen.generateSentences(wordlist_file = path + '/100-0.txt', markovLength=5), nonce
 
     @staticmethod
-    def entropy_from_seed(seed):
+    def entropy_from_seed(seed,nonce):
         for x in range(9999):
             _10000_hash = sha256(seed).digest()
         for x in range(14999):
@@ -74,7 +75,7 @@ class Wallet(object):
             _50000_hash = sha256(_25000_hash).digest()
         for x in range(74999):
             _75000_hash = sha256(_50000_hash).digest()
-        return _10000_hash + _25000_hash + _50000_hash + _75000_hash
+        return _10000_hash + _25000_hash + _50000_hash + _75000_hash + nonce
 
     def encrypt_entropy(self,passphrase,raw):
         self._hmac = sha256(raw).digest()
@@ -108,9 +109,9 @@ class Wallet(object):
     def _fn(self):
         return "wallet_" + binascii.hexlify(self.encrypted_entropy)[:8]
 
-    def fromSeed(self, seed, passphrase, wallet_path = '.', public=False, testnet=False):
+    def fromSeed(self, seed, nonce, passphrase, wallet_path = '.', public=False, testnet=False):
         self.seed = seed
-        entropy_from_seed = self.entropy_from_seed(seed)
+        entropy_from_seed = self.entropy_from_seed(seed,nonce)
         self.encrypt_entropy(sha256(passphrase).digest(),entropy_from_seed)
         self._root = HDKey.fromEntropy(entropy_from_seed, public, testnet)
         self._primary = self._root.ChildKey(0+HD_HARDEN)

@@ -6,7 +6,7 @@ from providers import TaoNode
 from decimal import Decimal, getcontext
 from os import listdir
 from os.path import isfile, join
-import json
+import json, binascii
 from utils.encoder import DecimalEncoder
 from params import ROOT_PATH, DATA_PATH, TEXT_PATH, TRANSACTION_PATH, INDEX_PATH, TAO_RPC, START_HEIGHT
 from utils.messages import sign_and_verify, verify_message
@@ -52,14 +52,15 @@ def listunspent(fn):
         pass
 
 def createwallet(passphrase):
-    seed = Wallet().create_seed(TEXT_PATH)
-    wallet = Wallet().fromSeed(seed,passphrase,wallet_path=DATA_PATH)
+    seed,nonce = Wallet().create_seed(TEXT_PATH)
+    wallet = Wallet().fromSeed(seed,nonce,passphrase,wallet_path=DATA_PATH)
     wallet.update_status("height",str(START_HEIGHT))
     wallet.update_status("utxo",json.dumps([]))
     wallet.update_status("current","ready")
     wallet.update_status("updated",str(0))
     d = {
         "passphrase":passphrase,
+        "nonce":binascii.heflify(nonce),
         "seed":seed,
         "data_file":wallet._fn() 
     }
