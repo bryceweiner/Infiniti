@@ -12,12 +12,12 @@ MAX_ADDRESS = 0xFFFFFFFF
 
 class Key(object):
     child = None
-    change_val = None
+    addr_type = None
     key = None
 
-    def __init__(self,child,change_val,key):
+    def __init__(self,child,addr_type,key):
         self.child = child
-        self.change_val = change_val
+        self.addr_type = addr_type
         self.key = key
 
     def address(self, ipaddr = False):
@@ -44,7 +44,7 @@ class Key(object):
 
     def save(self,filename):
         db = open_db(filename)
-        db.Put("k" + str(self.child), str(self.change_val))
+        db.Put("k_" + str(self.addr_type) + "_" + str(self.child),"m/0h/{0}/{1}: ".format(self.addr_type, self.child))
 
 class Wallet(object):
     seed = None
@@ -145,24 +145,24 @@ class Wallet(object):
     def filename(self):
         return self._filename
 
-    def create_address(self, save=False, child=None , change_val=0):
+    def create_address(self, save=False, child=None , addr_type=0):
         """
             create_address is a little tricky because it automatically moves to m/0h first
             Addresses are then always m/0h/0/x or 1/x for change addresses
         """
-        k = self._primary.ChildKey(change_val)
+        k = self._primary.ChildKey(addr_type)
         if child is None:
             # Generate leaves sequentially
-            db = open_db(self._filename)
-            leaf_count = 0
-            for key, value in db.RangeIter():
-                if key[:1] == 'k':
-                    if int(value) == change_val:
-                        leaf_count += 1
-            child = leaf_count
+            child = 0
+            children = (_k for _k in self.Keys if _k.addr_type == addr_type)
+            for c in children:
+                child += 1
         # m/0h/k/x
-        key = Key(child,change_val,k.ChildKey(child))
+        new_key = k.ChildKey(child)
+        key = Key(child,addr_type,k.ChildKey(child))
         self.Keys.append(key)
+        if save:
+            key.save(self.filename())
         return key
 
     def touch(self):
@@ -191,7 +191,7 @@ class Wallet(object):
         x = 0
         wb = leveldb.WriteBatch()
         for key in self.Keys:
-            wb.Put("k" + str(key.child), str(key.change_val))
+            wb.Put("k_" + str(key.child) + "_" + str(key.addr_type),"m/0h/{0}/{1}: ".format(key.addr_type, key.child))
         db.Write(wb)
 
     def load(self,passphrase):
@@ -208,7 +208,8 @@ class Wallet(object):
             self.fromEncryptedEntropy(passphrase,self.encrypted_entropy) 
             for key, value in db.RangeIter():
                 if key[:1] == 'k':
-                    self.create_address(False,int(key[1:]),int(value))       
+                    addr,addr_type,child = key.split("_")
+                    self.create_address(save=False,addr_type=int(addr_type),child=int(child))       
         self._filename = fn
 
 if __name__ == "__main__":
