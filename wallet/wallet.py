@@ -151,6 +151,7 @@ class Wallet(object):
         """
         k = self._primary.ChildKey(change_val)
         if child is None:
+            # Generate leaves sequentially
             db = open_db(self._filename)
             leaf_count = 0
             for key, value in db.RangeIter():
@@ -158,6 +159,7 @@ class Wallet(object):
                     if int(value) == change_val:
                         leaf_count += 1
             db.close()
+            child = leaf_count
         # m/0h/k/x
         key = Key(child,change_val,k.ChildKey(child))
         self.Keys.append(key)
