@@ -125,7 +125,7 @@ def sign_message(private_key, message, compressed=True):
     privkey = secp256k1.PrivateKey()
     privkey.set_raw_privkey(private_key)
     message = message.encode('utf8')
-    fullmsg = (varint(len(param_query('Tao','message_magic'))) + param_query('Tao','message_magic') + varint(len(message)) + message)
+    fullmsg = (varint(len(param_query(NETWORK,'message_magic'))) + param_query(NETWORK,'message_magic') + varint(len(message)) + message)
     hmsg = Hash(fullmsg)
 
     rawsig = privkey.ecdsa_sign_recoverable(hmsg, raw=True)
@@ -143,7 +143,7 @@ def verify_message(address, signature, message, prefix=False):
         raise Exception("Invalid base64 signature length")
 
     message = message.encode('utf8')
-    fullmsg = (varint(len(param_query('message_magic'))) + param_query('message_magic') + varint(len(message)) + message)
+    fullmsg = (varint(len(param_query(NETWORK,'message_magic'))) + param_query(NETWORK,'message_magic') + varint(len(message)) + message)
     hmsg = Hash(fullmsg)
 
     sigbytes = base64.b64decode(signature)

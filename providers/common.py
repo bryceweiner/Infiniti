@@ -5,14 +5,14 @@ getcontext().prec = 8
 import request
 
 from exceptions import *
-from params import _params, param_query, net_query
+from params import _params, param_query, net_query, NETWORK
 
 from abc import ABCMeta,abstractmethod
 
 class Provider(object):
     __metaclass__ = ABCMeta
 
-    net = "Tao"
+    net = NETWORK
     headers = {"User-Agent": "infiniti-protocol"}
 
     connection = None

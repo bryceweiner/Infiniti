@@ -36,7 +36,9 @@ PROTOCOL_PATH = os.path.join(DATA_PATH, 'protocol')
 if not os.path.exists(PROTOCOL_PATH):
     os.makedirs(PROTOCOL_PATH)
 
-TAO_RPC = True
+USE_RPC = True
+
+NETWORK = "Tao"
 
 _params = namedtuple('_params', [
     'network_name',
@@ -49,6 +51,8 @@ _params = namedtuple('_params', [
     'rpc_password',
     'start_height',
     'message_magic',
+    'address_version',
+    'wif_version',
 ])
 
 params = (
@@ -64,6 +68,8 @@ params = (
         "",
         134500,
         "Tao Signed Message:\n",
+        "\x42",
+        "\x4c",
 ),)
 
 def net_query(name):
@@ -71,7 +77,7 @@ def net_query(name):
         if name in (p.network_name, p.network_shortname,):
                 return p
     raise UnsupportedNetwork
-    
+
 def param_query(name,key=None):
     '''Find the PAParams for a network by its long or short name. Raises
     UnsupportedNetwork if no PAParams is found.

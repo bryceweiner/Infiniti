@@ -19,6 +19,7 @@ from ecdsa.ecdsa import int_to_string, string_to_int
 from ecdsa.numbertheory import square_root_mod_prime as sqrt_mod
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
+from params import NETWORK, param_query
 
 MIN_ENTROPY_LEN = 128        # bits
 HD_HARDEN    = 0x80000000 # choose from hardened set of child keys
@@ -288,7 +289,7 @@ class HDKey(object):
 
     def Address(self, ip = False):
         "Return compressed public key address"
-        addressversion = '\x42' if not ip else '\x66'
+        addressversion = param_query(NETWORK,'address_version') if not ip else '\x66'
         vh160 = addressversion + self.Identifier()
         return base58.check_encode(vh160)
 
@@ -310,7 +311,7 @@ class HDKey(object):
         "Returns private key encoded for wallet import"
         if self.public:
             raise Exception("Publicly derived deterministic keys have no private half")
-        addressversion = '\x4c' if not self.testnet else '\xef'
+        addressversion = param_query(NETWORK,'wif_version') if not self.testnet else '\xef'
         raw = addressversion + self.k.to_string() + '\x01' # Always compressed
         return base58.check_encode(raw)
 
