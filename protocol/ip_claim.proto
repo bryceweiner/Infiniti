@@ -9,7 +9,7 @@ message Claim {
   string name = 2;
   bytes uuid = 3;
 
-  bytes target_proof_uuid = 4;
+  repeated bytes target_proof_uuid = 4;
   bytes id_uuid = 5;
-  string signature = 6;  
+  repeated string signature = 6;  
 }

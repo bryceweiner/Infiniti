@@ -26,7 +26,7 @@ message Metaproof {
   uint32 amount = 7;
   uint32 start_block = 8;
   uint32 end_block = 9; // End block of -1 is unending
-  bytes proof_target = 10;
+  repeated bytes proof_target = 10;
   // Free form asset specific data (optional)
   bytes proof_specific_data = 11;
 
