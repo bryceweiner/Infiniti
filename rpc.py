@@ -8,7 +8,7 @@ from os import listdir
 from os.path import isfile, join
 import json, binascii
 from utils.encoder import DecimalEncoder
-from params import ROOT_PATH, DATA_PATH, TEXT_PATH, TRANSACTION_PATH, INDEX_PATH, TAO_RPC, START_HEIGHT
+from params import *
 from utils.crypto import sign_and_verify, verify_message
 
 if TAO_RPC:
@@ -54,7 +54,7 @@ def listunspent(fn):
 def createwallet(passphrase):
     seed,nonce = Wallet().create_seed(TEXT_PATH)
     wallet = Wallet().fromSeed(seed,nonce,passphrase,wallet_path=DATA_PATH)
-    wallet.update_status("height",str(START_HEIGHT))
+    wallet.update_status("height",str(param_quert('start_height')))
     wallet.update_status("utxo",json.dumps([]))
     wallet.update_status("current","ready")
     wallet.update_status("updated",str(0))

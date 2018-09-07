@@ -6,7 +6,7 @@ from utils.hd_key import HDKey, HD_HARDEN
 from secp256k1 import ALL_FLAGS
 from utils.crypto import *
 from utils.db import *
-from params import DATA_PATH, START_HEIGHT
+from params import *
 
 MAX_ADDRESS = 0xFFFFFFFF
 
@@ -166,7 +166,7 @@ class Wallet(object):
         try:
             return int(self.get_status('height'))
         except:
-            return START_HEIGHT
+            return param_query('start_height')
 
     def get_status(self,k):
         db = open_db(self._filename)

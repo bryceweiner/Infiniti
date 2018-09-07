@@ -4,7 +4,7 @@ from operator import itemgetter
 from decimal import Decimal, getcontext
 getcontext().prec = 8
 import os, os.path, sys, json, time, requests
-from params import USER_CONFIG_PATH, TRANSACTION_PATH, START_HEIGHT, DATA_PATH
+from params import *
 from utils.encoder import DecimalEncoder,DecimalDecoder
 from utils.db import *
 from wallet.wallet import Wallet
@@ -16,7 +16,7 @@ class Client:
                  ip=None, port=None, directory=None):
 
         if not ip:
-            self.ip = 'localhost'  # default to localhost
+            self.ip = param_query('rpc_port')  # default to localhost
         else:
             self.ip = ip
 
@@ -25,9 +25,9 @@ class Client:
                 try:
                     self.username, self.password = self.userpass()  # try to read from ~/.ppcoin
                 except:
-                    self.username, self.password = self.userpass(dir='Tao')  # try to read from ~/.peercoin
+                    self.username, self.password = param_query('rpc_username'), param_query('rpc_password')  # try some other directory
             else:
-                self.username, self.password = self.userpass(dir=directory)  # try some other directory
+                self.username, self.password = param_query('rpc_username'), param_query('rpc_password')  # try some other directory
         else:
             self.username = username
             self.password = password
@@ -36,7 +36,7 @@ class Client:
             self.port = 9904
         else:
             self.testnet = False
-            self.port = 15151
+            self.port = param_query('rpc_port')
         if port is not None:
             self.port = port
         self.url = 'http://{0}:{1}@{2}:{3}'.format(self.username,self.password,self.ip, self.port)
@@ -77,7 +77,7 @@ class TaoNode(Client, Provider):
         """
         wallet = Wallet(fn).fromFile(passphrase)
         if full:
-            wallet.update_status("height",str(START_HEIGHT))
+            wallet.update_status("height",str(param_query('start_height')))
             utxo = []
             wallet.update_status("utxo",json.dumps(utxo))
         start_block = wallet.block_height()

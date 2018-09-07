@@ -38,21 +38,31 @@ if not os.path.exists(PROTOCOL_PATH):
 
 TAO_RPC = True
 
-START_HEIGHT = 134500
-
-_params = namedtuple('PAParams', [
+_params = namedtuple('IPParams', [
     'network_name',
     'network_shortname',
     'Infiniti_fee',
+    'local_rpc_config',
+    'rpc_url',
+    'rpc_port',
+    'rpc_username'
+    'rpc_password',
+    'start_height',
+    'end'
 ])
 
 params = (
-
     ## Tao mainnet
     _params("Tao", 
             "XTO", 
-            "", Decimal(0.0001)),
-)
+            Decimal(0.0001),
+            True,
+            "127.0.0.1",
+            15151,
+            "",
+            "",
+            134500,
+))
 
 def param_query(name):
     '''Find the PAParams for a network by its long or short name. Raises
