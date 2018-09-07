@@ -116,8 +116,14 @@ def newaddress(fn,passphrase,addr_type=0):
     # Address types aren't programmatically important, but help to organize
     if addr_type is None:
         addr_type = 0
-    address = wallet.create_address(save=True,addr_type=addr_type)
-    d = { "new_address" : (address.address(),address.address(True)) }
+    k = wallet.create_address(save=True,addr_type=addr_type)
+    if k.addr_type == 0:
+        a_type = 'deposit'
+    if k.addr_type == 1:
+        a_type = 'change'
+    if k.addr_type == 2:
+        a_type = 'dealer'
+    d = { "new_address" : (a_type,k.address(),k.address(True)) }
     return json.dumps(d)
 
 def walletbalance(fn,passphrase):
