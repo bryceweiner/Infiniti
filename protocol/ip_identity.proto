@@ -7,6 +7,5 @@ message Identity {
   bytes uuid = 2;
   bytes public_key = 3;
   string rsa_public_key = 4;
-  string signature = 5;
-  bytes metadata = 6;
+  bytes metadata = 5;
 }

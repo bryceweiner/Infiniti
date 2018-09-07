@@ -67,14 +67,14 @@ class Wallet(object):
     @staticmethod
     def entropy_from_seed(seed):
         for x in range(9999):
-            _1000_hash = sha256(seed).digest()
+            _10000_hash = sha256(seed).digest()
         for x in range(14999):
-            _2500_hash = sha256(_1000_hash).digest()
+            _25000_hash = sha256(_10000_hash).digest()
         for x in range(49999):
-            _5000_hash = sha256(_2500_hash).digest()
+            _50000_hash = sha256(_25000_hash).digest()
         for x in range(74999):
-            _7500_hash = sha256(_5000_hash).digest()
-        return _1000_hash + _2500_hash + _5000_hash + _7500_hash
+            _75000_hash = sha256(_50000_hash).digest()
+        return _10000_hash + _25000_hash + _50000_hash + _75000_hash
 
     def encrypt_entropy(self,passphrase,raw):
         self._hmac = sha256(raw).digest()

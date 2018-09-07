@@ -17,6 +17,7 @@ from binascii import b2a_hex, hexlify
 from ecdsa.curves import SECP256k1
 from ecdsa.ecdsa import int_to_string, string_to_int
 from ecdsa.numbertheory import square_root_mod_prime as sqrt_mod
+from Crypto.PublicKey import RSA, PKCS1_OAEP
 
 MIN_ENTROPY_LEN = 128        # bits
 HD_HARDEN    = 0x80000000 # choose from hardened set of child keys
@@ -334,6 +335,35 @@ class HDKey(object):
             return raw
         else:
             return base58.check_encode(raw)
+
+    # RSA Functions
+    def GenerateRSA(self):
+        bits = 2048
+        self.rsa = RSA.generate(bits, randfunc=PRNG(self.Entropy()))
+
+    def RSAPublic(self):
+        if self.rsa is None:
+            self.GenerateRSA()
+        return self.rsa.publickey().exportKey("PEM") 
+
+    def RSAPrivate(self):
+        if self.rsa is None:
+            self.GenerateRSA()
+        return self.rsa.exportKey("PEM")
+
+    def RSAEncrypt(self, msg, recipient_key=None):
+        if recipient_key is None:
+            recipient_key = RSA.importKey(self.RSAPublic())
+        pko = PKCS1_OAEP.new(recipient_key)
+        enc = pko.encrypt(msg)
+        return base64.b64encode(enc)
+
+    def RSADecrypt(self, enc):
+        enc = base64.b64decode(enc)
+        pko = PKCS1_OAEP.new(RSA.importKey(self.RSAPrivate()))
+        dec = pko.decrypt(enc)
+        return six.text_type(dec, encoding='utf8')
+
 
     # Debugging methods
     #
