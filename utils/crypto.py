@@ -10,11 +10,11 @@ def Hash(data):
 def valid_address(data):
     raw = base58.check_decode(data)
     version = raw[:1].encode("hex")
-    return (version == "42") or (version == "66")
+    return (version == str(int(param_query(NETWORK,'address_version').encode('hex')))) or (version == "66")
 
 def public_key_to_bc_address(public_key,ip=False):
     i = hashlib.new('ripemd160', hashlib.sha256(public_key).digest()).digest()
-    prefix_to_use = '42' if not ip else '66'
+    prefix_to_use = str(int(param_query(NETWORK,'address_version').encode('hex'))) if not ip else '66'
     vh160 = prefix_to_use.decode('hex')+i
     return base58.check_encode(vh160)
 

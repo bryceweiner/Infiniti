@@ -14,7 +14,7 @@ import BaseHTTPServer, SimpleHTTPServer
 import ssl
 import node.logger as logger
 import sys, os, re, shutil, json, urllib, urllib2, BaseHTTPServer
-from node.protocol.fields import PROTOCOL_VERSION
+from params import *
 # Fix issues with decoding HTTP responses
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -24,7 +24,7 @@ here = os.path.dirname(os.path.realpath(__file__))
 def getinfo(handler):
 	obj =	{
 		    "version" : "pytao " + version,
-		    "protocolversion" : PROTOCOL_VERSION,
+		    "protocolversion" : param_query(NETWORK,'protocol_version'),
 		    "walletversion" : 60000,
 		    "balance" : 75780.09350130,
 		    "darksend_balance" : 0.00000000,

@@ -1,4 +1,5 @@
-from node.client import TaoClient, NETWORK_PORT, GENESIS_HASH
+from node.client import TaoClient
+from params import *
 from node.protocol.serializers import *
 from node.protocol.queues import MemPoolManager
 from node.rpc import RPCServer
@@ -13,7 +14,7 @@ from urllib2 import urlopen
 
 try:
     ip_address = load(urlopen('https://api.ipify.org/?format=json'))['ip'] 
-    port = NETWORK_PORT
+    port = param_query(NETWORK,'p2p_port')
 except Exception:
     print "Internet connection not found!"
     sys.exit(0)
@@ -66,7 +67,7 @@ class Infiniti(TaoClient):
             self.mempool_manager.getblocks_not_ok()     
             last_block = self.db.get_last_block()
             if not last_block:
-                _hash = GENESIS_HASH
+                _hash = param_query(NETWORK,'genesis_hash')
             else:
                 _hash = last_block[0]
             gh = GetBlocks([_hash])

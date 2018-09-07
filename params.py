@@ -59,6 +59,7 @@ _params = namedtuple('_params', [
     'genesis_hash',
     'protocol_version',
     'p2p_magic',
+    'p2p_port',
 ])
 
 params = (
@@ -81,6 +82,7 @@ params = (
         0x0000c1c4b036f822bd91dc2006b5575b9c3617903925b8e738803e094cd23f20,
         61402,
         0xE11ED11D,
+        15150,
 ),)
 
 def net_query(name):

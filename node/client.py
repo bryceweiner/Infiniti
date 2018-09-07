@@ -3,11 +3,8 @@ import socket, time
 from node.protocol.exceptions import NodeDisconnectException
 from node.protocol.buffer import ProtocolBuffer
 from node.protocol.serializers import *
-from node.protocol.fields import MAGIC_VALUES
 from node.protocol.database import Database
-
-NETWORK_PORT = 15150
-GENESIS_HASH = 0x0000c1c4b036f822bd91dc2006b5575b9c3617903925b8e738803e094cd23f20
+from params import *
 
 def intToBytes(n):
 	b = bytearray([0, 0, 0, 0])   # init
@@ -31,11 +28,11 @@ class TaoClient(object):
 
 	coin = "tao"
 
-	def __init__(self, logger, peerip, port=NETWORK_PORT):
+	def __init__(self, logger, peerip, port=None):
 		self.logger = logger
 		self.buffer = ProtocolBuffer()
 		self.peerip = peerip
-		self.port = port
+		self.port = port if port is not None else param_query(NETWORK,'p2p_port')
 		self.is_connected = False
 		self.error = False
 		self.exit = False
