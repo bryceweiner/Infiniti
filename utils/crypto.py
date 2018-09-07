@@ -1,6 +1,8 @@
-import hashlib
-import base58
-import struct
+import hashlib,base58,struct,ecdsa,base64,sys,secp256k1
+from crypto import *
+from hashlib import sha256
+from secp256k1 import ALL_FLAGS
+
 def Hash(data):
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
 
@@ -118,16 +120,6 @@ def varint(size):
         return b'\xFE' + struct.pack(b'<I', size)
     else:
         return b'\xFF' + struct.pack(b'<Q', size)
-
-import base58
-import ecdsa
-import base64
-import hashlib
-import sys
-from crypto import *
-import secp256k1
-from hashlib import sha256
-from secp256k1 import ALL_FLAGS
 
 msg_magic_str = "Tao Signed Message:\n" 
 

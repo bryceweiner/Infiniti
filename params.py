@@ -43,19 +43,15 @@ START_HEIGHT = 134500
 _params = namedtuple('PAParams', [
     'network_name',
     'network_shortname',
-    'P2TH_wif',
-    'P2TH_addr',
-    'test_P2TH_wif',
-    'test_P2TH_addr',
-    'P2TH_fee',
+    'Infiniti_fee',
 ])
 
 params = (
 
     ## Tao mainnet
-    _params("Tao", "XTO", "CK4NSWrSEAmDC6YqzDWq7niK2EzZ1ufvvLLczodmsCtEj7v5sB1x",
-             "TpeCntDjXS2E3rJmJDpuqkhN1v93yzzVQx", "",
-             "", Decimal(0.0001)),
+    _params("Tao", 
+            "XTO", 
+            "", Decimal(0.0001)),
 )
 
 def param_query(name):
