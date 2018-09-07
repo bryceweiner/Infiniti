@@ -73,7 +73,7 @@ params = (
         "Tao Signed Message:\n",
         "\x42",
         "\x4c",
-        [ codecs.decode('0488b21e', 'hex'), codecs.decode('049d7cb2', 'hex') ],
+        [ codecs.decode('0488b21e', 'hex') ],
         [ codecs.decode('0488ade4', 'hex') ],
 ),)
 
