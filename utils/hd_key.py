@@ -377,6 +377,7 @@ class HDKey(object):
             "pubkey":  b2a_hex(self.PublicKey()),
             "xpub hex":  b2a_hex(self.ExtendedKey(private=False, encoded=False)),
             "xpub b58":  self.ExtendedKey(private=False, encoded=True),
+            "RSA Pub":  self.RSAPublic(),
         }
         if self.public is False:
             i.update({
@@ -385,5 +386,6 @@ class HDKey(object):
                 "hex":  hexlify(self.PrivateKey()),
                 "chaincode":  b2a_hex(self.C),
                 "wif":  self.WalletImportFormat(),
+                "RSA Prv":  self.RSAPrivate(),
             })
         return i
