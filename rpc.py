@@ -60,7 +60,7 @@ def createwallet(passphrase):
     wallet.update_status("updated",str(0))
     d = {
         "passphrase":passphrase,
-        "nonce":binascii.heflify(nonce),
+        "nonce" : binascii.hexlify(nonce),
         "seed":seed,
         "data_file":wallet._fn() 
     }
@@ -93,11 +93,16 @@ def dumpaddress(fn,passphrase,address):
     return json.dumps(d)
 
 def listaddresses(fn,passphrase):
-    sync(fn,passphrase)
     wallet = Wallet(fn).fromFile(passphrase)
     a = []
     for k in wallet.Keys:
-        a.append(k.address())
+        if k.change_val == 0:
+            a_type = 'deposit'
+        if k.change_val == 1:
+            a_type = 'change'
+        if k.change_val == 2:
+            a_type = 'dealer'
+        a.append((a_type,k.address(), k.address(True)) )
     d = { "addresses" : a }
     return json.dumps(d)
 

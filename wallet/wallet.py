@@ -115,6 +115,7 @@ class Wallet(object):
         self.encrypt_entropy(sha256(passphrase).digest(),entropy_from_seed)
         self._root = HDKey.fromEntropy(entropy_from_seed, public, testnet)
         self._primary = self._root.ChildKey(0+HD_HARDEN)
+        self._filename = os.path.join(DATA_PATH, self._fn())
         self.save()
         return self
 
@@ -158,7 +159,6 @@ class Wallet(object):
                 if key[:1] == 'k':
                     if int(value) == change_val:
                         leaf_count += 1
-            db.close()
             child = leaf_count
         # m/0h/k/x
         key = Key(child,change_val,k.ChildKey(child))
@@ -203,6 +203,7 @@ class Wallet(object):
             self.updated = 0
         self.encrypted_entropy = db.Get("entropy")
         self._hmac = db.Get("hmac")
+        self.Keys = []
         if passphrase != '':
             self.fromEncryptedEntropy(passphrase,self.encrypted_entropy) 
             for key, value in db.RangeIter():

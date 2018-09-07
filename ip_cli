@@ -50,7 +50,7 @@ if __name__ == "__main__":
                 if not os.path.isdir(os.path.join(DATA_PATH, args.wallet)):
                     print "ERROR: Wallet does not exist!"
                 else:
-                    print newaddress(args.wallet,args.passphrase)
+                    print newaddress(args.wallet,args.passphrase,args.type)
 
     if args.command == "listaddresses":      
         if args.passphrase is None:
