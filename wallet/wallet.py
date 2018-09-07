@@ -4,7 +4,7 @@ from Crypto.Cipher import AES
 from Crypto import Random
 from utils.hd_key import HDKey, HD_HARDEN
 from secp256k1 import ALL_FLAGS
-from utils.messages import *
+from utils.crypto import *
 from utils.db import *
 from params import DATA_PATH, START_HEIGHT
 

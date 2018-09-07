@@ -9,7 +9,7 @@ from os.path import isfile, join
 import json, binascii
 from utils.encoder import DecimalEncoder
 from params import ROOT_PATH, DATA_PATH, TEXT_PATH, TRANSACTION_PATH, INDEX_PATH, TAO_RPC, START_HEIGHT
-from utils.messages import sign_and_verify, verify_message
+from utils.crypto import sign_and_verify, verify_message
 
 if TAO_RPC:
     _CONNECTION = TaoNode()
@@ -111,7 +111,7 @@ def newaddress(fn,passphrase,addr_type=0):
     # Address types aren't programmatically important, but help to organize
     address = wallet.create_address(change_val=addr_type)
     address.save(wallet.filename())
-    d = { "new_address" : address.address() }
+    d = { "new_address" : (address.address(),address.address(True)) }
     return json.dumps(d)
 
 def walletbalance(fn,passphrase):
