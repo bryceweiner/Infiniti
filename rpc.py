@@ -101,9 +101,15 @@ def listaddresses(fn,passphrase):
     d = { "addresses" : a }
     return json.dumps(d)
 
-def newaddress(fn,passphrase):
+def newaddress(fn,passphrase,addr_type=0):
     wallet = Wallet(fn).fromFile(passphrase)
-    address = wallet.create_address()
+    # Address Types
+    # addr_type == 0, deposit
+    # addr_type == 1, change
+    # addr_type == 2, staking
+    # addr_type == 3, Dealer
+    # Address types aren't programmatically important, but help to organize
+    address = wallet.create_address(change_val=addr_type)
     address.save(wallet.filename())
     d = { "new_address" : address.address() }
     return json.dumps(d)
