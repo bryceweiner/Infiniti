@@ -1,7 +1,7 @@
 import logging
 
 
-log = logging.getLogger('pytao')
+log = logging.getLogger('node')
 logger_handler = logging.FileHandler("node.log")  # Handler for the logger
 log.setLevel(logging.DEBUG)
 log.addHandler(logger_handler)

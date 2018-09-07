@@ -9,7 +9,7 @@
 #    https://localhost:4443
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 from SocketServer import ThreadingMixIn
-from pytao import version
+from node import version
 import BaseHTTPServer, SimpleHTTPServer
 import ssl
 import node.logger as logger
@@ -23,7 +23,7 @@ here = os.path.dirname(os.path.realpath(__file__))
 
 def getinfo(handler):
 	obj =	{
-		    "version" : "pytao " + version,
+		    "version" : "node " + version,
 		    "protocolversion" : param_query(NETWORK,'protocol_version'),
 		    "walletversion" : 60000,
 		    "balance" : 75780.09350130,
