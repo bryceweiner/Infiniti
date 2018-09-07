@@ -5,6 +5,8 @@ from exceptions import *
 from sys import platform
 import os
 
+OP_RETURN_KEY = 0xd6901b0cbe0f48420fc5814866b7c3de8d08c4e721a7afc655d5b5a0f8534f23
+
 if platform == "linux" or platform == "linux2":
     USER_CONFIG_PATH = '~/.{0}/{1}.conf'
 elif platform == "darwin":

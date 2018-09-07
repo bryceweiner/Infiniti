@@ -58,7 +58,6 @@ def createwallet(passphrase):
     wallet.update_status("utxo",json.dumps([]))
     wallet.update_status("current","ready")
     wallet.update_status("updated",str(0))
-
     d = {
         "passphrase":passphrase,
         "seed":seed,
