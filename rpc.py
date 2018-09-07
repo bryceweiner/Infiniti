@@ -14,7 +14,7 @@ from utils.crypto import sign_and_verify, verify_message
 if USE_RPC:
     _CONNECTION = TaoNode()
 else:
-    _CONNECTION = Cryptoid('Tao')
+    _CONNECTION = Cryptoid(NETWORK)
 
 def sync(fn,passphrase, reindex=False):
     try:
