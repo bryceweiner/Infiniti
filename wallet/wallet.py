@@ -151,7 +151,13 @@ class Wallet(object):
         """
         k = self._primary.ChildKey(change_val)
         if child is None:
-            child = len(self.Keys) + 1
+            db = open_db(self._filename)
+            leaf_count = 0
+            for key, value in db.RangeIter():
+                if key[:1] == 'k':
+                    if int(value) == change_val:
+                        leaf_count += 1
+            db.close()
         # m/0h/k/x
         key = Key(child,change_val,k.ChildKey(child))
         self.Keys.append(key)
