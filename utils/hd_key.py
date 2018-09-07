@@ -27,8 +27,6 @@ CURVE_GEN       = ecdsa.ecdsa.generator_secp256k1
 CURVE_ORDER     = CURVE_GEN.order()
 FIELD_ORDER     = SECP256k1.curve.p()
 INFINITY        = ecdsa.ellipticcurve.INFINITY
-EX_MAIN_PRIVATE = [ codecs.decode('0488ade4', 'hex') ] # Version strings for mainnet extended private keys
-EX_MAIN_PUBLIC  = [ codecs.decode('0488b21e', 'hex'), codecs.decode('049d7cb2', 'hex') ] # Version strings for mainnet extended public keys
 EX_TEST_PRIVATE = [ codecs.decode('04358394', 'hex') ] # Version strings for testnet extended private keys
 EX_TEST_PUBLIC  = [ codecs.decode('043587CF', 'hex') ] # Version strings for testnet extended public keys
 
@@ -66,13 +64,13 @@ class HDKey(object):
 
         # Verify address version/type
         version = raw[:4]
-        if version in EX_MAIN_PRIVATE:
+        if version in param_query(NETWORK,'hd_prv'):
             is_testnet = False
             is_pubkey = False
         elif version in EX_TEST_PRIVATE:
             is_testnet = True
             is_pubkey = False
-        elif version in EX_MAIN_PUBLIC:
+        elif version in param_query(NETWORK,'hd_pub'):
             is_testnet = False
             is_pubkey = True
         elif version in EX_TEST_PUBLIC:
@@ -321,7 +319,7 @@ class HDKey(object):
         if self.public is True and private is True:
             raise Exception("Cannot export an extended private key from a public-only deterministic key")
         if not self.testnet:
-            version = EX_MAIN_PRIVATE[0] if private else EX_MAIN_PUBLIC[0]
+            version = param_query(NETWORK,'hd_prv')[0] if private else param_query(NETWORK,'hd_pub')[0]
         else:
             version = EX_TEST_PRIVATE[0] if private else EX_TEST_PUBLIC[0]
         depth = bytes(bytearray([self.depth]))

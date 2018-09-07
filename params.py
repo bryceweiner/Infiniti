@@ -1,5 +1,6 @@
 from collections import namedtuple
 from decimal import Decimal
+import codecs
 
 from exceptions import *
 from sys import platform
@@ -53,6 +54,8 @@ _params = namedtuple('_params', [
     'message_magic',
     'address_version',
     'wif_version',
+    'hd_pub',
+    'hd_prv',
 ])
 
 params = (
@@ -70,6 +73,8 @@ params = (
         "Tao Signed Message:\n",
         "\x42",
         "\x4c",
+        [ codecs.decode('0488b21e', 'hex'), codecs.decode('049d7cb2', 'hex') ],
+        [ codecs.decode('0488ade4', 'hex') ],
 ),)
 
 def net_query(name):
