@@ -54,7 +54,7 @@ def listunspent(fn):
 def createwallet(passphrase):
     seed,nonce = Wallet().create_seed(TEXT_PATH)
     wallet = Wallet().fromSeed(seed,nonce,passphrase,wallet_path=DATA_PATH)
-    wallet.update_status("height",str(param_quert('start_height')))
+    wallet.update_status("height",str(_CONNECTION.parameters.start_height))
     wallet.update_status("utxo",json.dumps([]))
     wallet.update_status("current","ready")
     wallet.update_status("updated",str(0))

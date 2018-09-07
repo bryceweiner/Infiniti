@@ -38,39 +38,50 @@ if not os.path.exists(PROTOCOL_PATH):
 
 TAO_RPC = True
 
-_params = namedtuple('IPParams', [
+_params = namedtuple('_params', [
     'network_name',
     'network_shortname',
     'Infiniti_fee',
     'local_rpc_config',
     'rpc_url',
     'rpc_port',
-    'rpc_username'
+    'rpc_username',
     'rpc_password',
     'start_height',
-    'end'
+    'message_magic',
 ])
 
 params = (
     ## Tao mainnet
-    _params("Tao", 
-            "XTO", 
-            Decimal(0.0001),
-            True,
-            "127.0.0.1",
-            15151,
-            "",
-            "",
-            134500,
-))
+    _params(
+        "Tao", 
+        "XTO", 
+        Decimal(0.0001),
+        True,
+        "127.0.0.1",
+        15151,
+        "",
+        "",
+        134500,
+        "Tao Signed Message:\n",
+),)
 
-def param_query(name):
+def net_query(name):
+    for p in params:
+        if name in (p.network_name, p.network_shortname,):
+                return p
+    raise UnsupportedNetwork
+    
+def param_query(name,key=None):
     '''Find the PAParams for a network by its long or short name. Raises
     UnsupportedNetwork if no PAParams is found.
     '''
-
     for p in params:
         if name in (p.network_name, p.network_shortname,):
-            return p
-
+            if key is not None:
+                for n, value in p._asdict().iteritems():
+                    if n == key:
+                        return value
+            else:
+                return p
     raise UnsupportedNetwork

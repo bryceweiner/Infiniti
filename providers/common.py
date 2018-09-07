@@ -5,16 +5,14 @@ getcontext().prec = 8
 import request
 
 from exceptions import *
-from params import _params, param_query
-from networks import Constants, net_query
+from params import _params, param_query, net_query
 
 from abc import ABCMeta,abstractmethod
 
 class Provider(object):
     __metaclass__ = ABCMeta
 
-    net = ""
-
+    net = "Tao"
     headers = {"User-Agent": "infiniti-protocol"}
 
     connection = None
@@ -44,19 +42,19 @@ class Provider(object):
     def parameters(self):
         '''load network parameters.'''
 
-        return param_query(self.network)
+        return param_query(self.net)
 
     @property
     def network_properties(self):
         '''network parameters [min_fee, denomination, ...]'''
 
-        return net_query(self.network)
+        return net_query(self.net)
 
     @property
     def is_testnet(self):
         """testnet or not?"""
 
-        if "testnet" in self.network:
+        if "testnet" in self.net:
             return True
         else:
             return False

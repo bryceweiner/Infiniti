@@ -12,36 +12,6 @@ from wallet.wallet import Wallet
 class Client:
     '''JSON-RPC Client.'''
 
-    def __init__(self, testnet=False, username=None, password=None,
-                 ip=None, port=None, directory=None):
-
-        if not ip:
-            self.ip = param_query('rpc_port')  # default to localhost
-        else:
-            self.ip = ip
-
-        if not username and not password:
-            if not directory:
-                try:
-                    self.username, self.password = self.userpass()  # try to read from ~/.ppcoin
-                except:
-                    self.username, self.password = param_query('rpc_username'), param_query('rpc_password')  # try some other directory
-            else:
-                self.username, self.password = param_query('rpc_username'), param_query('rpc_password')  # try some other directory
-        else:
-            self.username = username
-            self.password = password
-        if testnet is True:
-            self.testnet = True
-            self.port = 9904
-        else:
-            self.testnet = False
-            self.port = param_query('rpc_port')
-        if port is not None:
-            self.port = port
-        self.url = 'http://{0}:{1}@{2}:{3}'.format(self.username,self.password,self.ip, self.port)
-        self.connection = AuthServiceProxy(self.url)
-
     def userpass(self, dir='Tao'):
         '''Reads config file for username/password'''
 
@@ -63,6 +33,35 @@ class Client:
 class TaoNode(Client, Provider):
     '''JSON-RPC connection to local Peercoin node'''
 
+    def __init__(self, testnet=False, username=None, password=None,
+                 ip=None, port=None, directory=None):
+        if not ip:
+            self.ip = self.parameters.rpc_url  # default to localhost
+        else:
+            self.ip = ip
+
+        if not username and not password:
+            if not directory:
+                try:
+                    self.username, self.password = self.userpass()  # try to read from ~/.ppcoin
+                except:
+                    self.username, self.password = self.parameters.rpc_username, self.parameters.rpc_password  # try some other directory
+            else:
+                self.username, self.password = self.parameters.rpc_username, self.parameters.rpc_password  # try some other directory
+        else:
+            self.username = username
+            self.password = password
+        if testnet is True:
+            self.testnet = True
+            self.port = 9904
+        else:
+            self.testnet = False
+            self.port = self.parameters.rpc_port
+        if port is not None:
+            self.port = port
+        self.url = 'http://{0}:{1}@{2}:{3}'.format(self.username,self.password,self.ip, self.port)
+        self.connection = AuthServiceProxy(self.url)
+
     def __getattr__(self, name):
         if name.startswith('__') and name.endswith('__'):
             # Python internal stuff
@@ -77,7 +76,7 @@ class TaoNode(Client, Provider):
         """
         wallet = Wallet(fn).fromFile(passphrase)
         if full:
-            wallet.update_status("height",str(param_query('start_height')))
+            wallet.update_status("height",str(self.parameters.start_height))
             utxo = []
             wallet.update_status("utxo",json.dumps(utxo))
         start_block = wallet.block_height()

@@ -166,7 +166,7 @@ class Wallet(object):
         try:
             return int(self.get_status('height'))
         except:
-            return param_query('start_height')
+            return param_query('Tao','start_height')
 
     def get_status(self,k):
         db = open_db(self._filename)
