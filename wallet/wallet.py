@@ -151,8 +151,7 @@ class Wallet(object):
         """
         k = self._primary.ChildKey(change_val)
         if child is None:
-            import random
-            child = random.randint(0,MAX_ADDRESS)
+            child = len(self.Keys) + 1
         # m/0h/k/x
         key = Key(child,change_val,k.ChildKey(child))
         self.Keys.append(key)
