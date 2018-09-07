@@ -56,6 +56,9 @@ _params = namedtuple('_params', [
     'wif_version',
     'hd_pub',
     'hd_prv',
+    'genesis_hash',
+    'protocol_version',
+    'p2p_magic',
 ])
 
 params = (
@@ -75,6 +78,9 @@ params = (
         "\x4c",
         [ codecs.decode('0488b21e', 'hex') ],
         [ codecs.decode('0488ade4', 'hex') ],
+        0x0000c1c4b036f822bd91dc2006b5575b9c3617903925b8e738803e094cd23f20,
+        61402,
+        0xE11ED11D,
 ),)
 
 def net_query(name):

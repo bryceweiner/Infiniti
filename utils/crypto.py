@@ -3,6 +3,7 @@ from crypto import *
 from hashlib import sha256
 from secp256k1 import ALL_FLAGS
 from params import *
+
 def Hash(data):
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
 
