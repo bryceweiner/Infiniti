@@ -110,23 +110,12 @@ def legendre_symbol(a, p):
     """
     ls = pow(a, (p - 1) / 2, p)
     return -1 if ls == p - 1 else ls
-def varint(size):
-    # Variable length integer encoding:
-    # https://en.bitcoin.it/wiki/Protocol_documentation
-    if size < 0xFD:
-        return struct.pack(b'<B', size)
-    elif size <= 0xFFFF:
-        return b'\xFD' + struct.pack(b'<H', size)
-    elif size <= 0xFFFFFFFF:
-        return b'\xFE' + struct.pack(b'<I', size)
-    else:
-        return b'\xFF' + struct.pack(b'<Q', size)
 
 def sign_message(private_key, message, compressed=True):
     privkey = secp256k1.PrivateKey()
     privkey.set_raw_privkey(private_key)
     message = message.encode('utf8')
-    fullmsg = (varint(len(param_query(NETWORK,'message_magic'))) + param_query(NETWORK,'message_magic') + varint(len(message)) + message)
+    fullmsg = (pack_varint(len(param_query(NETWORK,'message_magic'))) + param_query(NETWORK,'message_magic') + pack_varint(len(message)) + message)
     hmsg = Hash(fullmsg)
 
     rawsig = privkey.ecdsa_sign_recoverable(hmsg, raw=True)
@@ -144,7 +133,7 @@ def verify_message(address, signature, message, prefix=False):
         raise Exception("Invalid base64 signature length")
 
     message = message.encode('utf8')
-    fullmsg = (varint(len(param_query(NETWORK,'message_magic'))) + param_query(NETWORK,'message_magic') + varint(len(message)) + message)
+    fullmsg = (pack_varint(len(param_query(NETWORK,'message_magic'))) + param_query(NETWORK,'message_magic') + pack_varint(len(message)) + message)
     hmsg = Hash(fullmsg)
 
     sigbytes = base64.b64decode(signature)
@@ -167,4 +156,32 @@ def sign_and_verify(key, message, infiniti = False, compressed=True):
     assert verify_message(key.Address(infiniti), s, message, infiniti)
     return s
 
+def pack_varint(integer):
+    if integer>0xFFFFFFFF:
+        packed="\xFF"+pack_uint64(integer)
+    elif integer>0xFFFF:
+        packed="\xFE"+struct.pack('<L', integer)
+    elif integer>0xFC:
+        packed="\xFD".struct.pack('<H', integer)
+    else:
+        packed=struct.pack('B', integer)
+    
+    return packed
+
+def pack_uint64(integer):
+    upper=int(integer/4294967296)
+    lower=integer-upper*4294967296
+    
+    return struct.pack('<L', lower)+struct.pack('<L', upper)
+
+def hex_to_bin(hex):
+    try:
+        raw=binascii.a2b_hex(hex)
+    except Exception:
+        return None
+        
+    return raw
+    
+def bin_to_hex(string):
+    return binascii.b2a_hex(string).decode('utf-8')
 
