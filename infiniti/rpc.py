@@ -11,11 +11,21 @@ from utils.encoder import DecimalEncoder
 from infiniti.params import *
 from infiniti.logger import *
 from utils.crypto import sign_and_verify, verify_message
+from p2p import version
 
 if USE_RPC:
     _CONNECTION = TaoNode()
 else:
     _CONNECTION = Cryptoid(NETWORK)
+
+def getinfo():
+    info = _CONNECTION.getinfo()
+    infiniti = {
+        "infiniti_version" : version,
+        "connections" : 0,
+        "tao_node_info" : info,
+    }
+    return json.dumps(infiniti,cls=DecimalEncoder)
 
 def sync(fn,passphrase, reindex=False):
     try:

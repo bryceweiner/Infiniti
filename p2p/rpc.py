@@ -15,38 +15,13 @@ import ssl
 import infiniti.logger as logger
 import sys, os, re, shutil, json, urllib, urllib2, BaseHTTPServer
 from infiniti.params import *
+import infiniti.rpc as infiniti_rpc
 
 # Fix issues with decoding HTTP responses
 reload(sys)
 sys.setdefaultencoding('utf8')
 
 here = os.path.dirname(os.path.realpath(__file__))
-
-def getinfo(handler):
-	obj =	{
-		    "version" : "node " + version,
-		    "protocolversion" : param_query(NETWORK,'protocol_version'),
-		    "walletversion" : 60000,
-		    "balance" : 75780.09350130,
-		    "darksend_balance" : 0.00000000,
-		    "newmint" : 0.00000000,
-		    "stake" : 0.00000000,
-		    "blocks" : 133226,
-		    "timeoffset" : 0,
-		    "moneysupply" : 33144711.43683799,
-		    "connections" : 8,
-		    "proxy" : "",
-		    "ip" : "98.182.22.167",
-		    "difficulty" : 5613046.88822863,
-		    "testnet" : False,
-		    "keypoololdest" : 1472184481,
-		    "keypoolsize" : 1001,
-		    "paytxfee" : 0.00000000,
-		    "mininput" : 0.00000000,
-		    "unlocked_until" : 0,
-		    "errors" : ""
-		}
-	return json.dumps(obj)
 
 def rest_call_json(url, payload=None, with_payload_method='PUT'):
 	"""
@@ -78,18 +53,18 @@ class MethodRequest(urllib2.Request):
 	def get_method(self, *args, **kwargs):
 		return self._method if self._method is not None else urllib2.Request.get_method(self, *args, **kwargs)
 
+def getinfo(handler):
+	obj = json.loads(infiniti_rpc.getinfo())
+	return obj
+
 class RESTRequestHandler(BaseHTTPRequestHandler):
 	def __init__(self, *args, **kwargs):
 		self.routes = {
 			r'^/$': {'file': 'web/index.html', 'media_type': 'text/html'},
-			r'^/getinfo$': {'GET': getinfo, 'media_type': 'application/json'},}
+			r'^/api/getinfo$': {'GET': getinfo, 'media_type': 'application/json'},}
 			#r'^/record/': {'GET': get_record, 'PUT': set_record, 'DELETE': delete_record, 'media_type': 'application/json'}}
-		
 		return BaseHTTPServer.BaseHTTPRequestHandler.__init__(self, *args, **kwargs)
 	
-	def log_message(self, format, *args):
-		pass
-		
 	def do_HEAD(self):
 		self.handle_method('HEAD')
 	
@@ -113,6 +88,7 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
 		
 	def handle_method(self, method):
 		route = self.get_route()
+		print route
 		if route is None:
 			self.send_response(404)
 			self.end_headers()
@@ -171,12 +147,16 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
 		return None
 
 class RPCServerThread(ThreadingMixIn, HTTPServer):
-    """Handle requests in a separate thread."""
+	"""Handle requests in a separate thread."""
 
 class RPCServer(object):
+	def __init__(self,logger):
+		self.logger = logger
+
 	def start(self,ip='localhost',port=8000):
 		self.rpc_ip = ip
-		self.rpc_port = port
+		self.rpc_port = port		
 		self.httpd = RPCServerThread((self.rpc_ip, self.rpc_port), RESTRequestHandler)
-		logger.status_message("RPC server started.")
+		self.httpd.logger = self.logger
+		self.logger.info("RPC server started.")
 		self.httpd.serve_forever()

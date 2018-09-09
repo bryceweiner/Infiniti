@@ -41,21 +41,16 @@ class InfinitiPeer(object):
 
 	def open(self,ip_address,port):
 		# connect
+		self.logger.info("hello!!!")
 		self.ip_address = ip_address
 		self.network_port = port
 		try:
-			if self.socket is None:
-				self.logger.info("Connecting to {0}:{1}".format(self.peerip,str(self.port)))
-				self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-				self.socket.connect((self.peerip, self.port))
-			else:
-				peer = socket.getpeername()
-				self.peerip = peer[0]
-				self.port = peer[1]
-				self.logger.info("Connection from {0}:{1}".format(self.peerip,str(self.port)))
+			self.logger.info("Connecting to {0}:{1}".format(self.peerip,str(self.port)))
+			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			self.socket.connect((self.peerip, self.port))
 		except socket.error as err:
 			#self.db.update_peer(self,err.errno)
-			self.logger.info("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
+			self.logger.error("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
 			self.error = True
 			return
 		# send our version
@@ -141,11 +136,9 @@ class InfinitiPeer(object):
 		while not self.error and not self.exit:
 			try:
 				data = self.socket.recv(1024 * 8)
-
 				if len(data) <= 0:
 					self.is_connected = False
 					break
-
 				self.buffer.write(data)
 				message_header, message = self.buffer.receive_message()
 				if message is not None:
@@ -153,7 +146,8 @@ class InfinitiPeer(object):
 			except socket.error as err:
 				self.error = True
 				self.is_connected = False 
-				#self.db.update_peer(self,err.errno)
+				db = open_db(os.path.join(DATA_PATH,"peers"))
+				db.Put(self.peerip+":"+str(self.port),str(-1))				
 				self.logger.error("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))				
-		self.logger.info("{0} - Node disconnected.".format(self.peerip))
+		self.logger.status_message("{0} - Node disconnected.".format(self.peerip))
 		self.close()

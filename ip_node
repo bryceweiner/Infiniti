@@ -15,12 +15,12 @@ from urllib2 import urlopen
 
 from utils.daemonize import Daemon
 
-try:
-	ip_address = load(urlopen('https://api.ipify.org/?format=json'))['ip'] 
-	port = param_query(NETWORK,'p2p_port')
-except Exception:
-	print "Internet connection not found!"
-	sys.exit(0)
+#try:
+#	ip_address = load(urlopen('https://api.ipify.org/?format=json'))['ip'] 
+#	port = param_query(NETWORK,'p2p_port')
+#except Exception:
+#	print "Internet connection not found!"
+#	sys.exit(0)
 
 class Infiniti(InfinitiPeer):
 	db = None   
@@ -31,6 +31,7 @@ class Infiniti(InfinitiPeer):
 	s_ping_event = None
 	s_peers_event = None
 	counter = 0
+	active = threading.Event()
 
 	def touch_peer(self):
 		db = open_db(os.path.join(DATA_PATH,"peers"))
@@ -59,7 +60,7 @@ class Infiniti(InfinitiPeer):
 		self.is_connected = True
 		self.touch_peer()
 		self.logger.info("{0} - Connected.".format(self.peerip))
-
+		self.active.set()
 		gp = GetAddr()
 		self.send_message(gp)
 		mp = MemPool()
@@ -97,38 +98,46 @@ class Infiniti(InfinitiPeer):
 			peer.save(self.db)
 
 class PeerThread (threading.Thread):
-	def __init__(self, threadID, name, counter, client):
+	def __init__(self, threadID, name, logger, peer_ip, peer_port):
 		threading.Thread.__init__(self)
 		self.threadID = threadID
 		self.name = name
-		self.counter = counter
-		self.client = client
-		self.client.counter = counter
-		self.shutdown_flag = threading.Event()
-	
+		self.counter = self.threadID
+		self.logger = logger
+		self.client = Infiniti(self.logger, peer_ip, peer_port)
+
 	def stop(self):
-		self.shutdown_flag.set()
+		self.logger.info("{0} - Node disconnected.".format(self.client.peerip))
 		self.client.exit = True
+		db = open_db(os.path.join(DATA_PATH,"peers"))
+		db.Put(self.client.peerip+":"+str(self.client.port),str(int(time.time())))
 
 	def run(self):
+		self.logger.info("hello???")
 		self.client.open(ip_address,port)
 		self.client.loop()  
-		return
 
-class SpiderThread(threading.Thread):
-	counter = 0
-	def __init__(self, threadID, name, counter, logger):
+class RPCServerThread(threading.Thread):
+	def __init__(self, threadID, name, logger, ip='localhost', port=8000):
 		threading.Thread.__init__(self)
 		self.threadID = threadID
 		self.name = name
-		self.counter = counter
-		self.threads = []
-		self.halt = False
-		self.last_peers = 0
-		self.counter = 0
-		self.shutdown_flag = threading.Event()
+		self.counter = self.threadID
+		self.rpc_ip = ip
+		self.rpc_port = port
 		self.logger = logger
+		self.rpc_server = RPCServer(self.logger)
+		self.halt = False
 
+	def run(self):
+		self.rpc_server.start(self.rpc_ip,self.rpc_port)
+
+	def stop(self):
+		self.halt = True
+		self.rpc_server.httpd.shutdown()
+		self.logger.info("RPC server shutdown.")
+
+class InfinitiDaemon(Daemon):
 	def load_peer_db(self):
 		# trigger garbage collection closing db
 		db = open_db(os.path.join(DATA_PATH,"peers"))
@@ -148,16 +157,17 @@ class SpiderThread(threading.Thread):
 		db.Write(wb)
 
 	def get_peers(self):
-		if self.last_peers < time.time() - 60: # try new peers every 60 seconds
-			# Clean up dead threads         
-			for t in self.threads:
-				if t.client.exit or t.client.error:
-					self.threads.remove(t)
+		# Clean up dead threads 
+		self.logger.info("Network spider looking for peers.")        
+		for t in self.threads:
+			if t.client.exit or t.client.error:
+				self.threads.remove(t)
+		peers = self.load_peer_db() 
+		if len(peers) == 0:
+			self.create_peer_db()
 			peers = self.load_peer_db() 
-			if len(peers) == 0:
-				self.create_peer_db()
-				peers = self.load_peer_db() 
-			for k,v in peers:
+		for k,v in peers:
+			if v > -1:
 				peer_ip, peer_port = k.split(":")
 				peer_port = int(peer_port)
 				peer_found = False
@@ -166,65 +176,26 @@ class SpiderThread(threading.Thread):
 					if peer_ip == t.client.peerip:
 						peer_found = True
 				if not peer_found:
-					client = Infiniti(self.logger, peer_ip, peer_port)
 					self.counter += 1
-					thread = PeerThread(self.counter, "Thread-" + client.peerip, self.counter, client)
+					thread = PeerThread(self.counter, "Peer-" + str(self.counter), self.logger, peer_ip, peer_port)
 					thread.daemon=True
 					thread.start()
 					self.threads.append(thread)
-			self.last_peers = time.time()                                                        
+		self.last_peers = time.time()                                                        
 
-	def run(self):
-		self.counter = 0
-		self.logger.info("Network Spider Started.")
-		while not self.shutdown_flag.is_set():
-			self.get_peers()
-		for t in self.threads:
-			t.client.stop()
-
-	def stop(self, signum, frame):
-		self.shutdown_flag.set()
-
-"""
-class RPCServerThread(threading.Thread):
-	def __init__(self, threadID, name, counter, ip='localhost', port=8000):
-		threading.Thread.__init__(self)
-		self.threadID = threadID
-		self.name = name
-		self.counter = counter
-		self.rpc_ip = ip
-		self.rpc_port = port
-		self.rpc_server = RPCServer()
-		self.halt = False
-
-	def run(self):
-		self.rpc_server.start(self.rpc_ip,self.rpc_port)
-
-	def stop(self):
-		self.halt = True
-		self.rpc_server.httpd.shutdown()
-		logger.status_message("RPC server shutdown.")
-"""
-
-class InfinitiDaemon(Daemon):
 	def run(self):
 		# Register the signal handlers
-		print "Infiniti Starting ..."
+		self.logger.info("Infiniti starting.")
 		try:
-			self.logger.info("Infiniti server started.")
-			# Get list of peers
-			# Iterate list of peers and create client objects
-			# Main program loop.
-			counter = 0
-			"""
-			rpc_server = RPCServerThread(counter, "RPCServer", counter)
-			rpc_server.start()
-			counter += 1
-			"""
-			self.spider = SpiderThread(counter, "Spider", counter, self.logger)
-			self.spider.start()
-			counter += 1
-			while not self.got_sigterm(): 
+			self.threads = []
+			self.counter = 0
+			self.rpc_server = RPCServerThread(self.counter, "RPCServer", self.logger)
+			self.rpc_server.start()
+			self.counter += 1
+			self.last_peers = time.time() - 100                                                        
+			while not self.got_sigterm():
+				if self.last_peers < time.time() - 60: # try new peers every 60 seconds
+					self.get_peers() 
 				time.sleep(1)
 			self.halt()
 		except Exception as e:
@@ -233,19 +204,19 @@ class InfinitiDaemon(Daemon):
 			sys.exit(1)
 
 	def halt(self):  # signum and frame are mandatory
-		#rpc_server.stop()
-		#mempool_manager.empty()
-		#mempool_thread.manager.empty()
-		#mempool_thread.stop()
-		#server.stop()
+		for t in self.threads:
+			t.stop()
+		self.rpc_server.stop()
 		self.logger.info("Infiniti Shutting down.")
 
 if __name__ == "__main__":
 	infiniti = InfinitiDaemon(PID_FILE)
 	if len(sys.argv) == 2:
 		if 'start' == sys.argv[1]:
+			print "Starting Infiniti..."
 			infiniti.start()
 		elif 'stop' == sys.argv[1]:
+			print "Stopping Infiniti..."
 			infiniti.stop()
 		elif 'restart' == sys.argv[1]:
 			infiniti.restart()

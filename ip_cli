@@ -10,7 +10,7 @@ if __name__ == "__main__":
     parser.add_argument("command", help="Command to execute", choices=[ "listwallets","walletbalance","newaddress",
                                                                         "listaddresses","addressbalance", "createwallet",
                                                                         "verifymessage","signmessage","dumpaddress",
-                                                                        "sync","listunspent","reindex"])
+                                                                        "sync","listunspent","reindex","getinfo"])
     parser.add_argument("-w","--wallet", help="The wallet to use")
     parser.add_argument("-a","--address", help="An address to use")
     parser.add_argument("-p","--passphrase", help="The wallet passphrase")
@@ -154,3 +154,6 @@ if __name__ == "__main__":
 
     if args.command == "addressbalance":      
         print addressbalance(args.address)
+
+    if args.command == "getinfo":      
+        print getinfo()

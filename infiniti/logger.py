@@ -1,10 +1,29 @@
-import logging,os
+import logging,os,sys
 from infiniti.params import *
 
 logging.DEBUG_SEND = 11
 logging.DEBUG_RECEIVE = 10
+class LoggerWriter(object):
+	def __init__(self, logger, level):
+		# self.level is really like using log.debug(message)
+		# at least in my case
+		self.logger = logger
+		self.level = level
+		self.linebuf = ''
+
+	def write(self, buf):
+		for line in buf.rstrip().splitlines():
+			self.logger.log(self.log_level, line.rstrip())
+
+	def flush(self):
+		# create a flush method so things can be flushed when
+		# the system wants to. Not sure if simply 'printing'
+		# sys.stderr is the correct way to do it, but it seemed
+		# to work properly for me.
+		self.logger.log(self.level,sys.stderr)
 
 class LoggerClass(logging.getLoggerClass()):
+
 	def send(self, msg, *args, **kwargs):
 		if self.isEnabledFor(logging.DEBUG_SEND):
 			self._log(logging.DEBUG_SEND, msg, args, **kwargs)
@@ -53,4 +72,12 @@ logging.addLevelName(logging.DEBUG_SEND, "SEND")
 logging.addLevelName(logging.DEBUG_RECEIVE, "RECEIVE")
 logging.setLoggerClass(LoggerClass)
 logger_handler.setFormatter(LogFormatter())
+"""
+stdout_logger = logging.getLogger('STDOUT')
+sl = infiniti.logger.LoggerWriter(stdout_logger, logging.INFO)
+sys.stdout = sl
+stderr_logger = logging.getLogger('STDERR')
+sl = infiniti.logger.LoggerWriter(stderr_logger, logging.ERROR)
+sys.stderr = sl
+"""
 
