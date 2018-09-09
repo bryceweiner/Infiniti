@@ -31,7 +31,7 @@ def getinfo():
         "connections" : get_status('connected_peers'),
         "tao_node_info" : info,
     }
-    return json.dumps(infiniti,cls=DecimalEncoder)
+    return json.dumps(infiniti,cls=DecimalEncoder, sort_keys=True, indent=4)
 
 def sync(fn,passphrase, reindex=False):
     try:
@@ -51,7 +51,7 @@ def signmessage(fn,passphrase,address,message):
             "address":k.address(infiniti),
             "message":message,
             "signature":sig
-        })
+        }, sort_keys=True, indent=4)
 
 def verifymessage(address,message,signature):
     infiniti = address[:1]=='i'
@@ -64,7 +64,7 @@ def listunspent(fn):
         info = _CONNECTION.getinfo()
         for u in utxo:
             u.update({ "confirmations" : str(int(info['blocks']) - int(u["height"]))})
-        return json.dumps(utxo)
+        return json.dumps(utxo, sort_keys=True, indent=4)
     except:
         pass
 
@@ -81,14 +81,14 @@ def createwallet(passphrase):
         "seed":seed,
         "data_file":wallet._fn() 
     }
-    return json.dumps(d)
+    return json.dumps(d, sort_keys=True, indent=4)
 
 def addressbalance(address):
     c = _CONNECTION
     balance = 0
     balance += Decimal(c.getbalance(address))
     d = { "balance":balance }
-    return json.dumps(d,cls=DecimalEncoder)
+    return json.dumps(d,cls=DecimalEncoder, sort_keys=True, indent=4)
 
 def address_in_wallet(fn,passphrase,address):
     sync(fn,passphrase)
@@ -97,7 +97,7 @@ def address_in_wallet(fn,passphrase,address):
     for k in wallet.Keys:
         if k.address() == address:
             d = { "address_in_wallet" : True }
-    return json.dumps(d)
+    return json.dumps(d, sort_keys=True, indent=4)
 
 def dumpaddress(fn,passphrase,address):
     wallet = Wallet(fn).fromFile(passphrase)
@@ -107,7 +107,7 @@ def dumpaddress(fn,passphrase,address):
         elif k.address(True) == address:
             d = k.dump()
 
-    return json.dumps(d)
+    return json.dumps(d, sort_keys=True, indent=4)
 
 def listaddresses(fn):
     wallet = Wallet(fn).fromFile()
@@ -115,7 +115,7 @@ def listaddresses(fn):
     for k in wallet.Keys:
         a.append((k.address_type(),k.address(), k.address(True)) )
     d = { "addresses" : a }
-    return json.dumps(d)
+    return json.dumps(d, sort_keys=True, indent=4)
 
 def newaddress(fn,passphrase,addr_type=0):
     """
@@ -131,14 +131,8 @@ def newaddress(fn,passphrase,addr_type=0):
     if addr_type is None:
         addr_type = 0
     k = wallet.create_address(save=True,addr_type=addr_type)
-    if k.addr_type == 0:
-        a_type = 'deposit'
-    if k.addr_type == 1:
-        a_type = 'change'
-    if k.addr_type == 2:
-        a_type = 'dealer'
-    d = { "new_address" : (a_type,k.address(),k.address(True)) }
-    return json.dumps(d)
+    d = { "new_address" : (k.address_type(),k.address(),k.address(True)) }
+    return json.dumps(d, sort_keys=True, indent=4)
 
 def walletbalance(fn,passphrase):
     sync(fn,passphrase)
@@ -148,7 +142,7 @@ def walletbalance(fn,passphrase):
     for k in wallet.Keys:
         balance += Decimal(c.getbalance(k.address()))
     d = { "balance": balance }
-    return json.dumps(d, cls=DecimalEncoder)
+    return json.dumps(d, cls=DecimalEncoder, sort_keys=True, indent=4)
 
 def listwallets():
     return [f for f in listdir(WALLET_PATH) if True]

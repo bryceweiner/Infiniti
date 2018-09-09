@@ -11,30 +11,35 @@ import itertools
 MAX_ADDRESS = 0xFFFFFFFF
 
 class Key(object):
-    child = None
-    addr_type = None
+    _child = None
+    _addr_type = None
     key = None
     has_wif = True
     addresses = []
 
     def __init__(self,addr_type,child,key):
-        self.child = child
-        self.addr_type = addr_type
+        self._child = child
+        self._addr_type = addr_type
         self.key = key
 
-    def addrtype(self):
-        return int(self.addr_type)
+    def child(self):
+        return int(self._child)
+
+    def addr_type(self):
+        return int(self._addr_type)
 
     def address_type(self):
-        if self.addrtype()==0:
+        if self.addr_type()==0:
             return "deposit"
-        elif self.addrtype()==1:
+        elif self.addr_type()==1:
             return "change"
-        elif self.addrtype()==2:
+        elif self.addr_type()==2:
+            return "staking"
+        elif self.addr_type()==3:
             return "dealer"
 
     def db_key(self):
-        return "k.{0}.{1}".format(self.addr_type,self.child)        
+        return "k.{0}.{1}".format(self.addr_type(),self.child())        
 
     def db_value(self):
         return "{0}.{1}".format(self.address(),self.address(True))        
@@ -80,6 +85,9 @@ class Key(object):
         if self.has_wif:
             db = open_db(filename)
             db.put(self.db_key(),self.db_value())
+
+    def __repr__(self):
+        return "< Wallet.Key - [Address Type]={0}, [Child]={1} >".format(self.addr_type(),self.child())
 
 class Wallet(object):
     seed = None
@@ -180,21 +188,22 @@ class Wallet(object):
     def filename(self):
         return self._filename
 
-    def create_address(self, save=False, child=None , addr_type=0):
+    def create_address(self, save=False, addr_type=None , child=0):
         """
             create_address is a little tricky because it automatically moves to m/0h first
             Addresses are then always m/0h/0/x or 1/x for change addresses
         """
-        k = self._primary.ChildKey(addr_type)
+        k = self._primary.ChildKey(int(addr_type))
         if child is None:
             # Generate leaves sequentially
             child = 0
-            children = (_k for _k in self.Keys if _k.addr_type == addr_type)
-            for c in children:
-                child += 1
+        children = (_k for _k in self.Keys if _k.addr_type() == int(addr_type))
+        for c in children:
+            child += 1
         # m/0h/k/x
         new_key = k.ChildKey(child)
-        key = Key(child,addr_type,k.ChildKey(child))
+        key = Key(int(addr_type),child,new_key)
+        key.addresses = (new_key.Address(),new_key.Address(True))
         self.Keys.append(key)
         if save:
             key.save(self.filename())
@@ -247,29 +256,12 @@ class Wallet(object):
         for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
             addr,addr_type,child = key.split(".")
             if passphrase is not None:
-                _k = self._primary.ChildKey(int(addr_type))
-                _k = k.ChildKey(int(child))
+                _k = Key(int(addr_type),int(child),self._primary.ChildKey(int(addr_type)).ChildKey(int(child)))
                 _k.addresses = value.split('.')
                 self.Keys.append(_k)     
             else:
-                _k = Key(addr_type,child,None)
+                _k = Key(int(addr_type),int(child),None)
                 _k.has_wif = False
                 _k.addresses = value.split('.')
                 self.Keys.append(_k)     
         self._filename = fn
-
-if __name__ == "__main__":
-    passphrase = "This is my fairly long but not too long passphrase."
-
-    seed = Wallet().create_seed()
-    w = Wallet().fromSeed(seed,passphrase)
-    print seed
-    fn = w._filename
-    print fn
-    try:
-        w = Wallet().fromFile(fn, passphrase)
-    except:
-        print "Uh oh! Wallet password failed!"
-    w.create_address(save=True)
-    for k in w.Keys:
-        k.key.dump()
