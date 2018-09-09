@@ -33,6 +33,10 @@ class Infiniti(InfinitiPeer):
     s_peers_event = None
     counter = 0
 
+    def update_peer(self):
+        db = open_db(os.path.join(DATA_PATH,"peers"))
+        db.Put(self.peerip,time.time())
+
     def message_received(self, message_header, message):
         self.logger.recv_message("{0} - {1} - {2}".format(self.peerip, message_header.command, str(message)))
         super(Infiniti, self).message_received(message_header, message)
@@ -54,11 +58,8 @@ class Infiniti(InfinitiPeer):
     def connected(self):
         # Get list of peers
         self.is_connected = True
-        #self.db.update_peer(self,0)
+        self.update_peer()
         self.logger.status_message("{0} - Connected.".format(self.peerip))
-        #self.s_get_peers = sched.scheduler(time.time, time.sleep)
-        #self.s_peers_event = self.s_get_peers.enter(630, 1, self.get_peers, ())
-        #self.s_get_peers.run()
 
         gp = GetAddr()
         self.send_message(gp)

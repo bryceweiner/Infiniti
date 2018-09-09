@@ -10,7 +10,7 @@ import hashlib
 import ecdsa
 import struct
 import codecs
-import base58
+import utils.base58
 
 from hashlib import sha256
 from binascii import b2a_hex, hexlify
