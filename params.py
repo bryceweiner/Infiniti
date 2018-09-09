@@ -1,10 +1,9 @@
 from collections import namedtuple
 from decimal import Decimal
-import codecs
-
-from exceptions import *
 from sys import platform
-import os
+from exceptions import *
+import codecs, os
+
 BASE_UTXO_ID = 0x100001
 OP_RETURN_KEY = 0xd6901b0cbe0f48420fc5814866b7c3de8d08c4e721a7afc655d5b5a0f8534f23
 
@@ -25,13 +24,45 @@ TEXT_PATH = os.path.join(ROOT_PATH, 'wallet')
 if not os.path.exists(TEXT_PATH):
     os.makedirs(TEXT_PATH)
 
+TXIN_PATH = os.path.join(DATA_PATH, 'txin')
+if not os.path.exists(TXIN_PATH):
+    os.makedirs(TXIN_PATH)
+
+TXOUT_PATH = os.path.join(DATA_PATH, 'txout')
+if not os.path.exists(TXOUT_PATH):
+    os.makedirs(TXOUT_PATH)
+
 TRANSACTION_PATH = os.path.join(DATA_PATH, 'tx')
 if not os.path.exists(TRANSACTION_PATH):
     os.makedirs(TRANSACTION_PATH)
 
-INDEX_PATH = os.path.join(DATA_PATH, 'index')
-if not os.path.exists(INDEX_PATH):
-    os.makedirs(INDEX_PATH)
+BLOCK_PATH = os.path.join(DATA_PATH, 'blocks')
+if not os.path.exists(BLOCK_PATH):
+    os.makedirs(BLOCK_PATH)
+
+DECK_PATH = os.path.join(DATA_PATH, 'deck')
+if not os.path.exists(BLOCK_PATH):
+    os.makedirs(BLOCK_PATH)
+
+CARD_PATH = os.path.join(DATA_PATH, 'card')
+if not os.path.exists(BLOCK_PATH):
+    os.makedirs(BLOCK_PATH)
+
+METAPROOF_PATH = os.path.join(DATA_PATH, 'metaproof')
+if not os.path.exists(METAPROOF_PATH):
+    os.makedirs(METAPROOF_PATH)
+
+CLAIM_PATH = os.path.join(DATA_PATH, 'claim')
+if not os.path.exists(CLAIM_PATH):
+    os.makedirs(CLAIM_PATH)
+
+VOTE_PATH = os.path.join(DATA_PATH, 'vote')
+if not os.path.exists(VOTE_PATH):
+    os.makedirs(VOTE_PATH)
+
+IDENTITY_PATH = os.path.join(DATA_PATH, 'identity')
+if not os.path.exists(IDENTITY_PATH):
+    os.makedirs(IDENTITY_PATH)
 
 PROTOCOL_PATH = os.path.join(DATA_PATH, 'protocol')
 if not os.path.exists(PROTOCOL_PATH):

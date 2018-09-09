@@ -9,6 +9,7 @@ from node.protocol import fields, utils
 from node.protocol.exceptions import UnknownMessageException
 
 from params import *
+from db import open_db
 
 class SerializerMeta(type):
     """The serializer meta class. This class will create an attribute
@@ -190,15 +191,16 @@ class IPv4AddressSerializer(Serializer):
     ip_address = fields.IPv4AddressField()
     port = fields.UInt16BEField()
 
-
 class IPv4AddressTimestamp(IPv4Address):
     """The IPv4 Address with timestamp."""
+
+    def save(self):
+        db = open_db(PEERS_DB_PATH)
+        db.Put(self.ip_address + ":" + self.port, self.timestamp)
+
     def __init__(self):
         super(IPv4AddressTimestamp, self).__init__()
         self.timestamp = time.time()
-
-    def save(self,db):
-        db.save_peer(self)
 
     def __repr__(self):
         services = self._services_to_text()
@@ -207,7 +209,6 @@ class IPv4AddressTimestamp(IPv4Address):
         return "<%s Timestamp=[%s] IP=[%s:%d] Services=%r>" % \
             (self.__class__.__name__, time.ctime(self.timestamp),
                 self.ip_address, self.port, services)
-
 
 class IPv4AddressTimestampSerializer(Serializer):
     """Serializer for the IPv4AddressTimestamp."""
@@ -435,7 +436,6 @@ class OutPoint(object):
             (self.__class__.__name__, self.index,
                 self.out_hash)
 
-
 class OutPointSerializer(Serializer):
     """The OutPoint representation serializer."""
     model_class = OutPoint
@@ -452,8 +452,9 @@ class TxIn(object):
         # Basically, this field should always be UINT_MAX, i.e. int("ffffffff", 16)
         self.sequence = 4294967295
 
-    def save(self,tx_hash,db):
-        db.save_txin(self,tx_hash)
+    def save(self,tx_hash,pos):
+        db = open_db(TXIN_PATH)
+        db.Put(tx_hash + "_" + pos, self.serialize())
 
     def __repr__(self):
         return "<%s Sequence=[%d]>" % \
@@ -475,8 +476,9 @@ class TxOut(object):
         self.utxoid = BASE_UTXO_ID
         self.pk_script = "Empty"
 
-    def save(self,tx_hash,db):
-        db.save_txout(self,tx_hash)
+    def save(self,tx_hash,pos):
+        db = open_db(TXOUT_PATH)
+        db.Put(tx_hash + "_" + pos, self.serialize())
 
     def get_value(self):
         return self.value // 100000000 + self.value % 100000000 / 100000000.0
@@ -505,12 +507,19 @@ class Tx(SerializableMessage):
         self.tx_out = []
         self.lock_time = 0
         self.data = ""
-    def save(self,block_hash,pos,db):
-        db.save_tx(block_hash,self,pos)
-        for txin in self.tx_in:
-            txin.save(self.calculate_hash(),db)
+
+    def save(self,block_hash,pos):
+        db = open_db(TRANSACTION_PATH)
+        db.Put(block_hash + "_" + str(pos), self.calculate_hash() )
+        db = None # trigger garbage collection
+        n = 0
         for txout in self.tx_out:
-            txout.save(self.calculate_hash(),db)
+            txout.save(self.calculate_hash())
+            n += 1
+        n = 0
+        for txin in self.tx_in:
+            txin.save(self.calculate_hash())
+            n += 1
 
     def _locktime_to_text(self):
         """Converts the lock-time to textual representation."""
@@ -604,12 +613,13 @@ class Block(BlockHeader):
         self.blocksig = ""
 
     def save(self,db):
-        save_ok = db.save_block(self)
-        if save_ok is not None:
-            n = 0
-            for tx in self.txns:
-                tx.save(self.calculate_hash(),n,db)
-                n += 1
+        db = open_db(BLOCK_PATH)
+        db.Put(self.calculate_hash(),self.timestamp)
+        db = None # trigger garbage collection
+        n = 0
+        for tx in self.txns:
+            tx.save(self.calculate_hash(),n)
+            n += 1
 
     def __len__(self):
         return len(self.txns)
