@@ -1,5 +1,9 @@
-import leveldb
+import rocksdb
+
 MAX_RETRY_CREATE_DB = 5
+
+def writebatch():
+    return rocksdb.WriteBatch()
 
 def open_db(filename):
     db_default_path = (filename, "wallet_test")[filename == ""]
@@ -8,7 +12,7 @@ def open_db(filename):
     db = None
     while db is None and retry_count < MAX_RETRY_CREATE_DB:
         try:
-            db = leveldb.LevelDB(db_path, create_if_missing=True)
+            db = rocksdb.DB(db_path, rocksdb.Options(create_if_missing=True))
         except leveldb.LevelDBError:
             db_path = db_default_path + str(retry_count)
         retry_count += 1

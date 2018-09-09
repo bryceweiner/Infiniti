@@ -8,28 +8,21 @@ import threading, socket
 import sys, traceback
 import sched, time, os
 
-from utils.db import open_db 
+from utils.db import open_db, writebatch
 
 from json import load
 from urllib2 import urlopen
 
 from utils.daemonize import Daemon
 
-try:
-	ip_address = load(urlopen('https://api.ipify.org/?format=json'))['ip'] 
-	port = param_query(NETWORK,'p2p_port')
-except Exception:
-	print "Internet connection not found!"
-	sys.exit(0)
-
 class PeerThread (threading.Thread):
-	def __init__(self, threadID, name, logger, peer_ip, peer_port):
+	def __init__(self, threadID, name, logger, peer_ip, peer_port, my_ip_address, my_port):
 		threading.Thread.__init__(self)
 		self.threadID = threadID
 		self.name = name
 		self.counter = self.threadID
 		self.logger = logger
-		self.client = InfinitiPeer(self.logger, peer_ip, peer_port)
+		self.client = InfinitiPeer(self.logger, peer_ip, peer_port, my_ip_address, my_port)
 
 	def stop(self):
 		self.logger.info("{0} - Node disconnected.".format(self.client.peerip))
@@ -37,7 +30,7 @@ class PeerThread (threading.Thread):
 		self.client.touch_peer()
 
 	def run(self):
-		self.client.open(ip_address,port)
+		self.client.open()
 		self.client.loop()  
 
 class RPCServerThread(threading.Thread):
@@ -66,7 +59,9 @@ class InfinitiDaemon(Daemon):
 		db = open_db(os.path.join(DATA_PATH,"peers"))
 		# turn the iterator into a list
 		q = []
-		for k,v in db.RangeIter():
+		items = db.iteritems()
+		items.seek_to_first()
+		for k,v in list(items):
 			if int(v) > 255:
 				q.append((k,int(v)))
 		return q
@@ -74,17 +69,25 @@ class InfinitiDaemon(Daemon):
 	def create_peer_db(self):
 		# trigger garbage collection closing db
 		db = open_db(os.path.join(DATA_PATH,"peers"))
-		import leveldb
-		wb = leveldb.WriteBatch()
+		wb = writebatch()
 		for seed in SEEDS:
-			wb.Put(seed[0],str(seed[1]))
-		db.Write(wb)
+			wb.put(seed[0],str(seed[1]))
+		db.write(wb)
 
 	def update_status(self,k,v):
 		db = open_db(os.path.join(DATA_PATH,"status"))
-		db.Put(k,v)	
+		db.put(k,v)	
 
-	def get_peers(self):
+	def get_status(self,k):
+		db = open_db(os.path.join(DATA_PATH,"status"))
+		try:
+			_v = db.get(k,v)
+		except:
+			_v = 0
+			db.put(k,str(_v))	
+		return _v
+
+	def get_peers(self,my_ip_address, my_port):
 		# Clean up dead threads 
 		self.logger.info("Network spider looking for peers.")        
 		for t in self.threads:
@@ -94,6 +97,7 @@ class InfinitiDaemon(Daemon):
 		if len(peers) == 0:
 			self.create_peer_db()
 			peers = self.load_peer_db() 
+		self.logger.info("{0} peers loaded.".format(len(peers)))
 		for k,v in peers:
 			if v > -1:
 				peer_ip, peer_port = k.split(":")
@@ -105,7 +109,7 @@ class InfinitiDaemon(Daemon):
 						peer_found = True
 				if not peer_found:
 					self.counter += 1
-					thread = PeerThread(self.counter, "Peer-" + str(self.counter), self.logger, peer_ip, peer_port)
+					thread = PeerThread(self.counter, "Peer-" + str(self.counter), self.logger, peer_ip, peer_port, my_ip_address, my_port)
 					thread.daemon=True
 					thread.start()
 					self.threads.append(thread)
@@ -114,14 +118,28 @@ class InfinitiDaemon(Daemon):
 	def run(self):
 		# Register the signal handlers
 		self.logger.info("Infiniti starting.")
+		self.logger.info("Checking internet.")
 		try:
+			my_ip_address = load(urlopen('https://api.ipify.org/?format=json'))['ip'] 
+			my_port = param_query(NETWORK,'p2p_port')
+		except Exception:
+			self.logger.error("Internet connection not found!")
+			sys.exit(0)
+
+		try:
+			self.uptime = float(self.get_status('uptime'))
 			self.threads = []
 			self.counter = 0
 			self.rpc_server = RPCServerThread(self.counter, "RPCServer", self.logger)
 			self.rpc_server.start()
 			self.counter += 1
-			self.last_peers = time.time() - 100 
+			self.last_peers = time.time() - 100
+			wait_time = 0
+			cycle_end = time.time()
 			while not self.got_sigterm():
+				cycle_start = time.time() 
+				wait_time = cycle_end - cycle_start
+				self.uptime += wait_time
 				connected_peers = 0                                                       
 				# collect garbage
 				for t in self.threads:
@@ -132,8 +150,12 @@ class InfinitiDaemon(Daemon):
 				self.update_status('connected_peers',str(connected_peers))
 				self.update_status('in_process_peers',str(len(self.threads)))
 				if self.last_peers < time.time() - 60: # try new peers every 60 seconds
-					self.get_peers() 
+					self.get_peers(my_ip_address,my_port) 
 				time.sleep(1)
+				cycle_end = time.time()
+				cycle_time = time.time() - cycle_start
+				self.uptime += cycle_time
+				self.update_status('uptime',str(self.uptime))
 			self.halt()
 		except Exception as e:
 			self.logger.error(e, exc_info=True)

@@ -44,7 +44,7 @@ class Key(object):
 
     def save(self,filename):
         db = open_db(filename)
-        db.Put("k_" + str(self.addr_type) + "_" + str(self.child),"m/0h/{0}/{1}: ".format(self.addr_type, self.child))
+        db.put("k_" + str(self.addr_type) + "_" + str(self.child),"m/0h/{0}/{1}: ".format(self.addr_type, self.child))
 
 class Wallet(object):
     seed = None
@@ -167,7 +167,7 @@ class Wallet(object):
 
     def touch(self):
         db = open_db(self._filename)
-        db.Put("updated",str(int(time.time())))        
+        db.put("updated",str(int(time.time())))        
 
     def block_height(self):
         try:
@@ -177,39 +177,40 @@ class Wallet(object):
 
     def get_status(self,k):
         db = open_db(self._filename)
-        return db.Get(k)
+        return db.get(k)
 
     def update_status(self,k,v):
         db = open_db(self._filename)
-        db.Put(k,v)
+        db.put(k,v)
 
     def save(self):
         db = open_db(self._filename)
-        db.Put("entropy",self.encrypted_entropy)
-        db.Put("hmac",self._hmac)
-        db.Put("updated",str(int(time.time())))
+        db.put("entropy",self.encrypted_entropy)
+        db.put("hmac",self._hmac)
+        db.put("updated",str(int(time.time())))
         x = 0
-        wb = leveldb.WriteBatch()
+        wb = writebatch()
         for key in self.Keys:
-            wb.Put("k_" + str(key.child) + "_" + str(key.addr_type),"m/0h/{0}/{1}: ".format(key.addr_type, key.child))
-        db.Write(wb)
+            wb.put("k_" + str(key.child) + "_" + str(key.addr_type),"m/0h/{0}/{1}: ".format(key.addr_type, key.child))
+        db.write(wb)
 
     def load(self,passphrase):
         fn = self._filename
         db = open_db(self._filename)
         try:
-            self.updated = db.Get("updated")
+            self.updated = db.get("updated")
         except:
             self.updated = 0
-        self.encrypted_entropy = db.Get("entropy")
-        self._hmac = db.Get("hmac")
+        self.encrypted_entropy = db.get("entropy")
+        self._hmac = db.get("hmac")
         self.Keys = []
         if passphrase != '':
             self.fromEncryptedEntropy(passphrase,self.encrypted_entropy) 
-            for key, value in db.RangeIter():
-                if key[:1] == 'k':
-                    addr,addr_type,child = key.split("_")
-                    self.create_address(save=False,addr_type=int(addr_type),child=int(child))       
+            items = db.iteritems()
+            items.seek('k_')
+            for key, value in items:
+                addr,addr_type,child = key.split("_")
+                self.create_address(save=False,addr_type=int(addr_type),child=int(child))       
         self._filename = fn
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-import socket, time, leveldb
+import socket, time
 
 from p2p.protocol.exceptions import NodeDisconnectException
 from p2p.protocol.buffer import ProtocolBuffer
@@ -38,7 +38,7 @@ class InfinitiPeer(object):
 	s_peers_event = None
 	counter = 0
 
-	def __init__(self, logger, peerip, port=None):
+	def __init__(self, logger, peerip, port, my_ip_address, my_port):
 		self.logger = logger
 		self.buffer = ProtocolBuffer()
 		self.peerip = peerip
@@ -48,13 +48,15 @@ class InfinitiPeer(object):
 		self.exit = False
 		self.socket = None
 		self.remote_height = 0
+		self.my_ip_address = my_ip_address
+		self.my_port = my_port
 
 	def touch_peer(self):
 		db = open_db(peer_db_path)
-		db.Put(self.peerip+":"+str(self.port),str(int(time.time())))
+		db.put(self.peerip+":"+str(self.port),str(int(time.time())))
 	def error_peer(self,errno):
 		db = open_db(peer_db_path)
-		db.Put(self.peerip+":"+str(self.port),str(errno))				
+		db.put(self.peerip+":"+str(self.port),str(errno))				
 
 	def message_received(self, message_header, message):
 		"""
@@ -137,18 +139,15 @@ class InfinitiPeer(object):
 		"""
 		self.logger.info("Unpacking new peers from {0}".format(self.peerip))
 		db = open_db(peer_db_path)
-		wb = leveldb.WriteBatch()
+		wb = writebatch()
 		for peer in message.addresses:
-			try:
-				_p = db.Get(peer.ip_address+":"+str(peer.port))
-			except:
-				db.Put(peer.ip_address+":"+str(peer.port),str(int(time.time())))
-		db.Write(wb)
+			_p = db.get(peer.ip_address+":"+str(peer.port))
+			if len(_p) == 0:
+				wb.put(peer.ip_address+":"+str(peer.port),str(int(time.time())))
+		db.write(wb)
 
-	def open(self,ip_address,port):
+	def open(self):
 		# connect
-		self.ip_address = ip_address
-		self.network_port = port
 		try:
 			self.logger.info("Connecting to {0}:{1}".format(self.peerip,str(self.port)))
 			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -160,7 +159,7 @@ class InfinitiPeer(object):
 			self.is_connected = False 
 			return
 		# send our version
-		v = Version(self.peerip, self.port, self.ip_address,self.network_port)
+		v = Version(self.peerip, self.port, self.my_ip_address,self.my_port)
 		self.send_message(v)
 
 	def close(self):

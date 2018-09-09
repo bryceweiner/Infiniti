@@ -21,7 +21,7 @@ else:
 
 def get_status(k):
     db = open_db(os.path.join(DATA_PATH,"status"))
-    v = db.Get(k)
+    v = db.get(k)
     return v
 
 def getinfo():
