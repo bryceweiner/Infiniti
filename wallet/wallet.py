@@ -24,7 +24,7 @@ class Key(object):
         return "k.{0}.{1}".format(self.addr_type,self.child)        
 
     def db_value(self):
-        return "m/0h/{0}/{1}: ".format(self.addr_type, self.child)        
+        return "{0}.{1}".format(self.address(),self.address(True))        
 
     def address(self, ipaddr = False):
         return self.key.Address(ipaddr)
