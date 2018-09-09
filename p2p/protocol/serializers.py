@@ -9,7 +9,7 @@ from p2p.protocol import fields
 from p2p.protocol.exceptions import UnknownMessageException
 
 from infiniti.params import *
-from utils.db import open_db
+from utils.db import open_db, writebatch
 from utils import crypto
 
 class SerializerMeta(type):

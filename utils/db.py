@@ -13,7 +13,7 @@ def open_db(filename):
     while db is None and retry_count < MAX_RETRY_CREATE_DB:
         try:
             db = rocksdb.DB(db_path, rocksdb.Options(create_if_missing=True))
-        except leveldb.LevelDBError:
+        except rocksdb.RocksDBError:
             db_path = db_default_path + str(retry_count)
         retry_count += 1
     return db

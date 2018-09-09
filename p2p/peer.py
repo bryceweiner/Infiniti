@@ -3,7 +3,7 @@ import socket, time
 from p2p.protocol.exceptions import NodeDisconnectException
 from p2p.protocol.buffer import ProtocolBuffer
 from p2p.protocol.serializers import *
-from utils.db import open_db
+from utils.db import open_db,writebatch
 from infiniti.params import *
 
 def intToBytes(n):
@@ -137,14 +137,19 @@ class InfinitiPeer(object):
 			message_header: The message header
 			message: The list of peers
 		"""
-		self.logger.info("Unpacking new peers from {0}".format(self.peerip))
 		db = open_db(peer_db_path)
 		wb = writebatch()
-		for peer in message.addresses:
-			_p = db.get(peer.ip_address+":"+str(peer.port))
-			if len(_p) == 0:
-				wb.put(peer.ip_address+":"+str(peer.port),str(int(time.time())))
-		db.write(wb)
+		self.logger.info("Unpacking new peers from {0}".format(self.peerip))
+		try:
+			for peer in message.addresses:
+				self.logger.error(peer)
+				_p = db.get(peer.ip_address+":"+str(peer.port))
+				self.logger.error(_p)
+				if _p is None:
+					wb.put(peer.ip_address+":"+str(peer.port),str(int(time.time())))
+			db.write(wb)
+		except Exception as e:
+			self.logger.error(e)
 
 	def open(self):
 		# connect
