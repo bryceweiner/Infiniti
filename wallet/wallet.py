@@ -7,7 +7,7 @@ from secp256k1 import ALL_FLAGS
 from utils.crypto import *
 from utils.db import *
 from infiniti.params import *
-
+import itertools
 MAX_ADDRESS = 0xFFFFFFFF
 
 class Key(object):
@@ -19,6 +19,12 @@ class Key(object):
         self.child = child
         self.addr_type = addr_type
         self.key = key
+
+    def db_key(self):
+        return "k.{0}.{1}".format(self.addr_type,self.child)        
+
+    def db_value(self):
+        return "m/0h/{0}/{1}: ".format(self.addr_type, self.child)        
 
     def address(self, ipaddr = False):
         return self.key.Address(ipaddr)
@@ -44,7 +50,7 @@ class Key(object):
 
     def save(self,filename):
         db = open_db(filename)
-        db.put("k_" + str(self.addr_type) + "_" + str(self.child),"m/0h/{0}/{1}: ".format(self.addr_type, self.child))
+        db.put(self.db_key(),self.db_value())
 
 class Wallet(object):
     seed = None
@@ -191,7 +197,7 @@ class Wallet(object):
         x = 0
         wb = writebatch()
         for key in self.Keys:
-            wb.put("k_" + str(key.child) + "_" + str(key.addr_type),"m/0h/{0}/{1}: ".format(key.addr_type, key.child))
+            wb.put(key.db_key(),key.db_value())
         db.write(wb)
 
     def load(self,passphrase):
@@ -206,10 +212,11 @@ class Wallet(object):
         self.Keys = []
         if passphrase != '':
             self.fromEncryptedEntropy(passphrase,self.encrypted_entropy) 
-            items = db.iteritems()
-            items.seek('k_')
-            for key, value in items:
-                addr,addr_type,child = key.split("_")
+            it = db.iteritems()
+            prefix = b'k.'
+            it.seek(prefix)
+            for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
+                addr,addr_type,child = key.split(".")
                 self.create_address(save=False,addr_type=int(addr_type),child=int(child))       
         self._filename = fn
 
