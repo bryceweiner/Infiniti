@@ -157,6 +157,7 @@ class InfinitiPeer(object):
 			self.error_peer(err.errno)
 			self.logger.error("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
 			self.error = True
+			self.is_connected = False 
 			return
 		# send our version
 		v = Version(self.peerip, self.port, self.ip_address,self.network_port)

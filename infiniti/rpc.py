@@ -12,17 +12,23 @@ from infiniti.params import *
 from infiniti.logger import *
 from utils.crypto import sign_and_verify, verify_message
 from p2p import version
+from utils.db import *
 
 if USE_RPC:
     _CONNECTION = TaoNode()
 else:
     _CONNECTION = Cryptoid(NETWORK)
 
+def get_status(k):
+    db = open_db(os.path.join(DATA_PATH,"status"))
+    v = db.Get(k)
+    return v
+
 def getinfo():
     info = _CONNECTION.getinfo()
     infiniti = {
         "infiniti_version" : version,
-        "connections" : 0,
+        "connections" : get_status('connected_peers'),
         "tao_node_info" : info,
     }
     return json.dumps(infiniti,cls=DecimalEncoder)

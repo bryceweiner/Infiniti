@@ -80,6 +80,10 @@ class InfinitiDaemon(Daemon):
 			wb.Put(seed[0],str(seed[1]))
 		db.Write(wb)
 
+	def update_status(self,k,v):
+		db = open_db(os.path.join(DATA_PATH,"status"))
+		db.Put(k,v)	
+
 	def get_peers(self):
 		# Clean up dead threads 
 		self.logger.info("Network spider looking for peers.")        
@@ -116,12 +120,17 @@ class InfinitiDaemon(Daemon):
 			self.rpc_server = RPCServerThread(self.counter, "RPCServer", self.logger)
 			self.rpc_server.start()
 			self.counter += 1
-			self.last_peers = time.time() - 100                                                        
+			self.last_peers = time.time() - 100 
 			while not self.got_sigterm():
+				connected_peers = 0                                                       
 				# collect garbage
 				for t in self.threads:
 					if t.client.error or t.client.exit:
 						self.threads.remove(t)
+					else:
+						connected_peers += 1
+				self.update_status('connected_peers',str(connected_peers))
+				self.update_status('in_process_peers',str(len(self.threads)))
 				if self.last_peers < time.time() - 60: # try new peers every 60 seconds
 					self.get_peers() 
 				time.sleep(1)
