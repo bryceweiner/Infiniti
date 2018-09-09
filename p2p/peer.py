@@ -5,6 +5,7 @@ from p2p.protocol.buffer import ProtocolBuffer
 from p2p.protocol.serializers import *
 from utils.db import open_db,writebatch
 from infiniti.params import *
+from infiniti.protocol import rpc
 
 def intToBytes(n):
 	b = bytearray([0, 0, 0, 0])   # init
