@@ -109,17 +109,11 @@ def dumpaddress(fn,passphrase,address):
 
     return json.dumps(d)
 
-def listaddresses(fn,passphrase):
-    wallet = Wallet(fn).fromFile(passphrase)
+def listaddresses(fn):
+    wallet = Wallet(fn).fromFile()
     a = []
     for k in wallet.Keys:
-        if k.addr_type == 0:
-            a_type = 'deposit'
-        if k.addr_type == 1:
-            a_type = 'change'
-        if k.addr_type == 2:
-            a_type = 'dealer'
-        a.append((a_type,k.address(), k.address(True)) )
+        a.append((k.address_type(),k.address(), k.address(True)) )
     d = { "addresses" : a }
     return json.dumps(d)
 

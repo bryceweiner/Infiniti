@@ -54,16 +54,13 @@ if __name__ == "__main__":
                     print newaddress(args.wallet,args.passphrase,args.type)
 
     if args.command == "listaddresses":      
-        if args.passphrase is None:
-            print "ERROR: No passphrase specified!"
+        if args.wallet is None:
+            print "ERROR: No wallet specified!"
         else:
-            if args.wallet is None:
-                print "ERROR: No wallet specified!"
+            if not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
+                print "ERROR: Wallet does not exist!"
             else:
-                if not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
-                    print "ERROR: Wallet does not exist!"
-                else:
-                    print listaddresses(args.wallet,args.passphrase)
+                print listaddresses(args.wallet)
 
     if args.command == "sync":      
         if args.passphrase is None:

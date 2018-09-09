@@ -14,11 +14,24 @@ class Key(object):
     child = None
     addr_type = None
     key = None
+    has_wif = True
+    addresses = []
 
     def __init__(self,child,addr_type,key):
         self.child = child
         self.addr_type = addr_type
         self.key = key
+
+    def addrtype(self):
+        return int(self.addr_type)
+
+    def address_type(self):
+        if self.addrtype()==0:
+            return "deposit"
+        elif self.addrtype()==1:
+            return "change"
+        elif self.addrtype()==2:
+            return "dealer"
 
     def db_key(self):
         return "k.{0}.{1}".format(self.addr_type,self.child)        
@@ -27,30 +40,49 @@ class Key(object):
         return "{0}.{1}".format(self.address(),self.address(True))        
 
     def address(self, ipaddr = False):
-        return self.key.Address(ipaddr)
+        if self.has_wif:
+            return self.key.Address(ipaddr)
+        else:
+            if ipaddr:
+                return self.addresses[1]
+            else:
+                return self.addresses[0]
 
     def public_key(self):
-        return self.key.PublicKey()
+        if self.has_wif:
+            return self.key.PublicKey()
+        else:
+            return 0x00
 
     def private_key(self):
-        return self.key.PrivateKey()
+        if self.has_wif:
+            return self.key.PrivateKey()
+        else:
+            return 0x00
 
     def wif(self):
-        return self.key.WalletImportFormat()
+        if self.has_wif:
+            return self.key.WalletImportFormat()
+        else:
+            return ''
 
     def dump(self):
         return self.key.dump()
 
     def sign_msg(self, msg):
-        return sign_and_verify(self.key, msg, False)
+        if self.has_wif:
+            return sign_and_verify(self.key, msg, False)
+        else:
+            return None
 
     def verify_msg(self, address, signature, message):
         infiniti = True if address[:1]=='i' else False
         return verify_message(address, signature, message, infinit)
 
     def save(self,filename):
-        db = open_db(filename)
-        db.put(self.db_key(),self.db_value())
+        if self.has_wif:
+            db = open_db(filename)
+            db.put(self.db_key(),self.db_value())
 
 class Wallet(object):
     seed = None
@@ -143,7 +175,7 @@ class Wallet(object):
         self._primary = self._root.ChildKey(0+HD_HARDEN)
         return self
 
-    def fromFile(self,passphrase):
+    def fromFile(self,passphrase=None):
         self.load(passphrase)
         self.touch()
         return self
@@ -210,14 +242,20 @@ class Wallet(object):
         self.encrypted_entropy = db.get("entropy")
         self._hmac = db.get("hmac")
         self.Keys = []
-        if passphrase != '':
+        if passphrase is not None:
             self.fromEncryptedEntropy(passphrase,self.encrypted_entropy) 
-            it = db.iteritems()
-            prefix = b'k.'
-            it.seek(prefix)
-            for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
-                addr,addr_type,child = key.split(".")
-                self.create_address(save=False,addr_type=int(addr_type),child=int(child))       
+        it = db.iteritems()
+        prefix = b'k.'
+        it.seek(prefix)
+        for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
+            addr,addr_type,child = key.split(".")
+            if passphrase is not None:
+                self.create_address(save=False,addr_type=int(addr_type),child=int(child))  
+            else:
+                _k = Key(addr_type,child,None)
+                _k.has_wif = False
+                _k.addresses = value.split('.')
+                self.Keys.append(_k)     
         self._filename = fn
 
 if __name__ == "__main__":
