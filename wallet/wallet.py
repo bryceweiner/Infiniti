@@ -247,8 +247,8 @@ class Wallet(object):
         for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
             addr,addr_type,child = key.split(".")
             if passphrase is not None:
-                _k = self._primary.ChildKey(addr_type)
-                _k = k.ChildKey(child)
+                _k = self._primary.ChildKey(int(addr_type))
+                _k = k.ChildKey(int(child))
                 _k.addresses = value.split('.')
                 self.Keys.append(_k)     
             else:
