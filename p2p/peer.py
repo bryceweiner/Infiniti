@@ -50,6 +50,9 @@ class InfinitiPeer(object):
 	def touch_peer(self):
 		db = open_db(os.path.join(DATA_PATH,"peers"))
 		db.Put(self.peerip+":"+str(self.port),str(int(time.time())))
+	def error_peer(self,errno):
+		db = open_db(os.path.join(DATA_PATH,"peers"))
+		db.Put(self.peerip+":"+str(self.port),str(errno))				
 
 	def message_received(self, message_header, message):
 		"""
@@ -80,10 +83,9 @@ class InfinitiPeer(object):
 		try:
 			self.socket.sendall(message.get_message(self.coin))
 		except socket.error as err:
-			#self.db.update_peer(self,err.errno)
+			self.error_peer()
 			self.logger.error("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
 			self.error = True
-
 
 	def send_ping(self): 
 		p = Ping()
@@ -144,7 +146,7 @@ class InfinitiPeer(object):
 			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.socket.connect((self.peerip, self.port))
 		except socket.error as err:
-			#self.db.update_peer(self,err.errno)
+			self.error_peer(err.errno)
 			self.logger.error("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
 			self.error = True
 			return
@@ -204,8 +206,7 @@ class InfinitiPeer(object):
 			except socket.error as err:
 				self.error = True
 				self.is_connected = False 
-				db = open_db(os.path.join(DATA_PATH,"peers"))
-				db.Put(self.peerip+":"+str(self.port),str(-1))				
+				self.error_peer(err.errno)
 				self.logger.error("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))				
 		self.logger.status_message("{0} - Node disconnected.".format(self.peerip))
 		self.close()

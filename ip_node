@@ -30,13 +30,11 @@ class PeerThread (threading.Thread):
 		self.counter = self.threadID
 		self.logger = logger
 		self.client = InfinitiPeer(self.logger, peer_ip, peer_port)
-		self.logger.error(self.client)
 
 	def stop(self):
 		self.logger.info("{0} - Node disconnected.".format(self.client.peerip))
 		self.client.exit = True
-		db = open_db(os.path.join(DATA_PATH,"peers"))
-		db.Put(self.client.peerip+":"+str(self.client.port),str(int(time.time())))
+		self.client.touch_peer()
 
 	def run(self):
 		self.client.open(ip_address,port)
