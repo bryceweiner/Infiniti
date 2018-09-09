@@ -27,7 +27,7 @@ class Teller(object):
             output: The previous output transaction reference, as an OutPoint structure
             destination: The address to transfer to
             amount: The amount to transfer (in Satoshis)
-            data: the data to be hashed into the OP_RETURN
+            data: the data to be added to the "data" transaction field
             fee: The amount to reserve for the miners.  Default is 10K Satoshi's.
 
         Returns:
