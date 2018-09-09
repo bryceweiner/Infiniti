@@ -58,7 +58,7 @@ class Wallet(object):
 
     def __init__(self,filename=None):
         if filename is not None:
-            self._filename = os.path.join(DATA_PATH, filename)
+            self._filename = os.path.join(WALLET_PATH, filename)
 
     @staticmethod
     def create_seed(path):
