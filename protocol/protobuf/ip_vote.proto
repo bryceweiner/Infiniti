@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+// PeerAssets voting protocol specification
+// written by peerchemist <peerchemist@protonmail.ch>
+// Modified for Infiniti by Bryce Weiner (github.com/bryceweiner)
+// Identity message
+message Vote {
+
+  // voting protocol version number
+  uint32 version = 1;
+  bytes uuid = 2;
+  
+  // description (keep short)
+  string description = 3;
+
+  // start at block number
+  uint32 start_block = 4;
+
+  // end at block number
+  uint32 end_block = 5;
+
+  // Modes for card voting
+  enum MODE {
+    NONE = 0x00;
+    SIMPLE = 0x01; // One vote per transaction
+    WEIGHT_CARD_BALANCE = 0x03; // (0x01 | 0x02) Weightning vote with PA card balance
+    WEIGHT_CARD_DAYS = 0x07; //  (0x01 | 0x02 | 0x03) Weightnig vote with PA card days
+  }
+
+  uint32 count_mode = 6;
+
+  // vote choices
+  repeated string choices = 7;
+
+  // Free form vote specific data (optional)
+  bytes vote_metainfo = 8;
+}
