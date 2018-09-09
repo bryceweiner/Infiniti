@@ -19,6 +19,12 @@ if USE_RPC:
 else:
     _CONNECTION = Cryptoid(NETWORK)
 
+def importwallet():
+    pass
+
+def exportwallet():
+    pass
+
 def get_status(k):
     db = open_db(os.path.join(DATA_PATH,"status"))
     v = db.get(k)
