@@ -6,13 +6,15 @@ from p2p.protocol.queues import MemPoolManager
 from p2p.rpc import RPCServer
 import infiniti.logger as logger
 import threading, socket
-import sys, traceback
-import sched, time, os
+import sys, traceback, signal
+import sched, time, os, signal
 
 from utils.db import open_db 
 
 from json import load
 from urllib2 import urlopen
+
+from utils.daemon import Daemon
 
 try:
     ip_address = load(urlopen('https://api.ipify.org/?format=json'))['ip'] 
@@ -62,20 +64,6 @@ class Infiniti(InfinitiPeer):
         self.send_message(gp)
         mp = MemPool()
         self.send_message(mp)
-        # Ask for the top block we have processed in the database.
-        # If there are none, use the genesis block
-        if self.mempool_manager.can_getblocks():
-            # block for other threads
-            self.mempool_manager.getblocks_not_ok()     
-            last_block = self.db.get_last_block()
-            if not last_block:
-                _hash = param_query(NETWORK,'genesis_hash')
-            else:
-                _hash = last_block[0]
-            gh = GetBlocks([_hash])
-            self.send_message(gh)
-            # we're good for new blocks
-            self.mempool_manager.getblocks_ok()     
 
     def handle_inv(self, message_header, message):
         self.logger.status_message("Received new inventory data from {0}".format(self.peerip))  
@@ -231,39 +219,76 @@ class RPCServerThread(threading.Thread):
         logger.status_message("RPC server shutdown.")
 """
 
-def main():
-    try:
-        logger.status_message("Infiniti Started.")
-        # Get list of peers
-        # Iterate list of peers and create client objects
-        # Main program loop.
-        counter = 0
-        mempool_manager = None
-        """
-        mempool_manager = MemPoolManager()
-        #mempool_thread = MemPoolThread(counter, "MemPool", counter, mempool_manager)
-        #mempool_thread.start()
-        counter += 1
-        rpc_server = RPCServerThread(counter, "RPCServer", counter)
-        rpc_server.start()
-        counter += 1
-        """
-        spider = SpiderThread(counter, "Spider", counter, mempool_manager)
-        spider.start()
-        counter += 1
-        while True: 
-            time.sleep(1)
-    except KeyboardInterrupt:
-        logger.status_message("Infiniti Shutting down via KeyboardInterrupt.")
-        #rpc_server.stop()
-        #mempool_manager.empty()
-        #mempool_thread.manager.empty()
-        #mempool_thread.stop()
-        spider.stop()
-        #server.stop()
-    except Exception:
-        traceback.print_exc(file=sys.stdout)
-    sys.exit(0)
+class InfinitiDaemon(Daemon):
+    def run(self):
+        try:
+            # Get list of peers
+            # Iterate list of peers and create client objects
+            # Main program loop.
+            counter = 0
+            mempool_manager = None
+            """
+            mempool_manager = MemPoolManager()
+            #mempool_thread = MemPoolThread(counter, "MemPool", counter, mempool_manager)
+            #mempool_thread.start()
+            counter += 1
+            rpc_server = RPCServerThread(counter, "RPCServer", counter)
+            rpc_server.start()
+            counter += 1
+            """
+            self.spider = SpiderThread(counter, "Spider", counter, mempool_manager)
+            self.spider.start()
+            counter += 1
+            signal.signal(signal.SIGINT, self.shutdown())
+            while True: 
+                time.sleep(1)
+        except Exception:
+            logger.status_message(sys.exc_info())
+            logger.status_message("Infiniti Shutting down.")
+            sys.exit(1)
 
+        def shutdown(self):  # signum and frame are mandatory
+            #rpc_server.stop()
+            #mempool_manager.empty()
+            #mempool_thread.manager.empty()
+            #mempool_thread.stop()
+            #server.stop()
+            spider.stop()
+            logger.status_message("Infiniti Shutting down.")
+            sys.exit(0)
+
+#
 if __name__ == "__main__":
-    main()
+    infiniti = InfinitiDaemon(PID_FILE)
+    if len(sys.argv) == 2:
+
+        if 'start' == sys.argv[1]:
+            try:
+                infiniti.start()
+            except:
+                pass
+        elif 'stop' == sys.argv[1]:
+            print "Infinit Stopping ..."
+            infiniti.stop()
+        elif 'restart' == sys.argv[1]:
+            print "Infiniti Restaring ..."
+            infiniti.restart()
+        elif 'status' == sys.argv[1]:
+            try:
+                pf = file(PIDFILE,'r')
+                pid = int(pf.read().strip())
+                pf.close()
+            except IOError:
+                pid = None
+            except SystemExit:
+                pid = None
+            if pid:
+                print 'Infiniti is running as pid %s' % pid
+            else:
+                print 'Infiniti is not running.'
+        else:
+            print "Unknown command"
+            sys.exit(2)
+    else:
+        print "usage: %s start|stop|restart|status" % sys.argv[0]
+        sys.exit(2)
