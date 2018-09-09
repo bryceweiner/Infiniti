@@ -142,9 +142,7 @@ class InfinitiPeer(object):
 		self.logger.info("Unpacking new peers from {0}".format(self.peerip))
 		try:
 			for peer in message.addresses:
-				self.logger.error(peer)
 				_p = db.get(peer.ip_address+":"+str(peer.port))
-				self.logger.error(_p)
 				if _p is None:
 					wb.put(peer.ip_address+":"+str(peer.port),str(int(time.time())))
 			db.write(wb)
