@@ -1,7 +1,7 @@
 import os
 from cStringIO import StringIO
 
-from node.protocol.serializers import MessageHeaderSerializer, getSerializer
+from p2p.protocol.serializers import MessageHeaderSerializer, getSerializer
 
 
 class ProtocolBuffer(object):

@@ -4,9 +4,9 @@ import struct
 from cStringIO import StringIO
 from collections import OrderedDict
 
-from node import version as node_version
-from node.protocol import fields, utils
-from node.protocol.exceptions import UnknownMessageException
+from p2p import version as node_version
+from p2p.protocol import fields, utils
+from p2p.protocol.exceptions import UnknownMessageException
 
 from infiniti.params import *
 from db import open_db

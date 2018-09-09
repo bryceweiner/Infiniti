@@ -1,4 +1,4 @@
-from node.protocol.serializers import *
+from p2p.protocol.serializers import *
 import Queue
 class MemPoolManager(Queue.Queue):
 	_getblocks = True

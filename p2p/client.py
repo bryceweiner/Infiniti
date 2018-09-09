@@ -1,9 +1,9 @@
 import socket, time
 
-from node.protocol.exceptions import NodeDisconnectException
-from node.protocol.buffer import ProtocolBuffer
-from node.protocol.serializers import *
-from node.protocol.database import Database
+from p2p.protocol.exceptions import NodeDisconnectException
+from p2p.protocol.buffer import ProtocolBuffer
+from p2p.protocol.serializers import *
+from p2p.protocol.database import Database
 from infiniti.params import *
 
 def intToBytes(n):
