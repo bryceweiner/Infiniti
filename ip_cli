@@ -6,141 +6,142 @@ from utils.crypto import valid_address
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("command", help="Command to execute", choices=[ "listwallets","walletbalance","getnewaddress",
-                                                                        "listaddresses","addressbalance", "createwallet",
-                                                                        "verifymessage","signmessage","dumpaddress",
-                                                                        "sync","listunspent","reindex","getinfo","importwallet","exportwallet"])
-    parser.add_argument("-w","--wallet", help="The wallet to use")
-    parser.add_argument("-a","--address", help="An address to use")
-    parser.add_argument("-p","--passphrase", help="The wallet passphrase")
-    parser.add_argument("-m","--message", help="The message to verify")
-    parser.add_argument("-s","--signature", help="The signature of the message to verify")
-    parser.add_argument("-t","--type", help="The address type to create, default = 0",type=int, choices=[0,1,2])
-    parser.add_argument("-f","--filename", help="A filename",type=str)
+	parser = argparse.ArgumentParser()
+	parser.add_argument("command", help="Command to execute", choices=[ "listwallets","walletbalance","getnewaddress",
+																		"listaddresses","addressbalance", "createwallet",
+																		"verifymessage","signmessage","dumpaddress",
+																		"sync","listunspent","reindex","getinfo","importwallet","exportwallet"])
+	parser.add_argument("-w","--wallet", help="The wallet to use")
+	parser.add_argument("-a","--address", help="An address to use")
+	parser.add_argument("-p","--passphrase", help="The wallet passphrase")
+	parser.add_argument("-m","--message", help="The message to verify")
+	parser.add_argument("-s","--signature", help="The signature of the message to verify")
+	parser.add_argument("-t","--type", help="The address type to create, default = 0",type=int, choices=[0,1,2])
+	parser.add_argument("-f","--filename", help="A filename",type=str)
+	parser.add_argument("-j","--json", help="A JSON formatted string",type=str)
 
-    args = parser.parse_args()
+	args = parser.parse_args()
 
-    if args.command == "createwallet":
-        if args.passphrase is None:
-            print "ERROR: No passphrase provided!"
-        else:
-            print createwallet(args.passphrase)
-    elif args.command == "exportwallet":
-        if args.filename is None:
-            print "ERROR: No filename provided!"
-        else:
-            print exportwallet(args.filename)
+	if args.command == "createwallet":
+		if args.passphrase is None:
+			print "ERROR: No passphrase provided!"
+		else:
+			print createwallet(args.passphrase)
+	elif args.command == "exportwallet":
+		if args.wallet is None:
+			print "ERROR: No wallet provided!"
+		else:
+			print exportwallet(args.wallet)
 
-    elif args.command == "importwallet":
-        if args.filename is None:
-            print "ERROR: No filename provided!"
-        else:
-            print importwallet(args.filename)
+	elif args.command == "importwallet":
+		if args.filename is None:
+			print "ERROR: No filename or JSON provided!"
+		else:
+			print importwallet(args.filename)
 
-    elif args.command == "listwallets":
-        print listwallets()
+	elif args.command == "listwallets":
+		print listwallets()
 
-    elif args.command == "walletbalance":      
-        if args.passphrase is None:
-            print "ERROR: No wallet specified!"
-        elif args.wallet is None:
-                print "ERROR: No wallet specified!"
-            elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
-                    print "ERROR: Wallet does not exist!"
-                else:
-                    print walletbalance(args.wallet,args.passphrase)
+	elif args.command == "walletbalance":      
+		if args.passphrase is None:
+			print "ERROR: No wallet specified!"
+		elif args.wallet is None:
+				print "ERROR: No wallet specified!"
+		elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
+			print "ERROR: Wallet does not exist!"
+		else:
+			print walletbalance(args.wallet,args.passphrase)
 
-    elif args.command == "getnewaddress":      
-        if args.passphrase is None:
-            print "ERROR: No passphrase specified!"
-        elif args.wallet is None:
-                print "ERROR: No wallet specified!"
-            elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
-                    print "ERROR: Wallet does not exist!"
-                else:
-                    print newaddress(args.wallet,args.passphrase,args.type)
+	elif args.command == "getnewaddress":      
+		if args.passphrase is None:
+			print "ERROR: No passphrase specified!"
+		elif args.wallet is None:
+				print "ERROR: No wallet specified!"
+		elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
+				print "ERROR: Wallet does not exist!"
+		else:
+			print newaddress(args.wallet,args.passphrase,args.type)
 
-    elif args.command == "listaddresses":      
-        if args.wallet is None:
-            print "ERROR: No wallet specified!"
-        elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
-                print "ERROR: Wallet does not exist!"
-            else:
-                print listaddresses(args.wallet)
+	elif args.command == "listaddresses":      
+		if args.wallet is None:
+			print "ERROR: No wallet specified!"
+		elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
+				print "ERROR: Wallet does not exist!"
+		else:
+			print listaddresses(args.wallet)
 
-    elif args.command == "sync":      
-        if args.passphrase is None:
-            print "ERROR: No passphrase specified!"
-        elif args.wallet is None:
-                print "ERROR: No wallet specified!"
-            elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
-                    print "ERROR: Wallet does not exist!"
-                else:
-                    sync(args.wallet,args.passphrase)
+	elif args.command == "sync":      
+		if args.passphrase is None:
+			print "ERROR: No passphrase specified!"
+		elif args.wallet is None:
+				print "ERROR: No wallet specified!"
+		elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
+				print "ERROR: Wallet does not exist!"
+		else:
+			sync(args.wallet,args.passphrase)
 
-    elif args.command == "reindex":      
-        if args.passphrase is None:
-            print "ERROR: No passphrase specified!"
-        elif args.wallet is None:
-                print "ERROR: No wallet specified!"
-            elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
-                    print "ERROR: Wallet does not exist!"
-                else:
-                    sync(args.wallet,args.passphrase,True)
+	elif args.command == "reindex":      
+		if args.passphrase is None:
+			print "ERROR: No passphrase specified!"
+		elif args.wallet is None:
+				print "ERROR: No wallet specified!"
+		elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
+			print "ERROR: Wallet does not exist!"
+		else:
+			sync(args.wallet,args.passphrase,True)
 
-    elif args.command == "dumpaddress":      
-        if args.address is None:
-            print "ERROR: No address specified!"
-        elif not valid_address(args.address):
-                print "ERROR: Address provided is not a Tao or Infiniti address"
-            elif args.passphrase is None:
-                    print "ERROR: No passphrase specified!"
-                elif args.wallet is None:
-                        print "ERROR: No wallet specified!"
-                    elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
-                            print "ERROR: Wallet does not exist!"
-                        else:
-                            print dumpaddress(args.wallet,args.passphrase,args.address)
+	elif args.command == "dumpaddress":      
+		if args.address is None:
+			print "ERROR: No address specified!"
+		elif not valid_address(args.address):
+			print "ERROR: Address provided is not a Tao or Infiniti address"
+		elif args.passphrase is None:
+			print "ERROR: No passphrase specified!"
+		elif args.wallet is None:
+			print "ERROR: No wallet specified!"
+		elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
+			print "ERROR: Wallet does not exist!"
+		else:
+			print dumpaddress(args.wallet,args.passphrase,args.address)
 
-    elif args.command == "signmessage":
-        if args.message is None:
-            print "ERROR: Message cannot be blank!"
-        elif args.address is None:
-                print "ERROR: No address specified!"
-            elif not valid_address(args.address):
-                    print "ERROR: Address provided is not a Tao or Infiniti address"
-                elif args.passphrase is None:
-                        print "ERROR: No passphrase specified!"
-                    elif args.wallet is None:
-                            print "ERROR: No wallet specified!"
-                        elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
-                                print "ERROR: Wallet does not exist!"
-                            else:
-                                print signmessage(args.wallet,args.passphrase,args.address,args.message)
+	elif args.command == "signmessage":
+		if args.message is None:
+			print "ERROR: Message cannot be blank!"
+		elif args.address is None:
+			print "ERROR: No address specified!"
+		elif not valid_address(args.address):
+			print "ERROR: Address provided is not a Tao or Infiniti address"
+		elif args.passphrase is None:
+			print "ERROR: No passphrase specified!"
+		elif args.wallet is None:
+			print "ERROR: No wallet specified!"
+		elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
+			print "ERROR: Wallet does not exist!"
+		else:
+			print signmessage(args.wallet,args.passphrase,args.address,args.message)
 
-    elif args.command == "verifymessage":
-        if args.message is None:
-            print "ERROR: Message cannot be blank!"
-        elif args.address is None:
-                print "ERROR: No address specified!"
-            elif not valid_address(args.address):
-                    print "ERROR: Address provided is not a Tao or Infiniti address"
-                elif args.signature is None:
-                        print "ERROR: No signature specified!"
-                    else:
-                        print verifymessage(args.address,args.message,args.signature)
+	elif args.command == "verifymessage":
+		if args.message is None:
+			print "ERROR: Message cannot be blank!"
+		elif args.address is None:
+			print "ERROR: No address specified!"
+		elif not valid_address(args.address):
+			print "ERROR: Address provided is not a Tao or Infiniti address"
+		elif args.signature is None:
+			print "ERROR: No signature specified!"
+		else:
+			print verifymessage(args.address,args.message,args.signature)
 
-    elif args.command == "listunspent":      
-        if args.wallet is None:
-            print "ERROR: No wallet specified!"
-        elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
-                print "ERROR: Wallet does not exist!"
-            else:
-                print listunspent(args.wallet)
+	elif args.command == "listunspent":      
+		if args.wallet is None:
+			print "ERROR: No wallet specified!"
+		elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
+			print "ERROR: Wallet does not exist!"
+		else:
+			print listunspent(args.wallet)
 
-    elif args.command == "addressbalance":      
-        print addressbalance(args.address)
+	elif args.command == "addressbalance":      
+		print addressbalance(args.address)
 
-    elif args.command == "getinfo":      
-        print getinfo()
+	elif args.command == "getinfo":      
+		print getinfo()
