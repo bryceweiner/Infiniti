@@ -13,6 +13,9 @@ class LoggerClass(logging.getLoggerClass()):
 		if self.isEnabledFor(logging.DEBUG_RECEIVE):
 			self._log(logging.DEBUG_RECEIVE, msg, args, **kwargs)
 
+	def error(self, msg, *args, **kwargs):
+		self._log(logging.ERROR, msg, args, **kwargs)
+
 class LogFormatter(logging.Formatter):
 	err_fmt     = '%(asctime)s ERROR: %(message)s'
 	msg_rcv     = '%(asctime)s RECEIVE: %(message)s'
