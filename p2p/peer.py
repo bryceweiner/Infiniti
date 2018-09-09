@@ -1,4 +1,4 @@
-import socket, time
+import socket, time, leveldb
 
 from p2p.protocol.exceptions import NodeDisconnectException
 from p2p.protocol.buffer import ProtocolBuffer
@@ -19,7 +19,9 @@ def intToBytes(n):
 	# Return the result or as bytearray or as bytes (commented out)
 	##return bytes(b)  # uncomment if you need
 	return b
-	
+
+peer_db_path = os.path.join(DATA_PATH,"peers")
+
 class InfinitiPeer(object):
 	"""
 	The base class for a Tao network client.  This class
@@ -48,10 +50,10 @@ class InfinitiPeer(object):
 		self.remote_height = 0
 
 	def touch_peer(self):
-		db = open_db(os.path.join(DATA_PATH,"peers"))
+		db = open_db(peer_db_path)
 		db.Put(self.peerip+":"+str(self.port),str(int(time.time())))
 	def error_peer(self,errno):
-		db = open_db(os.path.join(DATA_PATH,"peers"))
+		db = open_db(peer_db_path)
 		db.Put(self.peerip+":"+str(self.port),str(errno))				
 
 	def message_received(self, message_header, message):
@@ -134,8 +136,11 @@ class InfinitiPeer(object):
 			message: The list of peers
 		"""
 		self.logger.info("Unpacking new peers from {0}".format(self.peerip))
+		db = open_db(peer_db_path)
+		wb = leveldb.WriteBatch()
 		for peer in message.addresses:
-			peer.save(self.db)
+			db.Put(peer.ip_address+":"+str(peer.port),str(int(time.time())))
+		db.Write(wb)
 
 	def open(self,ip_address,port):
 		# connect

@@ -195,10 +195,6 @@ class IPv4AddressSerializer(Serializer):
 class IPv4AddressTimestamp(IPv4Address):
     """The IPv4 Address with timestamp."""
 
-    def save(self):
-        db = open_db(PEERS_DB_PATH)
-        db.Put(self.ip_address + ":" + self.port, self.timestamp)
-
     def __init__(self):
         super(IPv4AddressTimestamp, self).__init__()
         self.timestamp = time.time()
