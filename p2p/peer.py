@@ -27,6 +27,14 @@ class InfinitiPeer(object):
 	"""
 
 	coin = "tao"
+	db = None   
+	socket = None
+	mempool_manager = None
+	s_send_ping = None
+	s_get_peers = None
+	s_ping_event = None
+	s_peers_event = None
+	counter = 0
 
 	def __init__(self, logger, peerip, port=None):
 		self.logger = logger
@@ -38,6 +46,94 @@ class InfinitiPeer(object):
 		self.exit = False
 		self.socket = None
 		self.remote_height = 0
+
+	def touch_peer(self):
+		db = open_db(os.path.join(DATA_PATH,"peers"))
+		db.Put(self.peerip+":"+str(self.port),str(int(time.time())))
+
+	def message_received(self, message_header, message):
+		"""
+		This method will be called for every message, and then will
+		delegate to the appropriate handle_* function for the given
+		message (if it exists).
+
+		Args:
+			message_header: The message header
+			message: The message object
+		"""
+		self.logger.receive("{0} - {1} - {2}".format(self.peerip, message_header.command, str(message)))
+		handle_func_name = "handle_" + message_header.command
+		handle_func = getattr(self, handle_func_name, None)
+		if handle_func:
+			handle_func(message_header, message)
+
+
+	def send_message(self, message):
+		"""
+		This method will serialize the message using the
+		appropriate serializer based on the message command
+		and then it will send it to the socket stream.
+
+		:param message: The message object to send
+		"""
+		self.logger.send("{0} - {1}".format(self.peerip, str(message)))
+		try:
+			self.socket.sendall(message.get_message(self.coin))
+		except socket.error as err:
+			#self.db.update_peer(self,err.errno)
+			self.logger.error("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
+			self.error = True
+
+
+	def send_ping(self): 
+		p = Ping()
+		self.send_message(p)
+		self.s_ping_event = self.s_send_ping.enter(617, 1, self.send_ping, ())
+
+	def get_peers(self):
+		ga = GetAddr()
+		self.send_message(ga)
+		self.s_peers_event = self.s_get_peers.enter(631, 1, self.get_peers, ())
+
+	def connected(self):
+		# Get list of peers
+		self.is_connected = True
+		self.touch_peer()
+		self.logger.info("{0} - Connected.".format(self.peerip))
+		gp = GetAddr()
+		self.send_message(gp)
+		mp = MemPool()
+		self.send_message(mp)
+
+	def handle_inv(self, message_header, message):
+		self.logger.receive("Received new inventory data from {0}".format(self.peerip))  
+		gd = GetData()
+		gd.inventory = message.inventory
+		self.send_message(gd)
+
+	def handle_tx(self, message_header, message):
+		self.logger.receive("Received new mempool transaction from {0}".format(self.peerip))
+		self.logger.receive("{0}".format(message))
+
+	def handle_block(self, message_header, message):
+		self.logger.receive("Received new block {0} from {1}".format(message.calculate_hash(), self.peerip))
+		message.save(self.db)
+
+	def handle_pong(self,messaage_header, message):
+		gp = SmsgPing()
+		self.send_message(gp)
+
+	def handle_addr(self, message_header, message):
+		"""
+		This method will handle incoming inventories of network 
+		peers.
+		Args:
+			message_header: The message header
+			message: The list of peers
+		"""
+		self.logger.info("Unpacking new peers from {0}".format(self.peerip))
+		for peer in message.addresses:
+			peer.save(self.db)
 
 	def open(self,ip_address,port):
 		# connect
@@ -77,13 +173,6 @@ class InfinitiPeer(object):
 		self.send_message(VerAck())
 		self.connected()
 
-	def connected(self):
-		"""
-		Called once we've exchanged version information and can make
-		calls on the network.
-		"""
-		raise NotImplementedError
-
 	def handle_ping(self, message_header, message):
 		"""
 		This method will handle the Ping message and then
@@ -97,36 +186,6 @@ class InfinitiPeer(object):
 		pong = Pong()
 		pong.nonce = message.nonce
 		self.send_message(pong)
-
-	def message_received(self, message_header, message):
-		"""
-		This method will be called for every message, and then will
-		delegate to the appropriate handle_* function for the given
-		message (if it exists).
-
-		Args:
-			message_header: The message header
-			message: The message object
-		"""
-		handle_func_name = "handle_" + message_header.command
-		handle_func = getattr(self, handle_func_name, None)
-		if handle_func:
-			handle_func(message_header, message)
-
-	def send_message(self, message):
-		"""
-		This method will serialize the message using the
-		appropriate serializer based on the message command
-		and then it will send it to the socket stream.
-
-		:param message: The message object to send
-		"""
-		try:
-			self.socket.sendall(message.get_message(self.coin))
-		except socket.error as err:
-			#self.db.update_peer(self,err.errno)
-			self.logger.error("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
-			self.error = True
 
 	def loop(self):
 		"""
