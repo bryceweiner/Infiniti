@@ -4,7 +4,6 @@ from infiniti.params import *
 from p2p.protocol.serializers import *
 from p2p.protocol.queues import MemPoolManager
 from p2p.rpc import RPCServer
-import infiniti.logger as logger
 import threading, socket
 import sys, traceback
 import sched, time, os
@@ -17,279 +16,282 @@ from urllib2 import urlopen
 from utils.daemonize import Daemon
 
 try:
-    ip_address = load(urlopen('https://api.ipify.org/?format=json'))['ip'] 
-    port = param_query(NETWORK,'p2p_port')
+	ip_address = load(urlopen('https://api.ipify.org/?format=json'))['ip'] 
+	port = param_query(NETWORK,'p2p_port')
 except Exception:
-    print "Internet connection not found!"
-    sys.exit(0)
+	print "Internet connection not found!"
+	sys.exit(0)
 
 class Infiniti(InfinitiPeer):
-    db = None   
-    socket = None
-    mempool_manager = None
-    s_send_ping = None
-    s_get_peers = None
-    s_ping_event = None
-    s_peers_event = None
-    counter = 0
+	db = None   
+	socket = None
+	mempool_manager = None
+	s_send_ping = None
+	s_get_peers = None
+	s_ping_event = None
+	s_peers_event = None
+	counter = 0
 
-    def update_peer(self):
-        db = open_db(os.path.join(DATA_PATH,"peers"))
-        db.Put(self.peerip,str(int(time.time())))
+	def touch_peer(self):
+		db = open_db(os.path.join(DATA_PATH,"peers"))
+		db.Put(self.peerip+":"+str(self.port),str(int(time.time())))
 
-    def message_received(self, message_header, message):
-        self.logger.recv_message("{0} - {1} - {2}".format(self.peerip, message_header.command, str(message)))
-        super(Infiniti, self).message_received(message_header, message)
+	def message_received(self, message_header, message):
+		self.logger.receive("{0} - {1} - {2}".format(self.peerip, message_header.command, str(message)))
+		super(Infiniti, self).message_received(message_header, message)
 
-    def send_message(self, message):
-        self.logger.send_message("{0} - {1}".format(self.peerip, str(message)))
-        super(Infiniti, self).send_message(message)
+	def send_message(self, message):
+		self.logger.send("{0} - {1}".format(self.peerip, str(message)))
+		super(Infiniti, self).send_message(message)
 
-    def send_ping(self): 
-        p = Ping()
-        self.send_message(p)
-        self.s_ping_event = self.s_send_ping.enter(617, 1, self.send_ping, ())
+	def send_ping(self): 
+		p = Ping()
+		self.send_message(p)
+		self.s_ping_event = self.s_send_ping.enter(617, 1, self.send_ping, ())
 
-    def get_peers(self):
-        ga = GetAddr()
-        self.send_message(ga)
-        self.s_peers_event = self.s_get_peers.enter(631, 1, self.get_peers, ())
+	def get_peers(self):
+		ga = GetAddr()
+		self.send_message(ga)
+		self.s_peers_event = self.s_get_peers.enter(631, 1, self.get_peers, ())
 
-    def connected(self):
-        # Get list of peers
-        self.is_connected = True
-        self.update_peer()
-        self.logger.status_message("{0} - Connected.".format(self.peerip))
+	def connected(self):
+		# Get list of peers
+		self.is_connected = True
+		self.touch_peer()
+		self.logger.info("{0} - Connected.".format(self.peerip))
 
-        gp = GetAddr()
-        self.send_message(gp)
-        mp = MemPool()
-        self.send_message(mp)
+		gp = GetAddr()
+		self.send_message(gp)
+		mp = MemPool()
+		self.send_message(mp)
 
-    def handle_inv(self, message_header, message):
-        self.logger.status_message("Received new inventory data from {0}".format(self.peerip))  
-        gd = GetData()
-        gd.inventory = message.inventory
-        self.send_message(gd)
+	def handle_inv(self, message_header, message):
+		self.logger.receive("Received new inventory data from {0}".format(self.peerip))  
+		gd = GetData()
+		gd.inventory = message.inventory
+		self.send_message(gd)
 
-    def handle_tx(self, message_header, message):
-        self.logger.status_message("Received new mempool transaction from {0}".format(self.peerip))
-        self.logger.status_message("{0}".format(message))
-        self.manager.add(message.calculate_hash())
+	def handle_tx(self, message_header, message):
+		self.logger.receive("Received new mempool transaction from {0}".format(self.peerip))
+		self.logger.receive("{0}".format(message))
+		self.manager.add(message.calculate_hash())
 
-    def handle_block(self, message_header, message):
-        self.logger.status_message("Received new block {0} from {1}".format(message.calculate_hash(), self.peerip))
-        message.save(self.db)
+	def handle_block(self, message_header, message):
+		self.logger.receive("Received new block {0} from {1}".format(message.calculate_hash(), self.peerip))
+		message.save(self.db)
 
-    def handle_pong(self,messaage_header, message):
-        gp = SmsgPing()
-        self.send_message(gp)
+	def handle_pong(self,messaage_header, message):
+		gp = SmsgPing()
+		self.send_message(gp)
 
-    def handle_addr(self, message_header, message):
-        """
-        This method will handle incoming inventories of network 
-        peers.
-        Args:
-            message_header: The message header
-            message: The list of peers
-        """
-        self.logger.status_message("Unpacking new peers from {0}".format(self.peerip))
-        for peer in message.addresses:
-            peer.save(self.db)
+	def handle_addr(self, message_header, message):
+		"""
+		This method will handle incoming inventories of network 
+		peers.
+		Args:
+			message_header: The message header
+			message: The list of peers
+		"""
+		self.logger.info("Unpacking new peers from {0}".format(self.peerip))
+		for peer in message.addresses:
+			peer.save(self.db)
 
 class PeerThread (threading.Thread):
-    def __init__(self, threadID, name, counter, client, mempool_manager):
-        threading.Thread.__init__(self)
-        self.threadID = threadID
-        self.name = name
-        self.counter = counter
-        self.client = client
-        self.client.counter = counter
-        self.client.mempool_manager = mempool_manager
-        self.shutdown_flag = threading.Event()
-    
-    def stop(self):
-        self.shutdown_flag.set()
-        self.client.exit = True
+	def __init__(self, threadID, name, counter, client, mempool_manager):
+		threading.Thread.__init__(self)
+		self.threadID = threadID
+		self.name = name
+		self.counter = counter
+		self.client = client
+		self.client.counter = counter
+		self.client.mempool_manager = mempool_manager
+		self.shutdown_flag = threading.Event()
+	
+	def stop(self):
+		self.shutdown_flag.set()
+		self.client.exit = True
 
-    def run(self):
-        self.client.open(ip_address,port)
-        self.client.loop()  
-        return
+	def run(self):
+		self.client.open(ip_address,port)
+		self.client.loop()  
+		return
 
 class SpiderThread(threading.Thread):
-    counter = 0
-    def __init__(self, threadID, name, counter, mempool_manager):
-        threading.Thread.__init__(self)
-        self.threadID = threadID
-        self.name = name
-        self.counter = counter
-        self.threads = []
-        self.halt = False
-        self.mempool_manager = mempool_manager
-        self.last_peers = 0
-        self.counter = 0
-        self.shutdown_flag = threading.Event()
+	counter = 0
+	def __init__(self, threadID, name, counter, logger):
+		threading.Thread.__init__(self)
+		self.threadID = threadID
+		self.name = name
+		self.counter = counter
+		self.threads = []
+		self.halt = False
+		self.mempool_manager = mempool_manager
+		self.last_peers = 0
+		self.counter = 0
+		self.shutdown_flag = threading.Event()
+		self.logger = logger
 
-    def load_peer_db(self):
-        # trigger garbage collection closing db
-        db = open_db(os.path.join(DATA_PATH,"peers"))
-        # turn the iterator into a list
-        q = []
-        for k,v in db.RangeIter():
-            q.append((k,int(v)))
-        return q
+	def load_peer_db(self):
+		# trigger garbage collection closing db
+		db = open_db(os.path.join(DATA_PATH,"peers"))
+		# turn the iterator into a list
+		q = []
+		for k,v in db.RangeIter():
+			q.append((k,int(v)))
+		return q
 
-    def create_peer_db(self):
-        # trigger garbage collection closing db
-        db = open_db(os.path.join(DATA_PATH,"peers"))
-        import leveldb
-        wb = leveldb.WriteBatch()
-        for seed in SEEDS:
-            wb.Put(seed[0],str(seed[1]))
-        db.Write(wb)
+	def create_peer_db(self):
+		# trigger garbage collection closing db
+		db = open_db(os.path.join(DATA_PATH,"peers"))
+		import leveldb
+		wb = leveldb.WriteBatch()
+		for seed in SEEDS:
+			wb.Put(seed[0],str(seed[1]))
+		db.Write(wb)
 
-    def get_peers(self):
-        if self.last_peers < time.time() - 60: # try new peers every 60 seconds
-            # Clean up dead threads         
-            for t in self.threads:
-                if t.client.exit or t.client.error:
-                    self.threads.remove(t)
-            peers = self.load_peer_db() 
-            if len(peers) == 0:
-                self.create_peer_db()
-                peers = self.load_peer_db() 
-            for k,v in peers:
-                peer_ip, peer_port = k.split(":")
-                peer_port = int(peer_port)
-                peer_found = False
-                # make sure it's not already running
-                for t in self.threads:
-                    if peer_ip == t.client.peerip:
-                        peer_found = True
-                if not peer_found:
-                    client = Infiniti(logger, peer_ip, peer_port)
-                    self.counter += 1
-                    thread = PeerThread(self.counter, "Thread-" + client.peerip, self.counter, client, self.mempool_manager)
-                    thread.daemon=True
-                    thread.start()
-                    self.threads.append(thread)
-            self.last_peers = time.time()                                                        
+	def get_peers(self):
+		if self.last_peers < time.time() - 60: # try new peers every 60 seconds
+			# Clean up dead threads         
+			for t in self.threads:
+				if t.client.exit or t.client.error:
+					self.threads.remove(t)
+			peers = self.load_peer_db() 
+			if len(peers) == 0:
+				self.create_peer_db()
+				peers = self.load_peer_db() 
+			for k,v in peers:
+				peer_ip, peer_port = k.split(":")
+				peer_port = int(peer_port)
+				peer_found = False
+				# make sure it's not already running
+				for t in self.threads:
+					if peer_ip == t.client.peerip:
+						peer_found = True
+				if not peer_found:
+					client = Infiniti(self.logger, peer_ip, peer_port)
+					self.counter += 1
+					thread = PeerThread(self.counter, "Thread-" + client.peerip, self.counter, client, self.mempool_manager)
+					thread.daemon=True
+					thread.start()
+					self.threads.append(thread)
+			self.last_peers = time.time()                                                        
 
-    def run(self):
-        self.counter = 0
-        logger.status_message("Network Spider Started.")
-        while not self.shutdown_flag.is_set():
-            self.get_peers()
-        for t in self.threads:
-            t.client.stop()
+	def run(self):
+		self.counter = 0
+		self.logger.info("Network Spider Started.")
+		while not self.shutdown_flag.is_set():
+			self.get_peers()
+		for t in self.threads:
+			t.client.stop()
 
-    def stop(self, signum, frame):
-        self.shutdown_flag.set()
+	def stop(self, signum, frame):
+		self.shutdown_flag.set()
 
 """
 class MemPoolThread(threading.Thread):
-    def __init__(self, threadID, name, counter, manager):
-        threading.Thread.__init__(self)
-        self.threadID = threadID
-        self.name = name
-        self.counter = counter
-        self.manager = manager
-        self.halt = False
+	def __init__(self, threadID, name, counter, manager):
+		threading.Thread.__init__(self)
+		self.threadID = threadID
+		self.name = name
+		self.counter = counter
+		self.manager = manager
+		self.halt = False
 
-    def run(self):
-        while not self.halt:
-            pass
-        logger.status_message("MemPool Stopping.")
+	def run(self):
+		while not self.halt:
+			pass
+		logger.status_message("MemPool Stopping.")
 
-    def stop(self):
-        self.halt = True        
+	def stop(self):
+		self.halt = True        
 class RPCServerThread(threading.Thread):
-    def __init__(self, threadID, name, counter, ip='localhost', port=8000):
-        threading.Thread.__init__(self)
-        self.threadID = threadID
-        self.name = name
-        self.counter = counter
-        self.rpc_ip = ip
-        self.rpc_port = port
-        self.rpc_server = RPCServer()
-        self.halt = False
+	def __init__(self, threadID, name, counter, ip='localhost', port=8000):
+		threading.Thread.__init__(self)
+		self.threadID = threadID
+		self.name = name
+		self.counter = counter
+		self.rpc_ip = ip
+		self.rpc_port = port
+		self.rpc_server = RPCServer()
+		self.halt = False
 
-    def run(self):
-        self.rpc_server.start(self.rpc_ip,self.rpc_port)
+	def run(self):
+		self.rpc_server.start(self.rpc_ip,self.rpc_port)
 
-    def stop(self):
-        self.halt = True
-        self.rpc_server.httpd.shutdown()
-        logger.status_message("RPC server shutdown.")
+	def stop(self):
+		self.halt = True
+		self.rpc_server.httpd.shutdown()
+		logger.status_message("RPC server shutdown.")
 """
 
 class InfinitiDaemon(Daemon):
-    def run(self):
-        # Register the signal handlers
-        try:
-            logger.status_message("Infiniti server started.")
-            # Get list of peers
-            # Iterate list of peers and create client objects
-            # Main program loop.
-            counter = 0
-            mempool_manager = None
-            """
-            mempool_manager = MemPoolManager()
-            #mempool_thread = MemPoolThread(counter, "MemPool", counter, mempool_manager)
-            #mempool_thread.start()
-            counter += 1
-            rpc_server = RPCServerThread(counter, "RPCServer", counter)
-            rpc_server.start()
-            counter += 1
-            """
-            self.spider = SpiderThread(counter, "Spider", counter, mempool_manager)
-            self.spider.start()
-            counter += 1
-            while True: 
-                time.sleep(1)
-        except Exception as e:
-            logger.status_message(sys.exc_info())
-            logger.status_message(dumps(e))
-            logger.status_message("Infiniti Shutting down due to errors.")
-            sys.exit(1)
+	def run(self):
+		# Register the signal handlers
+		print "Infiniti Starting ..."
+		try:
+			logger.info("Infiniti server started.")
+			# Get list of peers
+			# Iterate list of peers and create client objects
+			# Main program loop.
+			counter = 0
+			mempool_manager = None
+			"""
+			mempool_manager = MemPoolManager()
+			#mempool_thread = MemPoolThread(counter, "MemPool", counter, mempool_manager)
+			#mempool_thread.start()
+			counter += 1
+			rpc_server = RPCServerThread(counter, "RPCServer", counter)
+			rpc_server.start()
+			counter += 1
+			"""
+			self.spider = SpiderThread(counter, "Spider", counter, self.logger)
+			self.spider.start()
+			counter += 1
+			while not self.got_sigterm(): 
+				time.sleep(1)
+			self.halt()
+			self.logger.info("Infiniti Shutting down due to errors.")
+		except Exception as e:
+			self.logger.info(sys.exc_info())
+			self.logger.info(dumps(e))
+			self.logger.info("Infiniti Shutting down due to errors.")
+			sys.exit(1)
 
-    def halt(self, signum, frame):  # signum and frame are mandatory
-        #rpc_server.stop()
-        #mempool_manager.empty()
-        #mempool_thread.manager.empty()
-        #mempool_thread.stop()
-        #server.stop()
-        self.spider.stop()
-        logger.status_message("Infiniti Shutting down.")
-        sys.exit(0)
+	def halt(self):  # signum and frame are mandatory
+		#rpc_server.stop()
+		#mempool_manager.empty()
+		#mempool_thread.manager.empty()
+		#mempool_thread.stop()
+		#server.stop()
+		self.logger.info("Infiniti Shutting down.")
+		self.close()
 
 #
 if __name__ == "__main__":
-    infiniti = InfinitiDaemon(PID_FILE)
-    if len(sys.argv) == 2:
-        if 'start' == sys.argv[1]:
-            infiniti.start()
-        elif 'stop' == sys.argv[1]:
-            infiniti.stop()
-        elif 'restart' == sys.argv[1]:
-            infiniti.restart()
-        elif 'status' == sys.argv[1]:
-            try:
-                pf = file(PIDFILE,'r')
-                pid = int(pf.read().strip())
-                pf.close()
-            except IOError:
-                pid = None
-            except SystemExit:
-                pid = None
-            if pid:
-                print 'Infiniti is running as pid %s' % pid
-            else:
-                print 'Infiniti is not running.'
-        else:
-            print "Unknown command"
-            sys.exit(2)
-    else:
-        print "usage: %s start|stop|restart|status" % sys.argv[0]
-        sys.exit(2)
+	infiniti = InfinitiDaemon(PID_FILE)
+	if len(sys.argv) == 2:
+		if 'start' == sys.argv[1]:
+			infiniti.start()
+		elif 'stop' == sys.argv[1]:
+			infiniti.stop()
+		elif 'restart' == sys.argv[1]:
+			infiniti.restart()
+		elif 'status' == sys.argv[1]:
+			try:
+				pf = file(PIDFILE,'r')
+				pid = int(pf.read().strip())
+				pf.close()
+			except IOError:
+				pid = None
+			except SystemExit:
+				pid = None
+			if pid:
+				print 'Infiniti is running as pid %s' % pid
+			else:
+				print 'Infiniti is not running.'
+		else:
+			print "Unknown command"
+			sys.exit(2)
+	else:
+		print "usage: %s start|stop|restart|status" % sys.argv[0]
+		sys.exit(2)

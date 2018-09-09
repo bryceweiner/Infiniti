@@ -39,7 +39,6 @@ class InfinitiPeer(object):
 		self.socket = None
 		self.remote_height = 0
 
-
 	def open(self,ip_address,port):
 		# connect
 		self.ip_address = ip_address
