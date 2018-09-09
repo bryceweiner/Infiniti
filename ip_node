@@ -229,7 +229,7 @@ class InfinitiDaemon(Daemon):
 		# Register the signal handlers
 		print "Infiniti Starting ..."
 		try:
-			logger.info("Infiniti server started.")
+			self.logger.info("Infiniti server started.")
 			# Get list of peers
 			# Iterate list of peers and create client objects
 			# Main program loop.
@@ -250,11 +250,9 @@ class InfinitiDaemon(Daemon):
 			while not self.got_sigterm(): 
 				time.sleep(1)
 			self.halt()
-			self.logger.info("Infiniti Shutting down due to errors.")
 		except Exception as e:
-			self.logger.error(sys.exc_info())
-			self.logger.error(e.message + "\n" + vars(e.args))
-			self.logger.info("Infiniti Shutting down due to errors.")
+			self.logger.error(e, exc_info=True)
+			self.logger.error("Infiniti Shutting down due to errors.")
 			sys.exit(1)
 
 	def halt(self):  # signum and frame are mandatory

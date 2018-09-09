@@ -15,7 +15,6 @@ def debug_send(self, message, *args, **kws):
 		self._log(logging.DEBUG_SEND, message, args, **kws) 
 
 class LogFormatter(logging.Formatter):
-
 	err_fmt     = ':%(asctime)s - ERROR - %(message)s'
 	msg_rcv     = 'P2P:%(asctime)s - Recv Message - %(message)s'
 	msg_snd     = 'P2P:%(asctime)s - Send Message - %(message)s'
