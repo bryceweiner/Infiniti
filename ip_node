@@ -125,7 +125,6 @@ class SpiderThread(threading.Thread):
 		self.counter = counter
 		self.threads = []
 		self.halt = False
-		self.mempool_manager = mempool_manager
 		self.last_peers = 0
 		self.counter = 0
 		self.shutdown_flag = threading.Event()
