@@ -137,7 +137,6 @@ class InfinitiPeer(object):
 
 	def open(self,ip_address,port):
 		# connect
-		self.logger.info("hello!!!")
 		self.ip_address = ip_address
 		self.network_port = port
 		try:
