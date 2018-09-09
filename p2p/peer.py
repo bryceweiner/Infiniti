@@ -87,7 +87,7 @@ class InfinitiPeer(object):
 		Called once we've exchanged version information and can make
 		calls on the network.
 		"""
-		pass
+		raise NotImplementedError
 
 	def handle_ping(self, message_header, message):
 		"""
