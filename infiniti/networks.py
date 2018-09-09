@@ -1,6 +1,6 @@
 from collections import namedtuple
 from decimal import Decimal
-from exceptions import *
+from infiniti.exceptions import *
 
 # constants to be consumed by the backend
 Constants = namedtuple('Constants', [

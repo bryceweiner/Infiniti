@@ -4,7 +4,7 @@ from decimal import Decimal, getcontext
 getcontext().prec = 8
 import request
 
-from exceptions import *
+from infiniti.exceptions import *
 from infiniti.params import _params, param_query, net_query, NETWORK
 
 from abc import ABCMeta,abstractmethod

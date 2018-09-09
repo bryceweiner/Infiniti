@@ -7,7 +7,7 @@ import requests
 
 #from taopy.structs.transaction import TxIn, Sequence, ScriptSig
 
-#from exceptions import InsufficientFunds
+#from infiniti.exceptions import InsufficientFunds
 from providers.common import Provider
 
 

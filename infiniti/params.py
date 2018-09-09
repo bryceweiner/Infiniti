@@ -1,7 +1,7 @@
 from collections import namedtuple
 from decimal import Decimal
 from sys import platform
-from exceptions import *
+from infiniti.exceptions import *
 import codecs, os
 
 BASE_UTXO_ID = 0x100001
