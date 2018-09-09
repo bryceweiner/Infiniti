@@ -85,7 +85,7 @@ class InfinitiPeer(object):
 		try:
 			self.socket.sendall(message.get_message(self.coin))
 		except socket.error as err:
-			self.error_peer()
+			self.error_peer(err.errno)
 			self.logger.error("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
 			self.error = True
 
@@ -139,7 +139,10 @@ class InfinitiPeer(object):
 		db = open_db(peer_db_path)
 		wb = leveldb.WriteBatch()
 		for peer in message.addresses:
-			db.Put(peer.ip_address+":"+str(peer.port),str(int(time.time())))
+			try:
+				_p = db.Get(peer.ip_address+":"+str(peer.port))
+			except:
+				db.Put(peer.ip_address+":"+str(peer.port),str(int(time.time())))
 		db.Write(wb)
 
 	def open(self,ip_address,port):

@@ -67,7 +67,7 @@ class InfinitiDaemon(Daemon):
 		# turn the iterator into a list
 		q = []
 		for k,v in db.RangeIter():
-			if v > 255:
+			if int(v) > 255:
 				q.append((k,int(v)))
 		return q
 
@@ -99,9 +99,6 @@ class InfinitiDaemon(Daemon):
 				for t in self.threads:
 					if peer_ip == t.client.peerip:
 						peer_found = True
-					# collect garbage
-					if t.client.error or t.client.exit:
-						self.threads.remove(t)
 				if not peer_found:
 					self.counter += 1
 					thread = PeerThread(self.counter, "Peer-" + str(self.counter), self.logger, peer_ip, peer_port)
@@ -121,6 +118,10 @@ class InfinitiDaemon(Daemon):
 			self.counter += 1
 			self.last_peers = time.time() - 100                                                        
 			while not self.got_sigterm():
+				# collect garbage
+				for t in self.threads:
+					if t.client.error or t.client.exit:
+						self.threads.remove(t)
 				if self.last_peers < time.time() - 60: # try new peers every 60 seconds
 					self.get_peers() 
 				time.sleep(1)
