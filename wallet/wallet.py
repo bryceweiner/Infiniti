@@ -40,13 +40,10 @@ class Key(object):
         return "{0}.{1}".format(self.address(),self.address(True))        
 
     def address(self, ipaddr = False):
-        if self.has_wif:
-            return self.key.Address(ipaddr)
+        if ipaddr:
+            return self.addresses[1]
         else:
-            if ipaddr:
-                return self.addresses[1]
-            else:
-                return self.addresses[0]
+            return self.addresses[0]
 
     def public_key(self):
         if self.has_wif:
@@ -250,7 +247,9 @@ class Wallet(object):
         for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
             addr,addr_type,child = key.split(".")
             if passphrase is not None:
-                self.create_address(save=False,addr_type=int(addr_type),child=int(child))  
+                _k = self._primary.ChildKey(addr_type)
+                _k = k.ChildKey(child)
+                _k.addresses = value.split('.')
             else:
                 _k = Key(addr_type,child,None)
                 _k.has_wif = False
