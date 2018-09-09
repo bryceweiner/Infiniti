@@ -5,7 +5,7 @@ from p2p.protocol.buffer import ProtocolBuffer
 from p2p.protocol.serializers import *
 from utils.db import open_db,writebatch
 from infiniti.params import *
-from infiniti.rpc import *
+import infiniti.rpc as infiniti_rpc
 
 def intToBytes(n):
 	b = bytearray([0, 0, 0, 0])   # init
@@ -146,7 +146,10 @@ class InfinitiPeer(object):
 				_p = db.get("{0}:{1}".format(peer.ip_address,str(peer.port)))
 				if _p is None:
 					wb.put("{0}:{1}".format(peer.ip_address,str(peer.port)),str(int(time.time())))
-				_CONNECTION.addnode("{0}:{1}".format(peer.ip_address,str(peer.port)),'add')
+				try:
+					infiniti_rpc._CONNECTION.addnode("{0}:{1}".format(peer.ip_address,str(peer.port)),'add')
+				except:
+					pass
 			db.write(wb)
 		except Exception as e:
 			self.logger.error(e)

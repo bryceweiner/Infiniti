@@ -1,6 +1,6 @@
 import rocksdb
 
-MAX_RETRY_CREATE_DB = 5
+MAX_RETRY_CREATE_DB = 100
 
 def writebatch():
     return rocksdb.WriteBatch()
