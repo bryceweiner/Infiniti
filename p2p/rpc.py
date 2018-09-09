@@ -14,7 +14,7 @@ import BaseHTTPServer, SimpleHTTPServer
 import ssl
 import p2p.logger as logger
 import sys, os, re, shutil, json, urllib, urllib2, BaseHTTPServer
-from params import *
+from infiniti.params import *
 
 # Fix issues with decoding HTTP responses
 reload(sys)

@@ -19,7 +19,7 @@ from ecdsa.ecdsa import int_to_string, string_to_int
 from ecdsa.numbertheory import square_root_mod_prime as sqrt_mod
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
-from params import NETWORK, param_query
+from infiniti.params import NETWORK, param_query
 
 MIN_ENTROPY_LEN = 128        # bits
 HD_HARDEN    = 0x80000000 # choose from hardened set of child keys

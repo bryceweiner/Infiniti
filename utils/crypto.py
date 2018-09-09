@@ -2,7 +2,7 @@ import hashlib,base58,struct,ecdsa,base64,sys,secp256k1
 from crypto import *
 from hashlib import sha256
 from secp256k1 import ALL_FLAGS
-from params import *
+from infiniti.params import *
 
 def Hash(data):
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()

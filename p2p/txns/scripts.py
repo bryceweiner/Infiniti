@@ -1,5 +1,5 @@
 from utils import base58
-from params import OP_RETURN_KEY
+from infiniti.params import OP_RETURN_KEY
 
 def pay_to_pubkey_hash(key):
     """

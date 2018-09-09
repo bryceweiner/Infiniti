@@ -4,7 +4,7 @@ from node.protocol.exceptions import NodeDisconnectException
 from node.protocol.buffer import ProtocolBuffer
 from node.protocol.serializers import *
 from node.protocol.database import Database
-from params import *
+from infiniti.params import *
 
 def intToBytes(n):
 	b = bytearray([0, 0, 0, 0])   # init

@@ -6,7 +6,7 @@ from utils.hd_key import HDKey, HD_HARDEN
 from secp256k1 import ALL_FLAGS
 from utils.crypto import *
 from utils.db import *
-from params import *
+from infiniti.params import *
 
 MAX_ADDRESS = 0xFFFFFFFF
 

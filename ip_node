@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from node.client import TaoClient
-from params import *
+from infiniti.params import *
 from node.protocol.serializers import *
 from node.protocol.queues import MemPoolManager
 from node.rpc import RPCServer

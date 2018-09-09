@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from rpc import *
+from infiniti.rpc import *
 import argparse
 import sys
 from utils.crypto import valid_address

@@ -4,7 +4,7 @@ from operator import itemgetter
 from decimal import Decimal, getcontext
 getcontext().prec = 8
 import os, os.path, sys, json, time, requests
-from params import *
+from infiniti.params import *
 from utils.encoder import DecimalEncoder,DecimalDecoder
 from utils.db import *
 from wallet.wallet import Wallet

@@ -8,7 +8,7 @@ from node import version as node_version
 from node.protocol import fields, utils
 from node.protocol.exceptions import UnknownMessageException
 
-from params import *
+from infiniti.params import *
 from db import open_db
 
 class SerializerMeta(type):
