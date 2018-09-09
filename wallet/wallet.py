@@ -250,6 +250,7 @@ class Wallet(object):
                 _k = self._primary.ChildKey(addr_type)
                 _k = k.ChildKey(child)
                 _k.addresses = value.split('.')
+                self.Keys.append(_k)     
             else:
                 _k = Key(addr_type,child,None)
                 _k.has_wif = False
