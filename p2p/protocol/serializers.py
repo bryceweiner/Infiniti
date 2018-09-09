@@ -236,7 +236,7 @@ class Version(SerializableMessage):
         self.timestamp = time.time()
         self.addr_recv = p
         self.addr_from = i
-        self.nonce = utils.nonce()
+        self.nonce = crypto.nonce()
         self.user_agent = "/node:%s/" % node_version
         self.start_height = 0
 
@@ -269,7 +269,7 @@ class Ping(SerializableMessage):
     command = "ping"
 
     def __init__(self):
-        self.nonce = utils.nonce()
+        self.nonce = crypto.nonce()
 
     def __repr__(self):
         return "<%s Nonce=[%d]>" % (self.__class__.__name__, self.nonce)
@@ -287,7 +287,7 @@ class Pong(SerializableMessage):
     command = "pong"
 
     def __init__(self):
-        self.nonce = utils.nonce()
+        self.nonce = crypto.nonce()
 
     def __repr__(self):
         return "<%s Nonce=[%d]>" % (self.__class__.__name__, self.nonce)
