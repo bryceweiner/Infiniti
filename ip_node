@@ -80,7 +80,7 @@ class InfinitiDaemon(Daemon):
 
 	def get_status(self,k):
 		db = open_db(os.path.join(DATA_PATH,"status"))
-		_v = db.get(k,v)
+		_v = db.get(k)
 		if _v is None:
 			db.put(k,str(_v))	
 		return _v
