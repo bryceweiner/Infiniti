@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+// Written for Infiniti by Bryce weiner (github.com/bryceweiner)
+// Meta-data message for the metaproof transaction
+message Metaproof {
+  // Protocol version number
+  uint32 version = 1;
+
+  // Name for the registered metaproof
+  string name = 2;
+  bytes uuid = 3;
+  string target_asset_uuid = 4; // 0x00 for base currecy (XTO)
+
+  // Types of proofs
+  enum MODE {
+    NONE        = 0x00; // No issuance allowed
+    CUSTOM      = 0x01; // Not specified, custom client implementation needed
+    BURN        = 0x02; // Address specified in burn_target
+    AMOUNT      = 0x04; // Minimum tokens, specified in amount, currently held in address
+    TIMEPERIOD  = 0x08; // In blocks from genesis, indicated in start_block and requires non-zero amount
+    PROOF  = 0x10; // Non-zero amount held between start block and end block
+  }
+
+  uint32 proof_type = 5;
+  string burn_target = 6;
+  uint32 amount = 7;
+  uint32 start_block = 8;
+  uint32 end_block = 9; // End block of -1 is unending
+  repeated bytes proof_target = 10;
+  // Free form asset specific data (optional)
+  bytes proof_specific_data = 11;
+
+  // card transaction fee (optional)
+  // token amount to be paid to miners upon each claiming the proof
+  // to be encoded as: fee * 10**number_of_decimals
+  // defaults to zero
+  uint32 fee = 12;
+}
+
