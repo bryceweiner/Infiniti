@@ -9,6 +9,7 @@ from os.path import isfile, join
 import json, binascii
 from utils.encoder import DecimalEncoder
 from infiniti.params import *
+from infiniti.logger import *
 from utils.crypto import sign_and_verify, verify_message
 
 if USE_RPC:
