@@ -253,7 +253,7 @@ class InfinitiDaemon(Daemon):
 			self.logger.info("Infiniti Shutting down due to errors.")
 		except Exception as e:
 			self.logger.info(sys.exc_info())
-			self.logger.info(dumps(e))
+			self.logger.info(vars(e))
 			self.logger.info("Infiniti Shutting down due to errors.")
 			sys.exit(1)
 
