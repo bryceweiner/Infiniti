@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from rpc import *
 import argparse
 import sys

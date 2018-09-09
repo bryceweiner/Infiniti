@@ -14,7 +14,7 @@ def pay_to_pubkey_hash(key):
 
 def op_return_script():
     """
-    6a        89 AB CD EF AB BA AB BA AB BA AB BA AB BA AB BA
+    6A        89 AB CD EF AB BA AB BA AB BA AB BA AB BA AB BA
     OP_RETURN data to push 
     """
     h = '6a' + str(OP_RETURN_KEY).encode('hex')

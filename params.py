@@ -92,8 +92,8 @@ def net_query(name):
     raise UnsupportedNetwork
 
 def param_query(name,key=None):
-    '''Find the PAParams for a network by its long or short name. Raises
-    UnsupportedNetwork if no PAParams is found.
+    '''Find the _params for a network by its long or short name. Raises
+    UnsupportedNetwork if no _params is found.
     '''
     for p in params:
         if name in (p.network_name, p.network_shortname,):

@@ -374,7 +374,6 @@ class HDKey(object):
     def __repr__(self):
         return "<HDKey hexkey=[%s]>" % b2a_hex(self.Identifier())
 
-
     # Debugging methods
     #
     def dump(self):

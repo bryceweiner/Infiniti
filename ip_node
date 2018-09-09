@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from node.client import TaoClient
 from params import *
 from node.protocol.serializers import *
