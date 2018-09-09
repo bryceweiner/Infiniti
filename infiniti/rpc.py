@@ -118,6 +118,9 @@ def listaddresses(fn):
     return json.dumps(d)
 
 def newaddress(fn,passphrase,addr_type=0):
+    """
+    getnetaddress
+    """
     wallet = Wallet(fn).fromFile(passphrase)
     # Address Types
     # addr_type == 0, deposit

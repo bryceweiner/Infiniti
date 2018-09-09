@@ -17,7 +17,7 @@ class Key(object):
     has_wif = True
     addresses = []
 
-    def __init__(self,child,addr_type,key):
+    def __init__(self,addr_type,child,key):
         self.child = child
         self.addr_type = addr_type
         self.key = key
