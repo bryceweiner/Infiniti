@@ -149,6 +149,15 @@ class SpiderThread(threading.Thread):
         q = db.RangeIter()
         return q
 
+    def create_peer_db(self):
+        # trigger garbage collection closing db
+        db = open_db(os.path.join(DATA_PATH,"peers"))
+        import leveldb
+        wb = leveldb.WriteBatch()
+        for seed in SEEDS:
+            wb.Put(seed[0],seed[1])
+        db.Write(wb)
+
     def get_peers(self):
         if self.last_peers < time.time() - 60: # try new peers every 60 seconds
             # Clean up dead threads         
@@ -156,6 +165,9 @@ class SpiderThread(threading.Thread):
                 if t.client.exit or t.client.error:
                     self.threads.remove(t)
             peers = self.load_peer_db() 
+            if len(peers) == 0:
+                self.create_peer_db()
+                peers = self.load_peer_db() 
             for k,v in peers:
                 peer_ip, peer_port = k.split(":")
                 peer_found = False
@@ -238,7 +250,7 @@ def main():
         while True: 
             time.sleep(1)
     except KeyboardInterrupt:
-        logger.status_message("Infiniti Shutting down.")
+        logger.status_message("Infiniti Shutting down via KeyboardInterrupt.")
         #rpc_server.stop()
         #mempool_manager.empty()
         #mempool_thread.manager.empty()
