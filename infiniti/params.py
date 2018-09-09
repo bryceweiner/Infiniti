@@ -8,7 +8,7 @@ BASE_UTXO_ID = 0x100001
 OP_RETURN_KEY = 0xd6901b0cbe0f48420fc5814866b7c3de8d08c4e721a7afc655d5b5a0f8534f23
 
 ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PID_FILE =  os.path.join(ROOT_PATH,'infiniti.pid')
+PID_FILE =  os.path.join(ROOT_PATH,'infiniti')
 
 if platform == "linux" or platform == "linux2":
     USER_CONFIG_PATH = '~/.{0}/{1}.conf'

@@ -97,14 +97,13 @@ class Infiniti(InfinitiPeer):
 			peer.save(self.db)
 
 class PeerThread (threading.Thread):
-	def __init__(self, threadID, name, counter, client, mempool_manager):
+	def __init__(self, threadID, name, counter, client):
 		threading.Thread.__init__(self)
 		self.threadID = threadID
 		self.name = name
 		self.counter = counter
 		self.client = client
 		self.client.counter = counter
-		self.client.mempool_manager = mempool_manager
 		self.shutdown_flag = threading.Event()
 	
 	def stop(self):
@@ -169,7 +168,7 @@ class SpiderThread(threading.Thread):
 				if not peer_found:
 					client = Infiniti(self.logger, peer_ip, peer_port)
 					self.counter += 1
-					thread = PeerThread(self.counter, "Thread-" + client.peerip, self.counter, client, self.mempool_manager)
+					thread = PeerThread(self.counter, "Thread-" + client.peerip, self.counter, client)
 					thread.daemon=True
 					thread.start()
 					self.threads.append(thread)
@@ -187,22 +186,6 @@ class SpiderThread(threading.Thread):
 		self.shutdown_flag.set()
 
 """
-class MemPoolThread(threading.Thread):
-	def __init__(self, threadID, name, counter, manager):
-		threading.Thread.__init__(self)
-		self.threadID = threadID
-		self.name = name
-		self.counter = counter
-		self.manager = manager
-		self.halt = False
-
-	def run(self):
-		while not self.halt:
-			pass
-		logger.status_message("MemPool Stopping.")
-
-	def stop(self):
-		self.halt = True        
 class RPCServerThread(threading.Thread):
 	def __init__(self, threadID, name, counter, ip='localhost', port=8000):
 		threading.Thread.__init__(self)
@@ -233,12 +216,7 @@ class InfinitiDaemon(Daemon):
 			# Iterate list of peers and create client objects
 			# Main program loop.
 			counter = 0
-			mempool_manager = None
 			"""
-			mempool_manager = MemPoolManager()
-			#mempool_thread = MemPoolThread(counter, "MemPool", counter, mempool_manager)
-			#mempool_thread.start()
-			counter += 1
 			rpc_server = RPCServerThread(counter, "RPCServer", counter)
 			rpc_server.start()
 			counter += 1
@@ -261,9 +239,7 @@ class InfinitiDaemon(Daemon):
 		#mempool_thread.stop()
 		#server.stop()
 		self.logger.info("Infiniti Shutting down.")
-		self.close()
 
-#
 if __name__ == "__main__":
 	infiniti = InfinitiDaemon(PID_FILE)
 	if len(sys.argv) == 2:

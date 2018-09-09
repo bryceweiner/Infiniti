@@ -45,17 +45,17 @@ class InfinitiPeer(object):
 		self.network_port = port
 		try:
 			if self.socket is None:
-				self.logger.status_message("Connecting to " + self.peerip + ":" + str(self.port))
+				self.logger.info("Connecting to {0}:{1}".format(self.peerip,str(self.port)))
 				self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				self.socket.connect((self.peerip, self.port))
 			else:
 				peer = socket.getpeername()
 				self.peerip = peer[0]
 				self.port = peer[1]
-				self.logger.status_message("Connection from " + self.peerip + ":" + str(self.port))
+				self.logger.info("Connection from {0}:{1}".format(self.peerip,str(self.port)))
 		except socket.error as err:
 			#self.db.update_peer(self,err.errno)
-			self.logger.error_message("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
+			self.logger.info("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
 			self.error = True
 			return
 		# send our version
@@ -130,7 +130,7 @@ class InfinitiPeer(object):
 			self.socket.sendall(message.get_message(self.coin))
 		except socket.error as err:
 			#self.db.update_peer(self,err.errno)
-			self.logger.error_message("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
+			self.logger.error("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
 			self.error = True
 
 	def loop(self):
@@ -154,6 +154,6 @@ class InfinitiPeer(object):
 				self.error = True
 				self.is_connected = False 
 				#self.db.update_peer(self,err.errno)
-				self.logger.error_message("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))				
-		self.logger.status_message("{0} - Node disconnected.".format(self.peerip))
+				self.logger.error("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))				
+		self.logger.info("{0} - Node disconnected.".format(self.peerip))
 		self.close()
