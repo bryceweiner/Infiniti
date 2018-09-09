@@ -107,7 +107,7 @@ class Wallet(object):
         return s[:-ord(s[len(s)-1:])]
 
     def _fn(self):
-        return "wallet_" + binascii.hexlify(self.encrypted_entropy)[:8]
+        return binascii.hexlify(self.encrypted_entropy)[:8]
 
     def fromSeed(self, seed, nonce, passphrase, wallet_path = '.', public=False, testnet=False):
         self.seed = seed
@@ -115,7 +115,7 @@ class Wallet(object):
         self.encrypt_entropy(sha256(passphrase).digest(),entropy_from_seed)
         self._root = HDKey.fromEntropy(entropy_from_seed, public, testnet)
         self._primary = self._root.ChildKey(0+HD_HARDEN)
-        self._filename = os.path.join(DATA_PATH, self._fn())
+        self._filename = os.path.join(WALLET_PATH, self._fn())
         self.save()
         return self
 

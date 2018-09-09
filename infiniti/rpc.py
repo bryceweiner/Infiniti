@@ -154,5 +154,5 @@ def walletbalance(fn,passphrase):
     return json.dumps(d, cls=DecimalEncoder)
 
 def listwallets():
-    return [f for f in listdir(DATA_PATH) if f[:7]=="wallet_"]
+    return [f for f in listdir(WALLET_PATH) if True]
 
