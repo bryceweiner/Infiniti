@@ -18,47 +18,11 @@ elif platform == "win32":
 
 DATA_PATH = os.path.join(ROOT_PATH, 'data')
 WALLET_PATH = os.path.join(ROOT_PATH, 'wallets')
-TXIN_PATH = os.path.join(DATA_PATH, 'txin')
-TXOUT_PATH = os.path.join(DATA_PATH, 'txout')
-TRANSACTION_PATH = os.path.join(DATA_PATH, 'tx')
-BLOCK_PATH = os.path.join(DATA_PATH, 'blocks')
-DECK_PATH = os.path.join(DATA_PATH, 'deck')
-CARD_PATH = os.path.join(DATA_PATH, 'card')
-METAPROOF_PATH = os.path.join(DATA_PATH, 'metaproof')
-CLAIM_PATH = os.path.join(DATA_PATH, 'claim')
-VOTE_PATH = os.path.join(DATA_PATH, 'vote')
-IDENTITY_PATH = os.path.join(DATA_PATH, 'identity')
-PROTOCOL_PATH = os.path.join(DATA_PATH, 'protocol')
-PEERS_DB_PATH = os.path.join(DATA_PATH, 'peers')
 
 if not os.path.exists(DATA_PATH):
     os.makedirs(DATA_PATH)
-if not os.path.exists(PROTOCOL_PATH):
-    os.makedirs(PROTOCOL_PATH)
-if not os.path.exists(IDENTITY_PATH):
-    os.makedirs(IDENTITY_PATH)
-if not os.path.exists(VOTE_PATH):
-    os.makedirs(VOTE_PATH)
-if not os.path.exists(CLAIM_PATH):
-    os.makedirs(CLAIM_PATH)
-if not os.path.exists(METAPROOF_PATH):
-    os.makedirs(METAPROOF_PATH)
-if not os.path.exists(BLOCK_PATH):
-    os.makedirs(BLOCK_PATH)
-if not os.path.exists(BLOCK_PATH):
-    os.makedirs(BLOCK_PATH)
-if not os.path.exists(BLOCK_PATH):
-    os.makedirs(BLOCK_PATH)
-if not os.path.exists(TRANSACTION_PATH):
-    os.makedirs(TRANSACTION_PATH)
-if not os.path.exists(TXOUT_PATH):
-    os.makedirs(TXOUT_PATH)
-if not os.path.exists(TXIN_PATH):
-    os.makedirs(TXIN_PATH)
 if not os.path.exists(WALLET_PATH):
     os.makedirs(WALLET_PATH)
-if not os.path.exists(PEERS_DB_PATH):
-    os.makedirs(PEERS_DB_PATH)
 
 USE_RPC = True
 

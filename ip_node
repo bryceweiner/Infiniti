@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from p2p.client import TaoClient
+from p2p.peer import InfinitiPeer
 from infiniti.params import *
 from p2p.protocol.serializers import *
 from p2p.protocol.queues import MemPoolManager
@@ -7,11 +7,10 @@ from p2p.rpc import RPCServer
 import infiniti.logger as logger
 import threading, socket
 import sys, traceback
-import sched, time
+import sched, time, os
 
 from utils.db import open_db 
 
-from node.protocol.database import Database 
 from json import load
 from urllib2 import urlopen
 
@@ -22,7 +21,7 @@ except Exception:
     print "Internet connection not found!"
     sys.exit(0)
 
-class Infiniti(TaoClient):
+class Infiniti(InfinitiPeer):
     db = None   
     socket = None
     mempool_manager = None
@@ -109,7 +108,7 @@ class Infiniti(TaoClient):
         for peer in message.addresses:
             peer.save(self.db)
 
-class ClientThread (threading.Thread):
+class PeerThread (threading.Thread):
     def __init__(self, threadID, name, counter, client, mempool_manager):
         threading.Thread.__init__(self)
         self.threadID = threadID
@@ -144,24 +143,30 @@ class SpiderThread(threading.Thread):
         for t in self.threads:
             t.stop()
 
+    def load_peer_db(self):
+        # trigger garbage collection closing db
+        db = open_db(os.path.join(DATA_PATH,"peers"))
+        q = db.RangeIter()
+        return q
+
     def get_peers(self):
-        if self.last_peers < time.time() - 60:
-            db = Database()
+        if self.last_peers < time.time() - 60: # try new peers every 60 seconds
             # Clean up dead threads         
             for t in self.threads:
                 if t.client.exit or t.client.error:
                     self.threads.remove(t)
-            peers = db.get_peers()
-            for peer in peers:
+            peers = self.load_peer_db() 
+            for k,v in peers:
+                peer_ip, peer_port = k.split(":")
                 peer_found = False
                 # make sure it's not already running
                 for t in self.threads:
-                    if peer[0] == t.client.peerip:
+                    if peer_ip == t.client.peerip:
                         peer_found = True
                 if not peer_found:
-                    client = Infiniti(logger, peer[0], peer[1])
+                    client = Infiniti(logger, peer_ip, peer_port)
                     self.counter += 1
-                    thread = ClientThread(self.counter, "Thread-" + client.peerip, self.counter, client, self.mempool_manager)
+                    thread = PeerThread(self.counter, "Thread-" + client.peerip, self.counter, client, self.mempool_manager)
                     thread.daemon=True
                     thread.start()
                     self.threads.append(thread)
@@ -190,7 +195,6 @@ class MemPoolThread(threading.Thread):
 
     def stop(self):
         self.halt = True        
-"""
 class RPCServerThread(threading.Thread):
     def __init__(self, threadID, name, counter, ip='localhost', port=8000):
         threading.Thread.__init__(self)
@@ -209,6 +213,7 @@ class RPCServerThread(threading.Thread):
         self.halt = True
         self.rpc_server.httpd.shutdown()
         logger.status_message("RPC server shutdown.")
+"""
 
 def main():
     try:
@@ -217,6 +222,7 @@ def main():
         # Iterate list of peers and create client objects
         # Main program loop.
         counter = 0
+        mempool_manager = None
         """
         mempool_manager = MemPoolManager()
         #mempool_thread = MemPoolThread(counter, "MemPool", counter, mempool_manager)
@@ -233,8 +239,8 @@ def main():
             time.sleep(1)
     except KeyboardInterrupt:
         logger.status_message("Infiniti Shutting down.")
-        rpc_server.stop()
-        mempool_manager.empty()
+        #rpc_server.stop()
+        #mempool_manager.empty()
         #mempool_thread.manager.empty()
         #mempool_thread.stop()
         spider.stop()

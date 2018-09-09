@@ -2,7 +2,7 @@ import leveldb, secp256k1, time, sengen, binascii, os
 from hashlib import sha256
 from Crypto.Cipher import AES
 from Crypto import Random
-from utils.hd_key import HDKey, HD_HARDEN
+from infiniti.hdkey import HDKey, HD_HARDEN
 from secp256k1 import ALL_FLAGS
 from utils.crypto import *
 from utils.db import *

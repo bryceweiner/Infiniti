@@ -5,11 +5,12 @@ from cStringIO import StringIO
 from collections import OrderedDict
 
 from p2p import version as node_version
-from p2p.protocol import fields, utils
+from p2p.protocol import fields
 from p2p.protocol.exceptions import UnknownMessageException
 
 from infiniti.params import *
-from db import open_db
+from utils.db import open_db
+from utils import crypto
 
 class SerializerMeta(type):
     """The serializer meta class. This class will create an attribute

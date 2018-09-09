@@ -3,6 +3,7 @@ from crypto import *
 from hashlib import sha256
 from secp256k1 import ALL_FLAGS
 from infiniti.params import *
+import Crypto.Random
 
 def Hash(data):
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
@@ -185,3 +186,8 @@ def hex_to_bin(hex):
 def bin_to_hex(string):
     return binascii.b2a_hex(string).decode('utf-8')
 
+def nonce():
+    """
+    Return a random int between 0 and (2^32)-1
+    """
+    return Random.randint(0, 4294967295)
