@@ -63,7 +63,7 @@ class Wallet(object):
     @staticmethod
     def create_seed(path):
         nonce = Random.get_random_bytes(16)
-        return sengen.generateSentences(wordlist_file = path + '/100-0.txt', markovLength=5), nonce
+        return sengen.generateSentences(wordlist_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),'100-0.txt'), markovLength=5), nonce
 
     @staticmethod
     def entropy_from_seed(seed,nonce):
