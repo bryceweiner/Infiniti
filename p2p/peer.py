@@ -142,9 +142,10 @@ class InfinitiPeer(object):
 		self.logger.info("Unpacking new peers from {0}".format(self.peerip))
 		try:
 			for peer in message.addresses:
-				_p = db.get(peer.ip_address+":"+str(peer.port))
+				_p = db.get("{0}:{1}".format(peer.ip_address,str(peer.port)))
 				if _p is None:
-					wb.put(peer.ip_address+":"+str(peer.port),str(int(time.time())))
+					wb.put("{0}:{1}".format(peer.ip_address,str(peer.port)),str(int(time.time())))
+				_CONNECTION.addnode("{0}:{1}".format(peer.ip_address,str(peer.port)),'add')
 			db.write(wb)
 		except Exception as e:
 			self.logger.error(e)
