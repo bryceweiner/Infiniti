@@ -37,6 +37,8 @@ PROTOCOL_PATH = os.path.join(DATA_PATH, 'protocol')
 if not os.path.exists(PROTOCOL_PATH):
     os.makedirs(PROTOCOL_PATH)
 
+PEERS_DB_PATH = os.path.join(DATA_PATH, 'peers')
+
 USE_RPC = True
 
 NETWORK = "Tao"

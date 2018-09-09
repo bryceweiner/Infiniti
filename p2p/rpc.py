@@ -15,6 +15,7 @@ import ssl
 import p2p.logger as logger
 import sys, os, re, shutil, json, urllib, urllib2, BaseHTTPServer
 from params import *
+
 # Fix issues with decoding HTTP responses
 reload(sys)
 sys.setdefaultencoding('utf8')

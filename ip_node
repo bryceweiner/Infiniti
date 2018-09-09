@@ -9,6 +9,8 @@ import threading, socket
 import sys, traceback
 import sched, time
 
+from utils.db import open_db 
+
 from node.protocol.database import Database 
 from json import load
 from urllib2 import urlopen
@@ -246,16 +248,13 @@ class RPCServerThread(threading.Thread):
         logger.status_message("RPC server shutdown.")
 
 def main():
-    db = Database()
-    db.open()
-    db.create() # just in case it doesn't exist
-    db.close()
     try:
         logger.status_message("Infiniti Started.")
         # Get list of peers
         # Iterate list of peers and create client objects
         # Main program loop.
         counter = 0
+        """
         mempool_manager = MemPoolManager()
         #mempool_thread = MemPoolThread(counter, "MemPool", counter, mempool_manager)
         #mempool_thread.start()
@@ -263,11 +262,10 @@ def main():
         rpc_server = RPCServerThread(counter, "RPCServer", counter)
         rpc_server.start()
         counter += 1
+        """
         spider = SpiderThread(counter, "Spider", counter, mempool_manager)
         spider.start()
         counter += 1
-        #server = ServerThread(0xdeadbeef, "Server", counter, ip_address, 15152, mempool_manager)
-        #server.start()
         while True: 
             time.sleep(1)
     except KeyboardInterrupt:
