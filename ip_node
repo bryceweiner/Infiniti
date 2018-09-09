@@ -6,15 +6,15 @@ from p2p.protocol.queues import MemPoolManager
 from p2p.rpc import RPCServer
 import infiniti.logger as logger
 import threading, socket
-import sys, traceback, signal
-import sched, time, os, signal
+import sys, traceback
+import sched, time, os
 
 from utils.db import open_db 
 
 from json import load
 from urllib2 import urlopen
 
-from utils.daemon import Daemon
+from utils.daemonize import Daemon
 
 try:
     ip_address = load(urlopen('https://api.ipify.org/?format=json'))['ip'] 
@@ -35,7 +35,7 @@ class Infiniti(InfinitiPeer):
 
     def update_peer(self):
         db = open_db(os.path.join(DATA_PATH,"peers"))
-        db.Put(self.peerip,time.time())
+        db.Put(self.peerip,str(int(time.time())))
 
     def message_received(self, message_header, message):
         self.logger.recv_message("{0} - {1} - {2}".format(self.peerip, message_header.command, str(message)))
@@ -106,8 +106,12 @@ class PeerThread (threading.Thread):
         self.client = client
         self.client.counter = counter
         self.client.mempool_manager = mempool_manager
+        self.shutdown_flag = threading.Event()
+    
     def stop(self):
+        self.shutdown_flag.set()
         self.client.exit = True
+
     def run(self):
         self.client.open(ip_address,port)
         self.client.loop()  
@@ -125,12 +129,7 @@ class SpiderThread(threading.Thread):
         self.mempool_manager = mempool_manager
         self.last_peers = 0
         self.counter = 0
-
-    def stop(self):
-        logger.status_message("Network Spider Stopping.")
-        self.halt = True
-        for t in self.threads:
-            t.stop()
+        self.shutdown_flag = threading.Event()
 
     def load_peer_db(self):
         # trigger garbage collection closing db
@@ -180,8 +179,13 @@ class SpiderThread(threading.Thread):
     def run(self):
         self.counter = 0
         logger.status_message("Network Spider Started.")
-        while not self.halt:
+        while not self.shutdown_flag.is_set():
             self.get_peers()
+        for t in self.threads:
+            t.client.stop()
+
+    def stop(self, signum, frame):
+        self.shutdown_flag.set()
 
 """
 class MemPoolThread(threading.Thread):
@@ -222,7 +226,9 @@ class RPCServerThread(threading.Thread):
 
 class InfinitiDaemon(Daemon):
     def run(self):
+        # Register the signal handlers
         try:
+            logger.status_message("Infiniti server started.")
             # Get list of peers
             # Iterate list of peers and create client objects
             # Main program loop.
@@ -240,39 +246,33 @@ class InfinitiDaemon(Daemon):
             self.spider = SpiderThread(counter, "Spider", counter, mempool_manager)
             self.spider.start()
             counter += 1
-            signal.signal(signal.SIGINT, self.shutdown())
             while True: 
                 time.sleep(1)
-        except Exception:
+        except Exception as e:
             logger.status_message(sys.exc_info())
-            logger.status_message("Infiniti Shutting down.")
+            logger.status_message(dumps(e))
+            logger.status_message("Infiniti Shutting down due to errors.")
             sys.exit(1)
 
-        def shutdown(self):  # signum and frame are mandatory
-            #rpc_server.stop()
-            #mempool_manager.empty()
-            #mempool_thread.manager.empty()
-            #mempool_thread.stop()
-            #server.stop()
-            spider.stop()
-            logger.status_message("Infiniti Shutting down.")
-            sys.exit(0)
+    def halt(self, signum, frame):  # signum and frame are mandatory
+        #rpc_server.stop()
+        #mempool_manager.empty()
+        #mempool_thread.manager.empty()
+        #mempool_thread.stop()
+        #server.stop()
+        self.spider.stop()
+        logger.status_message("Infiniti Shutting down.")
+        sys.exit(0)
 
 #
 if __name__ == "__main__":
     infiniti = InfinitiDaemon(PID_FILE)
     if len(sys.argv) == 2:
-
         if 'start' == sys.argv[1]:
-            try:
-                infiniti.start()
-            except:
-                pass
+            infiniti.start()
         elif 'stop' == sys.argv[1]:
-            print "Infinit Stopping ..."
             infiniti.stop()
         elif 'restart' == sys.argv[1]:
-            print "Infiniti Restaring ..."
             infiniti.restart()
         elif 'status' == sys.argv[1]:
             try:

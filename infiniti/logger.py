@@ -7,6 +7,8 @@ log = logging.getLogger('infiniti')
 logger_handler = logging.FileHandler(os.path.join(ROOT_PATH, 'infiniti.log'))  # Handler for the logger
 log.setLevel(logging.DEBUG)
 log.addHandler(logger_handler)
+default_formatter = logging.Formatter(
+    '%(asctime)s - %(message)s')
 
 def error_message(msg,name='Infiniti'):
     error_formatter = logging.Formatter(
