@@ -1,20 +1,24 @@
 from node.txns.scripts import pay_to_pubkey_hash, op_return_script
 from node.protocol.serializers import TxIn, TxOut, Tx, TxSerializer
 from node.protocol.fields import VariableStringField
+from binascii import b2a_hex
 
 class Teller(object):
     """
     A Teller can be used to create transactions.
+
+    Currently doesn't deal w/ change
     """
 
-    def __init__(self, private_key):
+    def __init__(self, key):
         """
         Args:
             private_key: a PrivateKey
         """
-        self.private_key = private_key
-        self.public_key = private_key.get_public_key()
-        self.address = self.public_key.to_address()
+        self.key = key
+        self.private_key = key.PrivateKey()
+        self.public_key = key.PublicKey()
+        self.address = key.Address()
 
     def make_infiniti_tx(self, output, destination, amount, data, fee=100000):
         """
@@ -48,14 +52,14 @@ class Teller(object):
         tx.tx_out.append(txout)
 
         raw = TxSerializer().serialize(tx).encode('hex') + "01000000"
-        sig = self.private_key.sign(raw.decode('hex'))
+        sig = self.key.Sign_Tx(raw.decode('hex'))
 
         s = VariableStringField()
         s.parse(sig)
         txin.signature_script = s.serialize()
 
         s = VariableStringField()
-        s.parse(self.public_key.to_hex().decode('hex'))
+        s.parse(b2a_hex(self.PublicKey()))
         txin.signature_script += s.serialize()
         tx.tx_in = [txin]
 
@@ -76,7 +80,7 @@ class Teller(object):
         """
         txin = TxIn()
         txin.previous_output = output
-        txin.signature_script = pay_to_pubkey_hash(self.address)
+        txin.signature_script = pay_to_pubkey_hash(self.key.Address())
 
         txout = TxOut()
         txout.value = amount - fee
@@ -87,14 +91,14 @@ class Teller(object):
         tx.tx_out.append(txout)
 
         raw = TxSerializer().serialize(tx).encode('hex') + "01000000"
-        sig = self.private_key.sign(raw.decode('hex'))
+        sig = self.key.Sign_Tx(raw.decode('hex'))
 
         s = VariableStringField()
         s.parse(sig)
         txin.signature_script = s.serialize()
 
         s = VariableStringField()
-        s.parse(self.public_key.to_hex().decode('hex'))
+        s.parse(b2a_hex(self.PublicKey()))
         txin.signature_script += s.serialize()
         tx.tx_in = [txin]
 

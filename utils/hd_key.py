@@ -364,6 +364,16 @@ class HDKey(object):
         dec = pko.decrypt(enc)
         return six.text_type(dec, encoding='utf8')
 
+    def Sign_Tx(self, data):
+        """Digest and then sign the data."""
+        digest = hashlib.sha256(hashlib.sha256(data).digest()).digest()
+        sig = self.k.sign_digest(digest, sigencode=ecdsa.util.sigencode_der)
+        # 01 is hashtype
+        return sig + '\01'
+
+    def __repr__(self):
+        return "<HDKey hexkey=[%s]>" % b2a_hex(self.Identifier())
+
 
     # Debugging methods
     #
