@@ -4,6 +4,7 @@ certifi==2017.11.5
 cffi==1.11.5
 chardet==3.0.4
 configparser==3.5.0
+Django==1.11.15
 docutils==0.14
 ecdsa==0.13
 entrypoints==0.2.3
@@ -12,6 +13,7 @@ Flask==0.10.1
 Flask-HTTPAuth==2.2.1
 get==1.0.3
 idna==2.7
+image==1.5.24
 itsdangerous==0.24
 Jinja2==2.10
 json-rpc==1.6.0
@@ -20,6 +22,7 @@ leveldb==0.194
 lockfile==0.12.2
 MarkupSafe==1.0
 pid==2.2.0
+Pillow==5.2.0
 pkginfo==1.4.2
 post==1.0.2
 prettytable==0.7.2
@@ -33,6 +36,8 @@ python-daemon==2.2.0
 python-dateutil==2.2
 python-rocksdb==0.6.9
 python-taorpc==1.0
+pytz==2018.5
+qrencode==1.2
 query-string==1.0.2
 request==1.0.2
 requests==2.19.1
@@ -40,6 +45,7 @@ requests-toolbelt==0.8.0
 secp256k1==0.13.2
 service==0.5.1
 setproctitle==1.1.10
+sh==1.12.14
 six==1.11.0
 terminaltables==3.1.0
 tornado==4.0
