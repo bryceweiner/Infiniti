@@ -15,7 +15,6 @@ from utils.crypto import sign_and_verify, verify_message
 from p2p import version
 from utils.db import *
 import base64,ast
-from utils import lzw as _lzw
 
 import qrencode
 
