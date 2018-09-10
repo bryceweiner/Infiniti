@@ -23,7 +23,8 @@ class PeerThread (threading.Thread):
 		self.counter = self.threadID
 		self.logger = logger
 		self.client = InfinitiPeer(self.logger, peer_ip, peer_port, my_ip_address, my_port)
-		
+		self.uptime = 0
+
 	def stop(self):
 		self.logger.info("{0} - Node disconnected.".format(self.client.peerip))
 		self.client.exit = True
@@ -130,7 +131,11 @@ class InfinitiDaemon(Daemon):
 			sys.exit(0)
 
 		try:
-			self.uptime = float(self.get_status('uptime'))
+			uptime = self.get_status('uptime')
+			if uptime is None: 
+				self.uptime = 0
+			else:
+				self.uptime = float(uptime)
 			self.threads = []
 			self.counter = 0
 			self.rpc_server = RPCServerThread(self.counter, "RPCServer", self.logger)
