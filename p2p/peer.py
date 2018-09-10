@@ -6,6 +6,7 @@ from p2p.protocol.serializers import *
 from utils.db import open_db,writebatch
 from infiniti.params import *
 import infiniti.rpc as infiniti_rpc
+from infiniti.factories import process_mempool, process_block
 
 def intToBytes(n):
 	b = bytearray([0, 0, 0, 0])   # init
@@ -33,11 +34,8 @@ class InfinitiPeer(object):
 	db = None   
 	socket = None
 	mempool_manager = None
-	s_send_ping = None
-	s_get_peers = None
-	s_ping_event = None
-	s_peers_event = None
 	counter = 0
+	running = 0
 
 	def __init__(self, logger, peerip, port, my_ip_address, my_port):
 		self.logger = logger
@@ -95,12 +93,10 @@ class InfinitiPeer(object):
 	def send_ping(self): 
 		p = Ping()
 		self.send_message(p)
-		self.s_ping_event = self.s_send_ping.enter(617, 1, self.send_ping, ())
 
 	def get_peers(self):
 		ga = GetAddr()
 		self.send_message(ga)
-		self.s_peers_event = self.s_get_peers.enter(631, 1, self.get_peers, ())
 
 	def connected(self):
 		# Get list of peers
@@ -121,13 +117,15 @@ class InfinitiPeer(object):
 	def handle_tx(self, message_header, message):
 		self.logger.receive("Received new mempool transaction from {0}".format(self.peerip))
 		self.logger.receive("{0}".format(message))
+		process_mempool(message)
 
 	def handle_block(self, message_header, message):
 		self.logger.receive("Received new block {0} from {1}".format(message.calculate_hash(), self.peerip))
-		message.save(self.db)
+		process_block(message)
 
 	def handle_pong(self,messaage_header, message):
 		gp = SmsgPing()
+		# Only send SMsgPong if the client can relay secure messages
 		self.send_message(gp)
 
 	def handle_addr(self, message_header, message):
@@ -209,8 +207,14 @@ class InfinitiPeer(object):
 		This is the main method of the client, it will enter
 		in a receive/send loop.
 		"""
+		self.running = time.time()
+		# Send a ping every 30 minutes 
+		ping_time = 30 * 60
 		while not self.error and not self.exit:
 			try:
+				if time.time() > (self.running + ping_time):
+					self.running = time.time()
+					self.send_message(Ping())
 				data = self.socket.recv(1024 * 8)
 				if len(data) <= 0:
 					self.is_connected = False

@@ -23,7 +23,7 @@ class PeerThread (threading.Thread):
 		self.counter = self.threadID
 		self.logger = logger
 		self.client = InfinitiPeer(self.logger, peer_ip, peer_port, my_ip_address, my_port)
-
+		
 	def stop(self):
 		self.logger.info("{0} - Node disconnected.".format(self.client.peerip))
 		self.client.exit = True

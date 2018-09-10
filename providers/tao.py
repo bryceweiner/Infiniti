@@ -186,36 +186,6 @@ class TaoNode(Client, Provider):
             wallet.update_status("updated",str(int(time.time())))
             return json.loads(wallet.get_status("utxo"))
 
-    def select_inputs(self, address, amount):
-        '''finds apropriate utxo's to include in rawtx, while being careful
-        to never spend old transactions with a lot of coin age.
-        Argument is intiger, returns list of apropriate UTXO's'''
-        """
-        utxos = []
-        utxo_sum = Decimal(-0.01)  # starts from negative due to minimal fee
-        for tx in sorted(self.listunspent(address=address), key=itemgetter('confirmations')):
-
-            if tx["address"] not in (self.pa_parameters.P2TH_addr,
-                                     self.pa_parameters.test_P2TH_addr):
-
-                utxos.append(
-                        MutableTxIn(txid=tx['txid'],
-                                    txout=tx['vout'],
-                                    sequence=Sequence.max(),
-                                    script_sig=ScriptSig.empty())
-                         )
-
-                utxo_sum += Decimal(tx["amount"])
-                if utxo_sum >= amount:
-                    return {'utxos': utxos, 'total': utxo_sum}
-
-        if utxo_sum < amount:
-            raise InsufficientFunds("Insufficient funds.")
-
-        raise Exception("undefined behavior :.(")
-        """
-        pass 
-
     @property
     def is_testnet(self):
         '''check if node is configured to use testnet or mainnet'''
