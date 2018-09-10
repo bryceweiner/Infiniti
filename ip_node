@@ -54,6 +54,7 @@ class RPCServerThread(threading.Thread):
 		self.logger.info("RPC server shutdown.")
 
 class InfinitiDaemon(Daemon):
+	first_run = True
 	def load_peer_db(self):
 		# trigger garbage collection closing db
 		db = open_db(os.path.join(DATA_PATH,"peers"))
@@ -61,9 +62,13 @@ class InfinitiDaemon(Daemon):
 		q = []
 		items = db.iteritems()
 		items.seek_to_first()
+		min_error = 255
 		for k,v in list(items):
-			if int(v) > 255:
+			if self.first_run:
+				min_error = 54
+			if int(v) > min_error:
 				q.append((k,int(v)))
+		self.first_run = False
 		return q
 
 	def create_peer_db(self):

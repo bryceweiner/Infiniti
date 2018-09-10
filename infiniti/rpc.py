@@ -1,3 +1,4 @@
+from __future__ import print_function
 from wallet.wallet import Wallet
 import os
 import time
@@ -14,6 +15,10 @@ from utils.crypto import sign_and_verify, verify_message
 from p2p import version
 from utils.db import *
 import base64,ast
+from utils import lzw as _lzw
+
+import qrencode
+
 if USE_RPC:
 	_CONNECTION = TaoNode()
 else:
@@ -35,17 +40,21 @@ def importwallet(filename):
 	except:
 		return "Import failed! Filename name: {0}".format(filename)
 
-
 def exportwallet(wallet):
 	db = open_db(os.path.join(WALLET_PATH,wallet))
 	it = db.iteritems()
 	it.seek_to_first()
-	q = str(list(it))	
-	return json.dumps(
+	q = str(list(it))
+	q = json.dumps(
 		{ 
 			"wallet":wallet,
-			"data":base64.b64encode(q),
-		}, sort_keys=True, indent=4)
+			"data": q,
+		})
+	result = base64.b64encode(q.encode('ascii')).decode('ascii')
+	result = "ip://" + result
+	qr = qrencode.encode(result,qrencode.QR_ECLEVEL_L)
+	qr[2].save('qrcode_{0}_{1}_{2}.png'.format(qr[0],qr[1],wallet))
+	return result
 
 def get_status(k):
 	db = open_db(os.path.join(DATA_PATH,"status"))

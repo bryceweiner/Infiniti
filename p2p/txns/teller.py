@@ -19,6 +19,19 @@ class Teller(object):
         self.public_key = key.PublicKey()
         self.address = key.Address()
 
+    def make_change(inputs,change_address,amount,fee):
+        total_amount = amount + fee
+        input_value = 0
+        for o in inputs:
+            input_value += o.value
+        if input_value > (total_amount):
+            change = input_value - total_amount
+        if change > 0:
+            txout = TxOut()
+            txout.value = change
+            txout.pk_script = pay_to_pubkey_hash(change_address)
+            return txout
+        return None
     def make_infiniti_tx(self, output, destination, amount, change_address, data, fee=100000):
         """
         Create an OP_RETURN transaction.
@@ -33,31 +46,29 @@ class Teller(object):
         Returns:
             A Tx object suitable for serialization / transfer on the wire.
         """
+        tx = Tx()
+
         txin = TxIn()
         txin.previous_output = output
         txin.signature_script = pay_to_pubkey_hash(self.address)
-        total_amount = amount + fee
-        input_value = 0
-        for o in output:
-            input_value += o.value
-        if input_value > (total_amount):
-            change = input_value - total_amount
-        if change > 0:
-            txout = TxOut()
-            txout.value = change
-            txout.pk_script = pay_to_pubkey_hash(change_address)
+        tx.tx_in.append(txin)
+
 
         txout = TxOut()
         txout.value = amount - fee
         txout.pk_script = pay_to_pubkey_hash(destination)
+        txouts.append(txout)
+
+        change_txout = make_change(output,change_address,amount,fee)
+        if change_txout is not None:
+            txouts.append(change_txout)
 
         txout = TxOut()
         txout.value = 0
         txout.pk_script = op_return_script()
+        txouts.append(txout)
 
-        tx = Tx()
         tx.data = data
-        tx.tx_in.append(txin)
         tx.tx_out.append(txout)
 
         raw = TxSerializer().serialize(tx).encode('hex') + "01000000"
