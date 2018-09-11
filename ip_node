@@ -135,6 +135,13 @@ class InfinitiDaemon(Daemon):
 	def create_databases(self):
 		db = open_db(os.path.join(DATA_PATH,"status"),self.logger,False)
 
+	def sync_wallets(self):
+		# For every wallet, find it's height and sync it
+		wallet_list = [x[0] for x in os.walk(WALLET_PATH)]			
+		for wallet_name in wallet_list:
+			keys = wallet.Wallet(wallet_name).pubkeysOnly()
+
+
 	def run(self):
 		self.create_databases()
 		# Register the signal handlers
@@ -151,14 +158,17 @@ class InfinitiDaemon(Daemon):
 			uptime = self.get_status('uptime')
 			self.threads = []
 			self.counter = 0
+			self.last_peers = time.time() - 100
+
+			#self.sync_wallets()
+
 			self.rpc_server = RPCServerThread(self.counter, "RPCServer", self.logger)
 			self.rpc_server.start()
 			self.counter += 1
-			self.last_peers = time.time() - 100
 			wait_time = 0
 			cycle_end = time.time()
-			# Once an hour, try to reconnect to everyone
-			reclaim_peers = 60 * 60
+			# Once every 15 minutes, try to reconnect to everyone
+			reclaim_peers = 15 * 60
 			self.relcaim_peers = time.time()
 			#self.p2p_server = TaoServerThread('localhost',self.my_port,self.logger)
 			#self.p2p_server.start()

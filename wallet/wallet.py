@@ -8,6 +8,7 @@ from utils.crypto import *
 from utils.db import *
 from infiniti.params import *
 import itertools
+from binascii import b2a_hex
 MAX_ADDRESS = 0xFFFFFFFF
 
 class Key(object):
@@ -42,7 +43,7 @@ class Key(object):
         return "k.{0}.{1}".format(self.addr_type(),self.child())        
 
     def db_value(self):
-        return "{0}.{1}".format(self.address(),self.address(True))        
+        return "{0}".format(binascii.hexlify(pack_time(time.time())))     
 
     def address(self, ipaddr = False):
         if ipaddr:
@@ -175,10 +176,23 @@ class Wallet(object):
         self._primary = self._root.ChildKey(0)
         return self
 
-    def fromExtendedKey(self, xkey, public=False):
-        self._root = HDKey.fromExtendedKey(xkey, public)
-        self._primary = self._root.ChildKey(0)
-        return self
+    def pubkeysOnly(self):
+        """
+        Load all of the extended keys from the wallet
+        This way we can create any address necessary
+
+        Return a list of HDKeys
+        """
+        db = open_db(self._filename)
+        self.Keys = []
+        it = db.iteritems()
+        prefix = b'k.'
+        it.seek(prefix)
+        for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
+            addr,addr_type,child = key.split(".")
+            xpub = value.encode()
+
+        return HDKey.fromExtendedKey(xkey, public)
 
     def fromFile(self,passphrase=None):
         self.load(passphrase)
@@ -227,13 +241,17 @@ class Wallet(object):
         db = open_db(self._filename)
         db.put(k,v)
 
+    def dump_addresses(self):
+        pass
+
     def save(self):
         db = open_db(self._filename)
-        db.put("entropy",self.encrypted_entropy)
-        db.put("hmac",self._hmac)
-        db.put("updated",str(int(time.time())))
-        x = 0
         wb = writebatch()
+        wb.put("entropy",self.encrypted_entropy)
+        wb.put("hmac",self._hmac)
+        wb.put("updated",str(int(time.time())))
+        wb.put("_root",b2a_hex(self._root.ExtendedKey(private=False, encoded=False)))
+        x = 0
         for key in self.Keys:
             wb.put(key.db_key(),key.db_value())
         db.write(wb)

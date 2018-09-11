@@ -1,4 +1,4 @@
-import hashlib,base58,struct,ecdsa,base64,sys,secp256k1
+import hashlib,base58,struct,ecdsa,base64,sys,secp256k1,binascii,datetime
 from crypto import *
 from hashlib import sha256
 from secp256k1 import ALL_FLAGS
@@ -185,6 +185,12 @@ def hex_to_bin(hex):
     
 def bin_to_hex(string):
     return binascii.b2a_hex(string).decode('utf-8')
+
+def pack_time(_time=time.time()):
+    return binascii.unhexlify(str(int(time.mktime(time.gmtime(_time))) - time.timezone))
+
+def unpack_time(_time):
+    return datetime.utcfromtimestamp(int(binascii.hexlify(_time)))
 
 def nonce():
     """
