@@ -121,7 +121,7 @@ class InfinitiDaemon(Daemon):
 	def get_peer_count(self):
 		count = 0
 		for t in self.threads:
-			if t.exit == False and c.error == False:
+			if t.exit == False and t.error == False:
 				count += 1
 		return count
 
