@@ -1,4 +1,4 @@
-import rocksdb
+import rocksdb,time
 
 MAX_RETRY_CREATE_DB = 100
 
@@ -10,11 +10,15 @@ def open_db(filename, logger=None):
     db_path = db_default_path
     retry_count = 0
     db = None
+    save_err=None
     while db is None and retry_count < MAX_RETRY_CREATE_DB:
         try:
             db = rocksdb.DB(db_path, rocksdb.Options(create_if_missing=True))
         except Exception as err:
-            raise err
+            save_err=err
+            time.sleep(.1)
         retry_count += 1
+    if retry_count == MAX_RETRY_CREATE_DB:
+        raise save_err
     return db
 
