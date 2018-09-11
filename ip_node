@@ -82,7 +82,7 @@ class InfinitiDaemon(Daemon):
 	first_run = True
 	def load_peer_db(self):
 		# trigger garbage collection closing db
-		db = open_db(os.path.join(DATA_PATH,"peers"),self.logger)
+		db = open_db(os.path.join(DATA_PATH,"peers"),self.logger,read_only=True)
 		# turn the iterator into a list
 		q = []
 		items = db.iteritems()
@@ -109,7 +109,7 @@ class InfinitiDaemon(Daemon):
 		db.put(k,v)	
 
 	def get_status(self,k):
-		db = open_db(os.path.join(DATA_PATH,"status"),self.logger)
+		db = open_db(os.path.join(DATA_PATH,"status"),self.logger,read_only=True)
 		_v = db.get(k)
 		if _v is None:
 			db.put(k,str(_v))	
