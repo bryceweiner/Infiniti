@@ -92,6 +92,8 @@ class InfinitiDaemon(Daemon):
 		for k,v in list(items):
 			if self.first_run:
 				min_error = 54
+			if v is None:
+				v = 0
 			if int(v) >= min_error or int(v) == 0:
 				q.append((k,int(v)))
 		self.first_run = False
