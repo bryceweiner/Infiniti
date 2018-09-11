@@ -58,7 +58,7 @@ class InfinitiDaemon(Daemon):
 	first_run = True
 	def load_peer_db(self):
 		# trigger garbage collection closing db
-		db = open_db(os.path.join(DATA_PATH,"peers"))
+		db = open_db(os.path.join(DATA_PATH,"peers"),self.logger)
 		# turn the iterator into a list
 		q = []
 		items = db.iteritems()
@@ -74,18 +74,18 @@ class InfinitiDaemon(Daemon):
 
 	def create_peer_db(self):
 		# trigger garbage collection closing db
-		db = open_db(os.path.join(DATA_PATH,"peers"))
+		db = open_db(os.path.join(DATA_PATH,"peers"),self.logger)
 		wb = writebatch()
 		for seed in SEEDS:
 			wb.put(seed[0],str(seed[1]))
 		db.write(wb)
 
 	def update_status(self,k,v):
-		db = open_db(os.path.join(DATA_PATH,"status"))
+		db = open_db(os.path.join(DATA_PATH,"status"),self.logger)
 		db.put(k,v)	
 
 	def get_status(self,k):
-		db = open_db(os.path.join(DATA_PATH,"status"))
+		db = open_db(os.path.join(DATA_PATH,"status"),self.logger)
 		_v = db.get(k)
 		if _v is None:
 			db.put(k,str(_v))	

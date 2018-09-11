@@ -51,10 +51,10 @@ class InfinitiPeer(object):
 		self.my_port = my_port
 
 	def touch_peer(self):
-		db = open_db(peer_db_path)
+		db = open_db(peer_db_path,self.logger)
 		db.put(self.peerip+":"+str(self.port),str(int(time.time())))
 	def error_peer(self,errno):
-		db = open_db(peer_db_path)
+		db = open_db(peer_db_path,self.logger)
 		db.put(self.peerip+":"+str(self.port),str(errno))				
 
 	def message_received(self, message_header, message):
@@ -136,7 +136,7 @@ class InfinitiPeer(object):
 			message_header: The message header
 			message: The list of peers
 		"""
-		db = open_db(peer_db_path)
+		db = open_db(peer_db_path,self.logger)
 		wb = writebatch()
 		self.logger.info("Unpacking new peers from {0}".format(self.peerip))
 		try:
