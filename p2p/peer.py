@@ -51,12 +51,14 @@ class InfinitiPeer(object):
 		self.my_ip_address = my_ip_address
 		self.my_port = my_port
 
-	def touch_peer(self):
+	def touch_peer(self, value=0):
+		if int(value) == 0:
+			value == time.time()
 		db = open_db(peer_db_path,self.logger)
-		db.put(self.peerip+":"+str(self.port),str(int(time.time())))
+		db.put(self.peerip+":"+str(self.port),str(int(value)))
+
 	def error_peer(self,errno):
-		db = open_db(peer_db_path,self.logger)
-		db.put(self.peerip+":"+str(self.port),str(errno))				
+		self.touch_peer(value)				
 
 	def message_received(self, message_header, message):
 		"""
