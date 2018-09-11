@@ -20,7 +20,7 @@ class Key(object):
 
     def __init__(self,addr_type,child,key):
         self._child = child
-        self._addr_type = addr_type-HD_HARDEN
+        self._addr_type = addr_type
         self.key = key
 
     def child(self):
@@ -194,7 +194,7 @@ class Wallet(object):
         for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
             addr,addr_type,child = key.split(".")
             new_key = self._primary.ChildKey(int(addr_type)+HD_HARDEN).ChildKey(int(child))
-            key = Key(int(addr_type+HD_HARDEN),child,new_key)
+            key = Key(int(addr_type),child,new_key)
             key.addresses = (new_key.Address(),new_key.Address(True))
             self.Keys.append(key)
         return self.Keys
@@ -221,7 +221,7 @@ class Wallet(object):
             child += 1
         # m/0h/k/x
         new_key = k.ChildKey(child)
-        key = Key(int(addr_type+HD_HARDEN),child,new_key)
+        key = Key(int(addr_type),child,new_key)
         key.addresses = (new_key.Address(),new_key.Address(True))
         self.Keys.append(key)
         if save:
