@@ -162,15 +162,16 @@ class InfinitiPeer(object):
 			self.socket.connect((self.peerip, self.port))
 		except Exception as err:
 			self.logger.error(err)
-			self.error_peer(err.errno)
 			if self.is_connected:
 				self.logger.error("IP: {0} : Was Open Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
 				self.error = True
 				self.exit = False
+				self.error_peer(err.errno)
 			else:
 				self.logger.info("IP: {0} : Node offline.".format(self.peerip))
 				self.error = False
 				self.exit = True
+				self.error_peer(99)
 			self.is_connected = False 
 			return False
 		# send our version
