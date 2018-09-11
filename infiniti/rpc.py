@@ -146,7 +146,7 @@ def dumpaddress(fn,passphrase,address):
 	return json.dumps(d, sort_keys=True, indent=4)
 
 def listaddresses(fn):
-	wallet = Wallet(fn).fromFile()
+	wallet = Wallet(fn).pubkeysOnly()
 	a = []
 	for k in wallet.Keys:
 		a.append((k.address_type(),k.address(), k.address(True)) )

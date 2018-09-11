@@ -185,7 +185,7 @@ class Wallet(object):
         """
         db = open_db(self._filename)
         _root_xpubkey = binascii.unhexlify(db.get('_root'))
-        self._root = HDKey.fromExtendedKey(_root_xpubkey,True,False)
+        self._root = HDKey.fromExtendedKey(xkey=_root_xpubkey,public=True,encoded=False)
         self.Keys = []
         it = db.iteritems()
         prefix = b'k.'
@@ -280,11 +280,11 @@ class Wallet(object):
             addr,addr_type,child = key.split(".")
             if passphrase is not None:
                 _k = Key(int(addr_type),int(child),self._primary.ChildKey(int(addr_type+HD_HARDEN)).ChildKey(int(child)))
-                _k.addresses = value.split('.')
+                _k.addresses = (_k.key.Address(),_k.key.Address(True))
                 self.Keys.append(_k)     
             else:
                 _k = Key(int(addr_type),int(child),None)
                 _k.has_wif = False
-                _k.addresses = value.split('.')
+                _k.addresses = (_k.key.Address(),_k.key.Address(True))
                 self.Keys.append(_k)     
         self._filename = fn

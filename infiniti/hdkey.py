@@ -51,14 +51,15 @@ class HDKey(object):
         return key
 
     @staticmethod
-    def fromExtendedKey(xkey, public=False):
+    def fromExtendedKey(xkey, public=False,encoded=True):
         """
         Create a HDKey by importing from extended private or public key string
 
         If public is True, return a public-only key regardless of input type.
         """
         # Sanity checks
-        raw = base58.check_decode(xkey)
+        if encoded:
+            raw = base58.check_decode(xkey)
         if len(raw) != 78:
             raise ValueError("extended key format wrong length")
 
