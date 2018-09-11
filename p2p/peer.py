@@ -58,7 +58,7 @@ class InfinitiPeer(object):
 		db.put(self.peerip+":"+str(self.port),str(int(value)))
 
 	def error_peer(self,errno):
-		self.touch_peer(value)				
+		self.touch_peer(errno)				
 
 	def message_received(self, message_header, message):
 		"""
