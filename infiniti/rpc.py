@@ -16,7 +16,7 @@ from p2p import version
 from utils.db import *
 import base64,ast
 
-import qrencode
+import qrencode, threading
 
 if USE_RPC:
 	_CONNECTION = TaoNode()
