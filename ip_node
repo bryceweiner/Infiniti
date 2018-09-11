@@ -26,14 +26,15 @@ class PeerThread (threading.Thread):
 		self.uptime = 0
 
 	def stop(self):
-		self.logger.info("{0} - Thread stopping.".format(self.client.peerip))
 		self.client.exit = True
 		self.client.touch_peer()
+		self.logger.info("{0} - Thread stopping.".format(self.client.peerip))
 
 	def run(self):
 		self.client.open()
-		self.client.loop()  
-		self.logger.info("{0} - Thread closing.".format(self.client.peerip))
+		while (not self.client.error) and (not self.client.exit):
+			self.client.loop()  
+		self.logger.info("{0} - Thread closed.".format(self.client.peerip))
 
 class RPCServerThread(threading.Thread):
 	def __init__(self, threadID, name, logger, ip='localhost', port=8000):

@@ -174,6 +174,7 @@ class InfinitiPeer(object):
 			self.socket.close()
 		self.exit = True
 		self.is_connected = False 
+		self.logger.status_message("{0} - Connection closed.".format(self.peerip))
 
 	def handle_version(self, message_header, message):
 		"""
@@ -211,23 +212,21 @@ class InfinitiPeer(object):
 		self.running = time.time()
 		# Send a ping every 30 minutes 
 		ping_time = 30 * 60
-		while not self.error and not self.exit:
-			try:
-				if time.time() > (self.running + ping_time):
-					self.running = time.time()
-					self.send_message(Ping())
-				data = self.socket.recv(1024 * 8)
-				if len(data) <= 0:
-					self.is_connected = False
-					break
+		try:
+			if time.time() > (self.running + ping_time):
+				self.running = time.time()
+				self.send_message(Ping())
+			data = self.socket.recv(1024 * 8)
+			if len(data) <= 0:
+				self.is_connected = False
+			if self.is_connected:
 				self.buffer.write(data)
 				message_header, message = self.buffer.receive_message()
 				if message is not None:
 					self.message_received(message_header, message)
-			except socket.error as err:
-				self.error = True
-				self.is_connected = False 
-				self.error_peer(err.errno)
-				self.logger.error("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))				
-		self.logger.status_message("{0} - Node disconnected.".format(self.peerip))
+		except socket.error as err:
+			self.error = True
+			self.is_connected = False 
+			self.error_peer(err.errno)
+			self.logger.error("IP: {0} : Loop Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))				
 		self.close()
