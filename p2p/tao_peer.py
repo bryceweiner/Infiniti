@@ -191,7 +191,7 @@ class TaoInfinitiPeer(object):
 			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.socket.connect((self.peerip, self.port))
 		except Exception as err:
-			self.logger.error(err)
+			self.logger.error("{0} {1}".format(self.peerip, err))
 			return False
 		return True
 
@@ -240,5 +240,5 @@ class TaoPeerThread (TaoInfinitiPeer, threading.Thread):
 						if message is not None:
 							self.message_received(message_header, message)
 					except Exception as e:
-						self.logger.error(e)
+						self.logger.error("{0} {1}".format(self.peerip, err))
 						self.stop(err)
