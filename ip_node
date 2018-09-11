@@ -27,8 +27,10 @@ class PeerThread (InfinitiPeer, threading.Thread):
 		super(PeerThread, self).__init__(logger, peer_ip, peer_port, my_ip_address, my_port)
 
 	def stop(self,err=None):
+		if self.socket is not None:
+			self.socket.close()
 		self.exit = True
-		self.is_connected = False
+		self.is_connected = False 
 		if err is None:
 			self.touch_peer()
 			err=0
@@ -55,9 +57,7 @@ class PeerThread (InfinitiPeer, threading.Thread):
 						if message is not None:
 							self.message_received(message_header, message)
 					else:
-						self.stop()
-
-		self.logger.info("{0} - Connection closed.".format(self.peerip))
+						self.stop(0)
 
 class RPCServerThread(threading.Thread):
 	def __init__(self, threadID, name, logger, ip='localhost', port=8000):

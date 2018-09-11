@@ -89,9 +89,7 @@ class InfinitiPeer(object):
 		try:
 			self.socket.sendall(message.get_message(self.coin))
 		except socket.error as err:
-			self.error_peer(err.errno)
-			self.logger.error("IP: {0} : Send Message Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
-			self.error = True
+			self.stop(err.errno)
 
 	def send_ping(self): 
 		p = Ping()
@@ -164,17 +162,7 @@ class InfinitiPeer(object):
 			self.socket.connect((self.peerip, self.port))
 		except Exception as err:
 			self.logger.error(err)
-			if self.is_connected:
-				self.logger.error("IP: {0} : Was Open Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
-				self.error = True
-				self.exit = False
-				self.error_peer(err.errno)
-			else:
-				self.logger.info("IP: {0} : Node offline.".format(self.peerip))
-				self.error = False
-				self.exit = True
-				self.error_peer(99)
-			self.is_connected = False 
+				self.stop(99)
 			return False
 		# send our version
 		self.socket.settimeout(None)
@@ -182,13 +170,6 @@ class InfinitiPeer(object):
 		self.send_message(v)
 		self.is_connected = True
 		return True
-
-	def close(self):
-		if self.socket is not None:
-			self.socket.close()
-		self.exit = True
-		self.is_connected = False 
-		self.logger.status_message("{0} - Connection closed.".format(self.peerip))
 
 	def handle_version(self, message_header, message):
 		"""
