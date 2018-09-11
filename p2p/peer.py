@@ -101,7 +101,6 @@ class InfinitiPeer(object):
 
 	def connected(self):
 		# Get list of peers
-		self.is_connected = True
 		self.touch_peer()
 		self.logger.info("{0} - Connected.".format(self.peerip))
 		gp = GetAddr()
@@ -161,20 +160,25 @@ class InfinitiPeer(object):
 			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.socket.settimeout(60)
 			self.socket.connect((self.peerip, self.port))
-		except socket.error as err:
+		except Exception as err:
+			self.logger.error(err)
 			self.error_peer(err.errno)
 			if self.is_connected:
 				self.logger.error("IP: {0} : Was Open Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
+				self.error = True
+				self.exit = False
 			else:
-				self.logger.error("IP: {0} : Connection refused.".format(self.peerip))
-			self.error = True
+				self.logger.info("IP: {0} : Node offline.".format(self.peerip))
+				self.error = False
+				self.exit = True
 			self.is_connected = False 
-			return
+			return False
 		# send our version
 		self.socket.settimeout(None)
-		self.is_connected = True
 		v = Version(self.peerip, self.port, self.my_ip_address,self.my_port)
 		self.send_message(v)
+		self.is_connected = True
+		return True
 
 	def close(self):
 		if self.socket is not None:
@@ -210,9 +214,3 @@ class InfinitiPeer(object):
 		pong = Pong()
 		pong.nonce = message.nonce
 		self.send_message(pong)
-
-	def loop(self):
-		"""
-		This is the main method of the client, it will enter
-		in a receive/send loop.
-		"""

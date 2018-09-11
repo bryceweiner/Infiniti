@@ -31,32 +31,32 @@ class PeerThread (InfinitiPeer, threading.Thread):
 		self.logger.info("{0} - Thread stopping.".format(self.peerip))
 
 	def run(self):
-		self.open()
-		self.running = time.time()
-		# Send a ping every 30 minutes 
-		ping_time = 30 * 60
-		# Primary socket loop
-		while (not self.error) and (not self.exit):
-			if time.time() > (self.running + ping_time):
-				self.running = time.time()
-				self.send_message(Ping())
-			try:
-				if self.is_connected:
+		if self.open():
+			self.running = time.time()
+			# Send a ping every 30 minutes 
+			ping_time = 30 * 60
+			# Primary socket loop
+			while (not self.error) and (not self.exit):
+				if time.time() > (self.running + ping_time):
+					self.running = time.time()
+					self.send_message(Ping())
+				try:
 					data = self.socket.recv(1024 * 8)
-			except socket.error as err:
-				self.close()
-				self.error = True
-				self.is_connected = False 
-				self.error_peer(err.errno)
-				self.logger.error("IP: {0} : Loop Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))				
-			else:
-				if len(data) <= 0:
-					self.is_connected = False
-				if self.is_connected:
-					self.buffer.write(data)
-					message_header, message = self.buffer.receive_message()
-					if message is not None:
-						self.message_received(message_header, message)
+				except socket.error as err:
+					self.close()
+					self.error = True
+					self.is_connected = False 
+					self.error_peer(err.errno)
+					self.logger.error("IP: {0} : Loop Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))				
+				else:
+					if len(data) > 0:
+						self.buffer.write(data)
+						message_header, message = self.buffer.receive_message()
+						if message is not None:
+							self.message_received(message_header, message)
+					else:
+						self.is_connected = False
+						self.exit = True
 		self.logger.info("{0} - Thread closed.".format(self.peerip))
 
 class RPCServerThread(threading.Thread):
