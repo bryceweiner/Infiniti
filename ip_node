@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from p2p.tao_peer import TaoInfinitiPeer, TaoPeerThread
+from p2p.tao_peer import TaoPeerThread, TaoServerThread
 from infiniti.params import *
 from p2p.protocol.serializers import *
 from p2p.protocol.queues import MemPoolManager
@@ -39,6 +39,9 @@ class RPCServerThread(threading.Thread):
 class InfinitiDaemon(Daemon):
 	first_run = True
 	uptime = 0
+	p2p_sever = None
+	my_ip_address = 'localhost'
+	my_port = 0
 
 	def load_peer_db(self):
 		# trigger garbage collection closing db
@@ -48,13 +51,13 @@ class InfinitiDaemon(Daemon):
 		items = db.iteritems()
 		items.seek_to_first()
 		min_error = 61
-		error_delay = 24 * 60 * 60
+		error_delay = 60 * 60
 		for k,v in list(items):
 			if self.first_run:
 				min_error = 54
 			err,tme = v.split('.')
-			if int(tme) < int(time.time()) - error_delay:
-				if int(err) <= min_error:
+			if int(err) <= min_error:
+				if int(tme) < int(time.time()) - error_delay or err==0:
 					q.append((k,int(tme)))
 		self.first_run = False
 		return q
@@ -66,7 +69,6 @@ class InfinitiDaemon(Daemon):
 		for seed in SEEDS:
 			wb.put(seed[0],"0.0")
 		db.write(wb)
-
 
 	def update_status(self,k,v):
 		db = open_db(os.path.join(DATA_PATH,"status"),self.logger)
@@ -130,14 +132,17 @@ class InfinitiDaemon(Daemon):
 					self.threads.append(thread)
 		self.last_peers = time.time()                                                        
 
+	def create_databases(self):
+		db = open_db(os.path.join(DATA_PATH,"status"),self.logger,False)
+
 	def run(self):
 		self.create_databases()
 		# Register the signal handlers
 		self.logger.info("Infiniti starting.")
 		self.logger.info("Checking internet.")
 		try:
-			my_ip_address = load(urlopen('https://api.ipify.org/?format=json'))['ip'] 
-			my_port = param_query(NETWORK,'p2p_port')
+			self.my_ip_address = load(urlopen('https://api.ipify.org/?format=json'))['ip'] 
+			self.my_port = int(param_query(NETWORK,'p2p_port')) + 1
 		except Exception:
 			self.logger.error("Internet connection not found!")
 			sys.exit(0)
@@ -155,6 +160,8 @@ class InfinitiDaemon(Daemon):
 			# Once an hour, try to reconnect to everyone
 			reclaim_peers = 60 * 60
 			self.relcaim_peers = time.time()
+			#self.p2p_server = TaoServerThread('localhost',self.my_port,self.logger)
+			#self.p2p_server.start()
 			while not self.got_sigterm():
 				cycle_start = time.time() 
 				wait_time = cycle_end - cycle_start
@@ -163,7 +170,7 @@ class InfinitiDaemon(Daemon):
 					if time.time() > (self.relcaim_peers + reclaim_peers):
 						self.reclaim_peers = time.time()
 						self.first_run = True
-					self.get_peers(my_ip_address,my_port) 
+					self.get_peers(self.my_ip_address,self.my_port) 
 				time.sleep(1)
 				cycle_end = time.time()
 				cycle_time = time.time() - cycle_start
@@ -176,6 +183,7 @@ class InfinitiDaemon(Daemon):
 			sys.exit(1)
 
 	def halt(self):  # signum and frame are mandatory
+		#self.p2p_server.stop()
 		for t in self.threads:
 			t.stop(0,'halt')
 		self.rpc_server.stop()

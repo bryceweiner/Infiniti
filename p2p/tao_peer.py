@@ -25,7 +25,7 @@ def intToBytes(n):
 
 peer_db_path = os.path.join(DATA_PATH,"peers")
 
-class TaoInfinitiPeer(object):
+class TaoClient(object):
 	"""
 	The base class for a Tao network client.  This class
 	will handle the initial handshake and responding to pings,
@@ -52,9 +52,7 @@ class TaoInfinitiPeer(object):
 		self.my_ip_address = my_ip_address
 		self.my_port = my_port
 
-	def touch_peer(self, value=0):
-		if int(value) == 0:
-			value == time.time()
+	def touch_peer(self, value):
 		db = open_db(peer_db_path,self.logger)
 		timestr = str(int(time.time()))
 		valuestr = str(int(value))
@@ -104,7 +102,7 @@ class TaoInfinitiPeer(object):
 
 	def connected(self):
 		# Get list of peers
-		self.touch_peer()
+		self.touch_peer(0)
 		self.logger.info("{0} - Connected.".format(self.peerip))
 		gp = GetAddr()
 		self.send_message(gp)
@@ -146,7 +144,7 @@ class TaoInfinitiPeer(object):
 			for peer in message.addresses:
 				_p = db.get("{0}:{1}".format(peer.ip_address,str(peer.port)))
 				if _p is None:
-					wb.put("{0}:{1}".format(peer.ip_address,str(peer.port)),"{0}.{1}".format(str(0),str(int(time.time()))))
+					wb.put("{0}:{1}".format(peer.ip_address,str(peer.port)),"{0}.{1}".format(str(0),str(int(0))))
 				try:
 					infiniti_rpc._CONNECTION.addnode("{0}:{1}".format(peer.ip_address,str(peer.port)),'add')
 				except:
@@ -182,6 +180,7 @@ class TaoInfinitiPeer(object):
 		pong = Pong()
 		pong.nonce = message.nonce
 		self.send_message(pong)
+
 	def open(self):
 		# connect
 		try:
@@ -190,12 +189,13 @@ class TaoInfinitiPeer(object):
 			self.logger.info("Connecting to {0}:{1}".format(self.peerip,str(self.port)))
 			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.socket.connect((self.peerip, self.port))
+			return True
 		except Exception as err:
 			self.logger.error("{0} {1}".format(self.peerip, err))
+			self.error_peer(err.errno)
 			return False
-		return True
 
-class TaoPeerThread (TaoInfinitiPeer, threading.Thread):
+class TaoPeerThread (TaoClient, threading.Thread):
 	def __init__(self, threadID, name, logger, peer_ip, peer_port, my_ip_address, my_port):
 		threading.Thread.__init__(self)
 		self.threadID = threadID
@@ -219,6 +219,7 @@ class TaoPeerThread (TaoInfinitiPeer, threading.Thread):
 
 	def run(self):
 		if self.open():
+			self.touch_peer(0)
 			# send our version
 			self.is_connected = True
 			self.send_message(Version(self.peerip, self.port, self.my_ip_address,self.my_port))
@@ -242,3 +243,31 @@ class TaoPeerThread (TaoInfinitiPeer, threading.Thread):
 					except Exception as e:
 						self.logger.error("{0} {1}".format(self.peerip, err))
 						self.stop(err)
+
+class TaoServerThread(threading.Thread):
+	def __init__(self, host, port,logger):
+		threading.Thread.__init__(self)
+		self.host = host
+		self.port = port
+		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		self.socket.bind((self.host, self.port))
+		self.exit = False
+		self.error = False
+		self.clients = []
+		self.logger = logger
+
+	def run(self):
+		self.socket.listen(5)
+		while not self.exit and not self.error:
+			for q in self.clients:
+				if not q.isAlive():
+					self.clients.remove(q)
+			c, a = self.sock.accept()
+			c.settimeout(1800) # 30 minutes
+			self.clients.append(threading.Thread(target = TaoClient,args = (self.logger, a, None, self.host, self.port)).start())
+
+	def stop(self):
+		self.exit = True
+		self.error = False
+
