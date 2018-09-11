@@ -209,13 +209,7 @@ class InfinitiPeer(object):
 		This is the main method of the client, it will enter
 		in a receive/send loop.
 		"""
-		self.running = time.time()
-		# Send a ping every 30 minutes 
-		ping_time = 30 * 60
 		try:
-			if time.time() > (self.running + ping_time):
-				self.running = time.time()
-				self.send_message(Ping())
 			data = self.socket.recv(1024 * 8)
 			if len(data) <= 0:
 				self.is_connected = False

@@ -32,7 +32,13 @@ class PeerThread (threading.Thread):
 
 	def run(self):
 		self.client.open()
+		self.client.running = time.time()
+		# Send a ping every 30 minutes 
+		ping_time = 30 * 60
 		while (not self.client.error) and (not self.client.exit):
+			if time.time() > (self.client.running + ping_time):
+				self.client.running = time.time()
+				self.client.send_message(Ping())
 			self.client.loop()  
 		self.logger.info("{0} - Thread closed.".format(self.client.peerip))
 
