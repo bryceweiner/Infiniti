@@ -184,15 +184,20 @@ class Wallet(object):
         Return a list of HDKeys
         """
         db = open_db(self._filename)
+        _root_xpubkey = binascii.unhexlify(db.get('_root'))
+        self._root = HDKey.fromExtendedKey(_root_xpubkey,True,False)
         self.Keys = []
         it = db.iteritems()
         prefix = b'k.'
-        it.seek(prefix)
+        it.seek(prefix)        
+        self._primary = _root.ChildKey(0)
         for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
             addr,addr_type,child = key.split(".")
-            xpub = value.encode()
-
-        return HDKey.fromExtendedKey(xkey, public)
+            new_key = self._primary.ChildKey(int(addr_type)+HD_HARDEN).ChildKey(int(child))
+            key = Key(int(addr_type+HD_HARDEN),child,new_key)
+            key.addresses = (new_key.Address(),new_key.Address(True))
+            self.Keys.append(key)
+        return self.Keys
 
     def fromFile(self,passphrase=None):
         self.load(passphrase)
@@ -207,7 +212,7 @@ class Wallet(object):
             create_address is a little tricky because it automatically moves to m/0h first
             Addresses are then always m/0h/0/x or 1/x for change addresses
         """
-        k = self._primary.ChildKey(int(addr_type))
+        k = self._primary.ChildKey(int(addr_type)+HD_HARDEN)
         if child is None:
             # Generate leaves sequentially
             child = 0
@@ -250,7 +255,7 @@ class Wallet(object):
         wb.put("entropy",self.encrypted_entropy)
         wb.put("hmac",self._hmac)
         wb.put("updated",str(int(time.time())))
-        wb.put("_root",b2a_hex(self._root.ExtendedKey(private=False, encoded=False)))
+        wb.put("_root",binascii.hexlify(self._root.ExtendedKey(private=False, encoded=False)))
         x = 0
         for key in self.Keys:
             wb.put(key.db_key(),key.db_value())
@@ -274,11 +279,11 @@ class Wallet(object):
         for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
             addr,addr_type,child = key.split(".")
             if passphrase is not None:
-                _k = Key(int(addr_type+HD_HARDEN),int(child),self._primary.ChildKey(int(addr_type+HD_HARDEN)).ChildKey(int(child)))
+                _k = Key(int(addr_type),int(child),self._primary.ChildKey(int(addr_type+HD_HARDEN)).ChildKey(int(child)))
                 _k.addresses = value.split('.')
                 self.Keys.append(_k)     
             else:
-                _k = Key(int(addr_type+HD_HARDEN),int(child),None)
+                _k = Key(int(addr_type),int(child),None)
                 _k.has_wif = False
                 _k.addresses = value.split('.')
                 self.Keys.append(_k)     
