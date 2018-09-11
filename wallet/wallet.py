@@ -19,7 +19,7 @@ class Key(object):
 
     def __init__(self,addr_type,child,key):
         self._child = child
-        self._addr_type = addr_type
+        self._addr_type = addr_type-HD_HARDEN
         self.key = key
 
     def child(self):
