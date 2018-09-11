@@ -146,7 +146,7 @@ class TaoInfinitiPeer(object):
 			for peer in message.addresses:
 				_p = db.get("{0}:{1}".format(peer.ip_address,str(peer.port)))
 				if _p is None:
-					wb.put("{0}:{1}".format(peer.ip_address,str(peer.port)),str(int(time.time())))
+					wb.put("{0}:{1}".format(peer.ip_address,str(peer.port)),"{0}.{1}".format(str(0),str(int(time.time()))))
 				try:
 					infiniti_rpc._CONNECTION.addnode("{0}:{1}".format(peer.ip_address,str(peer.port)),'add')
 				except:

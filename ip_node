@@ -103,10 +103,6 @@ class InfinitiDaemon(Daemon):
 	def get_peers(self,my_ip_address, my_port):
 		# Clean up dead threads 
 		self.logger.info("Network spider looking for peers.")        
-		for t in self.threads:
-			if t.exit or t.error:
-				t.stop()
-				self.threads.remove(t)
 		peers = self.load_peer_db() 
 		if len(peers) == 0:
 			self.create_peer_db()
@@ -133,9 +129,6 @@ class InfinitiDaemon(Daemon):
 					thread.start()
 					self.threads.append(thread)
 		self.last_peers = time.time()                                                        
-
-	def create_databases(self):
-		db = open_db(os.path.join(DATA_PATH,"status"),self.logger,False)
 
 	def run(self):
 		self.create_databases()
