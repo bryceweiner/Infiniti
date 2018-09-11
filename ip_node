@@ -55,13 +55,10 @@ class PeerThread (InfinitiPeer, threading.Thread):
 				r, _, _ = select.select([self.socket], [], [])
 				if r:
 					data = self.socket.recv(1024 * 8)
-					if len(data) > 0:
-						self.buffer.write(data)
-						message_header, message = self.buffer.receive_message()
-						if message is not None:
-							self.message_received(message_header, message)
-					else:
-						self.stop(0)
+					self.buffer.write(data)
+					message_header, message = self.buffer.receive_message()
+					if message is not None:
+						self.message_received(message_header, message)
 
 class RPCServerThread(threading.Thread):
 	def __init__(self, threadID, name, logger, ip='localhost', port=8000):
