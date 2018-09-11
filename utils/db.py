@@ -14,9 +14,7 @@ def open_db(filename, logger=None):
         try:
             db = rocksdb.DB(db_path, rocksdb.Options(create_if_missing=True))
         except Exception as err:
-            if logger is not None:
-                logger.error("DB: {0}{1}".format(err.errno, err.strerror))
-            raise Exception
+            raise err
         retry_count += 1
     return db
 
