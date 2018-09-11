@@ -1,4 +1,4 @@
-import socket, time
+import socket, time,select
 
 from p2p.protocol.exceptions import NodeDisconnectException
 from p2p.protocol.buffer import ProtocolBuffer
@@ -56,7 +56,9 @@ class TaoInfinitiPeer(object):
 		if int(value) == 0:
 			value == time.time()
 		db = open_db(peer_db_path,self.logger)
-		db.put(self.peerip+":"+str(self.port),str(int(value)))
+		timestr = str(int(time.time()))
+		valuestr = str(int(value))
+		db.put("{0}:{1}".format(self.peerip,str(self.port)),"{0}.{1}".format(valuestr,timestr))
 
 	def error_peer(self,errno):
 		self.touch_peer(errno)				
@@ -90,7 +92,7 @@ class TaoInfinitiPeer(object):
 		try:
 			self.socket.sendall(message.get_message(self.coin))
 		except socket.error as err:
-			self.stop(err.errno)
+			self.stop(err.errno,'send_message')
 
 	def send_ping(self): 
 		p = Ping()
@@ -151,24 +153,7 @@ class TaoInfinitiPeer(object):
 					pass
 			db.write(wb)
 		except Exception as e:
-			self.stop(e.errno)
-
-	def open(self):
-		# connect
-		try:
-			self.logger.info("Connecting to {0}:{1}".format(self.peerip,str(self.port)))
-			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			self.socket.settimeout(60)
-			self.socket.connect((self.peerip, self.port))
-		except Exception as err:
-			self.stop(e.errno)
-			return False
-		# send our version
-		self.socket.settimeout(None)
-		v = Version(self.peerip, self.port, self.my_ip_address,self.my_port)
-		self.send_message(v)
-		self.is_connected = True
-		return True
+			self.stop(e.errno,'handle_addr')
 
 	def handle_version(self, message_header, message):
 		"""
@@ -197,6 +182,18 @@ class TaoInfinitiPeer(object):
 		pong = Pong()
 		pong.nonce = message.nonce
 		self.send_message(pong)
+	def open(self):
+		# connect
+		try:
+			self.error = False
+			self.exit = False
+			self.logger.info("Connecting to {0}:{1}".format(self.peerip,str(self.port)))
+			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			self.socket.connect((self.peerip, self.port))
+		except Exception as err:
+			self.logger.error(err)
+			return False
+		return True
 
 class TaoPeerThread (TaoInfinitiPeer, threading.Thread):
 	def __init__(self, threadID, name, logger, peer_ip, peer_port, my_ip_address, my_port):
@@ -208,39 +205,40 @@ class TaoPeerThread (TaoInfinitiPeer, threading.Thread):
 		self.uptime = 0
 		super(TaoPeerThread, self).__init__(logger, peer_ip, peer_port, my_ip_address, my_port)
 
-	def stop(self,err=None):
+	def stop(self,err=0,source=''):
 		self.exit = True
 		self.is_connected = False 
-		if err is None:
-			err=60
-		else:
-			self.error=True
-		self.error_peer(err)
-
+		if err > 0 : self.error = True
 		if self.error:
-			self.logger.error("{0} - Thread stopping. Code: {1}".format(self.peerip,err))
+			self.error_peer(err)
+			self.logger.error("{0} - Thread stopping. Code: {1} Func: {2}".format(self.peerip,err,source))
 		else:
-			self.logger.info("{0} - Thread stopping. Code: {1}".format(self.peerip,err))
+			self.logger.info("{0} - Thread stopping. Code: {1}".format(self.peerip,err,source))
 		if self.socket is not None:
 			self.socket.close()
 
 	def run(self):
 		if self.open():
+			# send our version
+			self.is_connected = True
+			self.send_message(Version(self.peerip, self.port, self.my_ip_address,self.my_port))
 			self.running = time.time()
 			# Send a ping every 30 minutes 
 			ping_time = 30 * 60
 			# Primary socket loop
-			while (not self.error) and (not self.exit):
+			while (not self.error) and (not self.exit) and (self.is_connected):
 				if time.time() > (self.running + ping_time):
 					self.running = time.time()
 					self.send_message(Ping())
+
 				r, _, _ = select.select([self.socket], [], [])
 				if r:
-					data = self.socket.recv(1024 * 8)
-					self.buffer.write(data)
-					message_header, message = self.buffer.receive_message()
-					if message is not None:
-						self.message_received(message_header, message)
-		else:
-			self.stop(50)
-
+					try:
+						data = self.socket.recv(1024 * 8)
+						self.buffer.write(data)
+						message_header, message = self.buffer.receive_message()
+						if message is not None:
+							self.message_received(message_header, message)
+					except Exception as e:
+						self.logger.error(e)
+						self.stop(err)

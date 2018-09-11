@@ -39,6 +39,7 @@ class RPCServerThread(threading.Thread):
 class InfinitiDaemon(Daemon):
 	first_run = True
 	uptime = 0
+
 	def load_peer_db(self):
 		# trigger garbage collection closing db
 		db = open_db(os.path.join(DATA_PATH,"peers"),self.logger)
@@ -46,14 +47,15 @@ class InfinitiDaemon(Daemon):
 		q = []
 		items = db.iteritems()
 		items.seek_to_first()
-		min_error = 255
+		min_error = 61
+		error_delay = 24 * 60 * 60
 		for k,v in list(items):
 			if self.first_run:
 				min_error = 54
-			if v == "None":
-				v = 0
-			if int(v) >= min_error or int(v) == 0:
-				q.append((k,int(v)))
+			err,tme = v.split('.')
+			if int(tme) < int(time.time()) - error_delay:
+				if int(err) <= min_error:
+					q.append((k,int(tme)))
 		self.first_run = False
 		return q
 
@@ -62,7 +64,7 @@ class InfinitiDaemon(Daemon):
 		db = open_db(os.path.join(DATA_PATH,"peers"),self.logger)
 		wb = writebatch()
 		for seed in SEEDS:
-			wb.put(seed[0],str(seed[1]))
+			wb.put(seed[0],"0.0")
 		db.write(wb)
 
 
@@ -78,6 +80,10 @@ class InfinitiDaemon(Daemon):
 		return _v
 
 	def get_peer_thread_count(self):
+		# collect garbage
+		for t in self.threads:
+			if not t.isAlive():
+				self.threads.remove(t)
 		return len(self.threads)
 
 	def get_connecting_count(self):
@@ -107,7 +113,9 @@ class InfinitiDaemon(Daemon):
 			peers = self.load_peer_db() 
 		self.logger.info("{0} peers loaded.".format(len(peers)))
 		self.logger.info("{0} threads running.".format(self.get_peer_thread_count()))
+		self.update_status('in_process_peers',str(self.get_connecting_count()))
 		self.logger.info("{0} peers in process.".format(self.get_connecting_count()))
+		self.update_status('connected_peers',str(self.get_connected_peer_count()))
 		self.logger.info("{0} peers connected.".format(self.get_connected_peer_count()))
 		for k,v in peers:
 			if v > -1:
@@ -158,16 +166,6 @@ class InfinitiDaemon(Daemon):
 				cycle_start = time.time() 
 				wait_time = cycle_end - cycle_start
 				self.uptime += wait_time
-				connected_peers = 0                                                       
-				# collect garbage
-				for t in self.threads:
-					if not t.isAlive() or t.error or t.exit:
-						t.stop()
-						self.threads.remove(t)
-					else:
-						connected_peers += 1
-				self.update_status('connected_peers',str(connected_peers))
-				self.update_status('in_process_peers',str(len(self.threads)))
 				if self.last_peers < time.time() - 60: # try new peers every 60 seconds
 					if time.time() > (self.relcaim_peers + reclaim_peers):
 						self.reclaim_peers = time.time()
@@ -186,7 +184,7 @@ class InfinitiDaemon(Daemon):
 
 	def halt(self):  # signum and frame are mandatory
 		for t in self.threads:
-			t.stop()
+			t.stop(0,'halt')
 		self.rpc_server.stop()
 		self.logger.info("Infiniti Shutting down.")
 
