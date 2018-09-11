@@ -157,14 +157,14 @@ class Wallet(object):
         entropy_from_seed = self.entropy_from_seed(seed,nonce)
         self.encrypt_entropy(sha256(passphrase).digest(),entropy_from_seed)
         self._root = HDKey.fromEntropy(entropy_from_seed, public, testnet)
-        self._primary = self._root.ChildKey(0+HD_HARDEN)
+        self._primary = self._root.ChildKey(0)
         self._filename = os.path.join(WALLET_PATH, self._fn())
         self.save()
         return self
 
     def fromEntropy(self, entropy, wallet_path = '.', public=False, testnet=False):
         self._root = HDKey.fromEntropy(entropy, public, testnet)
-        self._primary = self._root.ChildKey(0+HD_HARDEN)
+        self._primary = self._root.ChildKey(0)
         return self
 
     def fromEncryptedEntropy(self, passphrase, entropy, wallet_path = '.', public=False, testnet=False):
@@ -172,12 +172,12 @@ class Wallet(object):
         p = sha256(passphrase).digest()        
         d = self.decrypt_entropy(p)
         self._root = HDKey.fromEntropy(d, public, testnet)
-        self._primary = self._root.ChildKey(0+HD_HARDEN)
+        self._primary = self._root.ChildKey(0)
         return self
 
     def fromExtendedKey(self, xkey, public=False):
         self._root = HDKey.fromExtendedKey(xkey, public)
-        self._primary = self._root.ChildKey(0+HD_HARDEN)
+        self._primary = self._root.ChildKey(0)
         return self
 
     def fromFile(self,passphrase=None):
@@ -202,7 +202,7 @@ class Wallet(object):
             child += 1
         # m/0h/k/x
         new_key = k.ChildKey(child)
-        key = Key(int(addr_type),child,new_key)
+        key = Key(int(addr_type+HD_HARDEN),child,new_key)
         key.addresses = (new_key.Address(),new_key.Address(True))
         self.Keys.append(key)
         if save:
@@ -256,11 +256,11 @@ class Wallet(object):
         for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
             addr,addr_type,child = key.split(".")
             if passphrase is not None:
-                _k = Key(int(addr_type),int(child),self._primary.ChildKey(int(addr_type)).ChildKey(int(child)))
+                _k = Key(int(addr_type+HD_HARDEN),int(child),self._primary.ChildKey(int(addr_type+HD_HARDEN)).ChildKey(int(child)))
                 _k.addresses = value.split('.')
                 self.Keys.append(_k)     
             else:
-                _k = Key(int(addr_type),int(child),None)
+                _k = Key(int(addr_type+HD_HARDEN),int(child),None)
                 _k.has_wif = False
                 _k.addresses = value.split('.')
                 self.Keys.append(_k)     
