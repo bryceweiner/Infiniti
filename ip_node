@@ -27,20 +27,20 @@ class PeerThread (InfinitiPeer, threading.Thread):
 		super(PeerThread, self).__init__(logger, peer_ip, peer_port, my_ip_address, my_port)
 
 	def stop(self,err=None):
-		if self.socket is not None:
-			self.socket.close()
 		self.exit = True
 		self.is_connected = False 
 		if err is None:
-			self.touch_peer()
-			err=0
+			err=60
 		else:
 			self.error=True
-			self.error_peer(err)
+		self.error_peer(err)
+
 		if self.error:
 			self.logger.error("{0} - Thread stopping. Code: {1}".format(self.peerip,err))
 		else:
 			self.logger.info("{0} - Thread stopping. Code: {1}".format(self.peerip,err))
+		if self.socket is not None:
+			self.socket.close()
 
 	def run(self):
 		if self.open():
@@ -59,6 +59,8 @@ class PeerThread (InfinitiPeer, threading.Thread):
 					message_header, message = self.buffer.receive_message()
 					if message is not None:
 						self.message_received(message_header, message)
+		else:
+			self.stop(50)
 
 class RPCServerThread(threading.Thread):
 	def __init__(self, threadID, name, logger, ip='localhost', port=8000):
@@ -143,6 +145,7 @@ class InfinitiDaemon(Daemon):
 		self.logger.info("Network spider looking for peers.")        
 		for t in self.threads:
 			if t.exit or t.error:
+				t.stop()
 				self.threads.remove(t)
 		peers = self.load_peer_db() 
 		if len(peers) == 0:
@@ -205,6 +208,7 @@ class InfinitiDaemon(Daemon):
 				# collect garbage
 				for t in self.threads:
 					if not t.isAlive() or t.error or t.exit:
+						t.stop()
 						self.threads.remove(t)
 					else:
 						connected_peers += 1
