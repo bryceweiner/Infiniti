@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from p2p.peer import InfinitiPeer
+from p2p.tao_peer import TaoInfinitiPeer
 from infiniti.params import *
 from p2p.protocol.serializers import *
 from p2p.protocol.queues import MemPoolManager
@@ -16,7 +16,7 @@ from urllib2 import urlopen
 
 from utils.daemonize import Daemon
 
-class PeerThread (InfinitiPeer, threading.Thread):
+class TaoPeerThread (TaoInfinitiPeer, threading.Thread):
 	def __init__(self, threadID, name, logger, peer_ip, peer_port, my_ip_address, my_port):
 		threading.Thread.__init__(self)
 		self.threadID = threadID
@@ -24,7 +24,7 @@ class PeerThread (InfinitiPeer, threading.Thread):
 		self.counter = self.threadID
 		self.logger = logger
 		self.uptime = 0
-		super(PeerThread, self).__init__(logger, peer_ip, peer_port, my_ip_address, my_port)
+		super(TaoPeerThread, self).__init__(logger, peer_ip, peer_port, my_ip_address, my_port)
 
 	def stop(self,err=None):
 		self.exit = True
@@ -166,7 +166,7 @@ class InfinitiDaemon(Daemon):
 						peer_found = True
 				if not peer_found:
 					self.counter += 1
-					thread = PeerThread(self.counter, "Peer-" + str(self.counter), self.logger, peer_ip, peer_port, my_ip_address, my_port)
+					thread = TaoPeerThread(self.counter, "Peer-" + str(self.counter), self.logger, peer_ip, peer_port, my_ip_address, my_port)
 					thread.daemon=True
 					thread.start()
 					self.threads.append(thread)
