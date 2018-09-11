@@ -16,6 +16,7 @@ import infiniti.logger as logger
 import sys, os, re, shutil, json, urllib, urllib2, BaseHTTPServer
 from infiniti.params import *
 import infiniti.rpc as infiniti_rpc
+import threading
 
 # Fix issues with decoding HTTP responses
 reload(sys)
@@ -146,8 +147,24 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
 				return route
 		return None
 
-class RPCServerThread(ThreadingMixIn, HTTPServer):
-	"""Handle requests in a separate thread."""
+class RPCServerThread(threading.Thread, HTTPServer):
+	def __init__(self, threadID, name, logger, ip='localhost', port=8000):
+		self.threadID = threadID
+		self.name = name
+		self.counter = self.threadID
+		self.rpc_ip = ip
+		self.rpc_port = port
+		self.logger = logger
+		self.rpc_server = RPCServer(self.logger)
+		self.halt = False
+
+	def run(self):
+		self.rpc_server.start(self.rpc_ip,self.rpc_port)
+
+	def stop(self):
+		self.halt = True
+		self.rpc_server.httpd.shutdown()
+		self.logger.info("RPC server shutdown.")
 
 class RPCServer(object):
 	def __init__(self,logger):

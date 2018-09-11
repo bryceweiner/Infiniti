@@ -186,23 +186,3 @@ def walletbalance(fn,passphrase):
 def listwallets():
 	return [f for f in listdir(WALLET_PATH) if True]
 
-class RPCServerThread(threading.Thread):
-	def __init__(self, threadID, name, logger, ip='localhost', port=8000):
-		threading.Thread.__init__(self)
-		self.threadID = threadID
-		self.name = name
-		self.counter = self.threadID
-		self.rpc_ip = ip
-		self.rpc_port = port
-		self.logger = logger
-		self.rpc_server = RPCServer(self.logger)
-		self.halt = False
-
-	def run(self):
-		self.rpc_server.start(self.rpc_ip,self.rpc_port)
-
-	def stop(self):
-		self.halt = True
-		self.rpc_server.httpd.shutdown()
-		self.logger.info("RPC server shutdown.")
-
