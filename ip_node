@@ -35,6 +35,7 @@ class PeerThread (InfinitiPeer, threading.Thread):
 		self.running = time.time()
 		# Send a ping every 30 minutes 
 		ping_time = 30 * 60
+		# Primary socket loop
 		while (not self.error) and (not self.exit):
 			if time.time() > (self.running + ping_time):
 				self.running = time.time()
@@ -188,6 +189,9 @@ class InfinitiDaemon(Daemon):
 			self.last_peers = time.time() - 100
 			wait_time = 0
 			cycle_end = time.time()
+			# Once an hour, try to reconnect to everyone
+			reclaim_peers = 60 * 60
+			self.relcaim_peers = time.time()
 			while not self.got_sigterm():
 				cycle_start = time.time() 
 				wait_time = cycle_end - cycle_start
@@ -202,6 +206,9 @@ class InfinitiDaemon(Daemon):
 				self.update_status('connected_peers',str(connected_peers))
 				self.update_status('in_process_peers',str(len(self.threads)))
 				if self.last_peers < time.time() - 60: # try new peers every 60 seconds
+					if time.time() > (self.relcaim_peers + reclaim_peers):
+						self.reclaim_peers = time.time()
+						self.first_run = True
 					self.get_peers(my_ip_address,my_port) 
 				time.sleep(1)
 				cycle_end = time.time()
