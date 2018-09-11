@@ -1,9 +1,9 @@
 #!/usr/bin/python
-from p2p.tao_peer import TaoInfinitiPeer
+from p2p.tao_peer import TaoInfinitiPeer, TaoPeerThread
 from infiniti.params import *
 from p2p.protocol.serializers import *
 from p2p.protocol.queues import MemPoolManager
-from p2p.rpc import RPCServer
+from p2p.rpc import RPCServer, RPCServerThread
 import threading, socket
 import sys, traceback
 import sched, time, os
@@ -15,72 +15,6 @@ from json import load
 from urllib2 import urlopen
 
 from utils.daemonize import Daemon
-
-class TaoPeerThread (TaoInfinitiPeer, threading.Thread):
-	def __init__(self, threadID, name, logger, peer_ip, peer_port, my_ip_address, my_port):
-		threading.Thread.__init__(self)
-		self.threadID = threadID
-		self.name = name
-		self.counter = self.threadID
-		self.logger = logger
-		self.uptime = 0
-		super(TaoPeerThread, self).__init__(logger, peer_ip, peer_port, my_ip_address, my_port)
-
-	def stop(self,err=None):
-		self.exit = True
-		self.is_connected = False 
-		if err is None:
-			err=60
-		else:
-			self.error=True
-		self.error_peer(err)
-
-		if self.error:
-			self.logger.error("{0} - Thread stopping. Code: {1}".format(self.peerip,err))
-		else:
-			self.logger.info("{0} - Thread stopping. Code: {1}".format(self.peerip,err))
-		if self.socket is not None:
-			self.socket.close()
-
-	def run(self):
-		if self.open():
-			self.running = time.time()
-			# Send a ping every 30 minutes 
-			ping_time = 30 * 60
-			# Primary socket loop
-			while (not self.error) and (not self.exit):
-				if time.time() > (self.running + ping_time):
-					self.running = time.time()
-					self.send_message(Ping())
-				r, _, _ = select.select([self.socket], [], [])
-				if r:
-					data = self.socket.recv(1024 * 8)
-					self.buffer.write(data)
-					message_header, message = self.buffer.receive_message()
-					if message is not None:
-						self.message_received(message_header, message)
-		else:
-			self.stop(50)
-
-class RPCServerThread(threading.Thread):
-	def __init__(self, threadID, name, logger, ip='localhost', port=8000):
-		threading.Thread.__init__(self)
-		self.threadID = threadID
-		self.name = name
-		self.counter = self.threadID
-		self.rpc_ip = ip
-		self.rpc_port = port
-		self.logger = logger
-		self.rpc_server = RPCServer(self.logger)
-		self.halt = False
-
-	def run(self):
-		self.rpc_server.start(self.rpc_ip,self.rpc_port)
-
-	def stop(self):
-		self.halt = True
-		self.rpc_server.httpd.shutdown()
-		self.logger.info("RPC server shutdown.")
 
 class InfinitiDaemon(Daemon):
 	first_run = True

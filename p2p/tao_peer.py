@@ -7,6 +7,7 @@ from utils.db import open_db,writebatch
 from infiniti.params import *
 import infiniti.rpc as infiniti_rpc
 from infiniti.factories import process_mempool, process_block
+import threading
 
 def intToBytes(n):
 	b = bytearray([0, 0, 0, 0])   # init
@@ -196,3 +197,50 @@ class TaoInfinitiPeer(object):
 		pong = Pong()
 		pong.nonce = message.nonce
 		self.send_message(pong)
+
+class TaoPeerThread (TaoInfinitiPeer, threading.Thread):
+	def __init__(self, threadID, name, logger, peer_ip, peer_port, my_ip_address, my_port):
+		threading.Thread.__init__(self)
+		self.threadID = threadID
+		self.name = name
+		self.counter = self.threadID
+		self.logger = logger
+		self.uptime = 0
+		super(TaoPeerThread, self).__init__(logger, peer_ip, peer_port, my_ip_address, my_port)
+
+	def stop(self,err=None):
+		self.exit = True
+		self.is_connected = False 
+		if err is None:
+			err=60
+		else:
+			self.error=True
+		self.error_peer(err)
+
+		if self.error:
+			self.logger.error("{0} - Thread stopping. Code: {1}".format(self.peerip,err))
+		else:
+			self.logger.info("{0} - Thread stopping. Code: {1}".format(self.peerip,err))
+		if self.socket is not None:
+			self.socket.close()
+
+	def run(self):
+		if self.open():
+			self.running = time.time()
+			# Send a ping every 30 minutes 
+			ping_time = 30 * 60
+			# Primary socket loop
+			while (not self.error) and (not self.exit):
+				if time.time() > (self.running + ping_time):
+					self.running = time.time()
+					self.send_message(Ping())
+				r, _, _ = select.select([self.socket], [], [])
+				if r:
+					data = self.socket.recv(1024 * 8)
+					self.buffer.write(data)
+					message_header, message = self.buffer.receive_message()
+					if message is not None:
+						self.message_received(message_header, message)
+		else:
+			self.stop(50)
+
