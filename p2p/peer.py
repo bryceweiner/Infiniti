@@ -87,7 +87,7 @@ class InfinitiPeer(object):
 			self.socket.sendall(message.get_message(self.coin))
 		except socket.error as err:
 			self.error_peer(err.errno)
-			self.logger.error("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
+			self.logger.error("IP: {0} : Send Message Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
 			self.error = True
 
 	def send_ping(self): 
@@ -161,7 +161,7 @@ class InfinitiPeer(object):
 			self.socket.connect((self.peerip, self.port))
 		except socket.error as err:
 			self.error_peer(err.errno)
-			self.logger.error("IP: {0} : Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
+			self.logger.error("IP: {0} : On Open Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
 			self.error = True
 			self.is_connected = False 
 			return
