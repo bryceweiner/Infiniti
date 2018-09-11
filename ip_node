@@ -81,9 +81,10 @@ class RPCServerThread(threading.Thread):
 
 class InfinitiDaemon(Daemon):
 	first_run = True
+	uptime = 0
 	def load_peer_db(self):
 		# trigger garbage collection closing db
-		db = open_db(os.path.join(DATA_PATH,"peers"),self.logger,read_only=True)
+		db = open_db(os.path.join(DATA_PATH,"peers"),self.logger)
 		# turn the iterator into a list
 		q = []
 		items = db.iteritems()
@@ -107,12 +108,13 @@ class InfinitiDaemon(Daemon):
 			wb.put(seed[0],str(seed[1]))
 		db.write(wb)
 
+
 	def update_status(self,k,v):
 		db = open_db(os.path.join(DATA_PATH,"status"),self.logger)
 		db.put(k,v)	
 
 	def get_status(self,k):
-		db = open_db(os.path.join(DATA_PATH,"status"),self.logger,read_only=True)
+		db = open_db(os.path.join(DATA_PATH,"status"),self.logger)
 		_v = db.get(k)
 		if _v is None:
 			db.put(k,str(_v))	
@@ -166,7 +168,11 @@ class InfinitiDaemon(Daemon):
 					self.threads.append(thread)
 		self.last_peers = time.time()                                                        
 
+	def create_databases(self):
+		db = open_db(os.path.join(DATA_PATH,"status"),self.logger,False)
+
 	def run(self):
+		self.create_databases()
 		# Register the signal handlers
 		self.logger.info("Infiniti starting.")
 		self.logger.info("Checking internet.")
@@ -179,10 +185,6 @@ class InfinitiDaemon(Daemon):
 
 		try:
 			uptime = self.get_status('uptime')
-			if uptime is None: 
-				self.uptime = 0
-			else:
-				self.uptime = float(uptime)
 			self.threads = []
 			self.counter = 0
 			self.rpc_server = RPCServerThread(self.counter, "RPCServer", self.logger)
@@ -242,7 +244,7 @@ if __name__ == "__main__":
 			infiniti.restart()
 		elif 'status' == sys.argv[1]:
 			try:
-				pf = file(PIDFILE,'r')
+				pf = file(PID_FILE + ".pid",'r')
 				pid = int(pf.read().strip())
 				pf.close()
 			except IOError:

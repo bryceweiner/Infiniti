@@ -159,17 +159,19 @@ class InfinitiPeer(object):
 		try:
 			self.logger.info("Connecting to {0}:{1}".format(self.peerip,str(self.port)))
 			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			# Time out should be 35 minutes, or five minutes greater than
-			# the ping cycle.
-			self.socket.settimeout(35 * 60)
+			self.socket.settimeout(60)
 			self.socket.connect((self.peerip, self.port))
 		except socket.error as err:
 			self.error_peer(err.errno)
-			self.logger.error("IP: {0} : On Open Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
+			if self.is_connected:
+				self.logger.error("IP: {0} : Was Open Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))
+			else:
+				self.logger.error("IP: {0} : Connection refused.".format(self.peerip))
 			self.error = True
 			self.is_connected = False 
 			return
 		# send our version
+		self.socket.settimeout(None)
 		self.is_connected = True
 		v = Version(self.peerip, self.port, self.my_ip_address,self.my_port)
 		self.send_message(v)

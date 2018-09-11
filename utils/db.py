@@ -21,4 +21,3 @@ def open_db(filename, logger=None, read_only=False):
     if retry_count == MAX_RETRY_CREATE_DB:
         raise save_err
     return db
-
