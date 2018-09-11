@@ -159,7 +159,9 @@ class InfinitiPeer(object):
 		try:
 			self.logger.info("Connecting to {0}:{1}".format(self.peerip,str(self.port)))
 			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			self.socket.settimeout(20)
+			# Time out should be 35 minutes, or five minutes greater than
+			# the ping cycle.
+			self.socket.settimeout(35 * 60)
 			self.socket.connect((self.peerip, self.port))
 		except socket.error as err:
 			self.error_peer(err.errno)
