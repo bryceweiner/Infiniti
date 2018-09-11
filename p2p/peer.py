@@ -150,6 +150,7 @@ class InfinitiPeer(object):
 					pass
 			db.write(wb)
 		except Exception as e:
+			self.error = True
 			self.logger.error(e)
 
 	def open(self):
