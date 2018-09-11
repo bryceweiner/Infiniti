@@ -150,8 +150,7 @@ class InfinitiPeer(object):
 					pass
 			db.write(wb)
 		except Exception as e:
-			self.error = True
-			self.logger.error(e)
+			self.stop(e.errno)
 
 	def open(self):
 		# connect
@@ -161,8 +160,7 @@ class InfinitiPeer(object):
 			self.socket.settimeout(60)
 			self.socket.connect((self.peerip, self.port))
 		except Exception as err:
-			self.logger.error(err)
-				self.stop(99)
+			self.stop(e.errno)
 			return False
 		# send our version
 		self.socket.settimeout(None)
