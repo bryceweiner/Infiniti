@@ -27,7 +27,8 @@ peer_db_path = os.path.join(DATA_PATH,"peers")
 class InfinitiPeer(object):
 	"""
 	The base class for a Tao network client.  This class
-	will handle the initial handshake and responding to pings.
+	will handle the initial handshake and responding to pings,
+	and socket connections.
 	"""
 
 	coin = "tao"
@@ -166,6 +167,7 @@ class InfinitiPeer(object):
 			self.is_connected = False 
 			return
 		# send our version
+		self.is_connected = True
 		v = Version(self.peerip, self.port, self.my_ip_address,self.my_port)
 		self.send_message(v)
 
@@ -209,18 +211,3 @@ class InfinitiPeer(object):
 		This is the main method of the client, it will enter
 		in a receive/send loop.
 		"""
-		try:
-			data = self.socket.recv(1024 * 8)
-			if len(data) <= 0:
-				self.is_connected = False
-			if self.is_connected:
-				self.buffer.write(data)
-				message_header, message = self.buffer.receive_message()
-				if message is not None:
-					self.message_received(message_header, message)
-		except socket.error as err:
-			self.error = True
-			self.is_connected = False 
-			self.error_peer(err.errno)
-			self.logger.error("IP: {0} : Loop Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))				
-		self.close()

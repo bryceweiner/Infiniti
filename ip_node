@@ -15,32 +15,48 @@ from urllib2 import urlopen
 
 from utils.daemonize import Daemon
 
-class PeerThread (threading.Thread):
+class PeerThread (InfinitiPeer, threading.Thread):
 	def __init__(self, threadID, name, logger, peer_ip, peer_port, my_ip_address, my_port):
 		threading.Thread.__init__(self)
 		self.threadID = threadID
 		self.name = name
 		self.counter = self.threadID
 		self.logger = logger
-		self.client = InfinitiPeer(self.logger, peer_ip, peer_port, my_ip_address, my_port)
 		self.uptime = 0
+		super(PeerThread, self).__init__(logger, peer_ip, peer_port, my_ip_address, my_port)
 
 	def stop(self):
-		self.client.exit = True
-		self.client.touch_peer()
-		self.logger.info("{0} - Thread stopping.".format(self.client.peerip))
+		self.exit = True
+		self.touch_peer()
+		self.logger.info("{0} - Thread stopping.".format(self.peerip))
 
 	def run(self):
-		self.client.open()
-		self.client.running = time.time()
+		self.open()
+		self.running = time.time()
 		# Send a ping every 30 minutes 
 		ping_time = 30 * 60
-		while (not self.client.error) and (not self.client.exit):
-			if time.time() > (self.client.running + ping_time):
-				self.client.running = time.time()
-				self.client.send_message(Ping())
-			self.client.loop()  
-		self.logger.info("{0} - Thread closed.".format(self.client.peerip))
+		while (not self.error) and (not self.exit):
+			if time.time() > (self.running + ping_time):
+				self.running = time.time()
+				self.send_message(Ping())
+			try:
+				if self.is_connected:
+					data = self.socket.recv(1024 * 8)
+			except socket.error as err:
+				self.close()
+				self.error = True
+				self.is_connected = False 
+				self.error_peer(err.errno)
+				self.logger.error("IP: {0} : Loop Socket Error({1}): {2}".format(self.peerip,err.errno, err.strerror))				
+			else:
+				if len(data) <= 0:
+					self.is_connected = False
+				if self.is_connected:
+					self.buffer.write(data)
+					message_header, message = self.buffer.receive_message()
+					if message is not None:
+						self.message_received(message_header, message)
+		self.logger.info("{0} - Thread closed.".format(self.peerip))
 
 class RPCServerThread(threading.Thread):
 	def __init__(self, threadID, name, logger, ip='localhost', port=8000):
@@ -75,7 +91,7 @@ class InfinitiDaemon(Daemon):
 		for k,v in list(items):
 			if self.first_run:
 				min_error = 54
-			if int(v) > min_error or int(v) == 0:
+			if int(v) >= min_error or int(v) == 0:
 				q.append((k,int(v)))
 		self.first_run = False
 		return q
@@ -99,17 +115,37 @@ class InfinitiDaemon(Daemon):
 			db.put(k,str(_v))	
 		return _v
 
+	def get_peer_thread_count(self):
+		return len(self.threads)
+
+	def get_peer_count(self):
+		count = 0
+		for t in self.threads:
+			if t.exit == False and c.error == False:
+				count += 1
+		return count
+
+	def get_connected_peer_count(self):
+		count = 0
+		for t in self.threads:
+			if t.is_connected == True:
+				count += 1
+		return count
+
 	def get_peers(self,my_ip_address, my_port):
 		# Clean up dead threads 
 		self.logger.info("Network spider looking for peers.")        
 		for t in self.threads:
-			if t.client.exit or t.client.error:
+			if t.exit or t.error:
 				self.threads.remove(t)
 		peers = self.load_peer_db() 
 		if len(peers) == 0:
 			self.create_peer_db()
 			peers = self.load_peer_db() 
 		self.logger.info("{0} peers loaded.".format(len(peers)))
+		self.logger.info("{0} threads running.".format(self.get_peer_thread_count()))
+		self.logger.info("{0} peers in process.".format(self.get_peer_count()))
+		self.logger.info("{0} peers connected.".format(self.get_connected_peer_count()))
 		for k,v in peers:
 			if v > -1:
 				peer_ip, peer_port = k.split(":")
@@ -117,7 +153,7 @@ class InfinitiDaemon(Daemon):
 				peer_found = False
 				# make sure it's not already running
 				for t in self.threads:
-					if peer_ip == t.client.peerip:
+					if peer_ip == t.peerip:
 						peer_found = True
 				if not peer_found:
 					self.counter += 1
@@ -159,7 +195,7 @@ class InfinitiDaemon(Daemon):
 				connected_peers = 0                                                       
 				# collect garbage
 				for t in self.threads:
-					if not t.isAlive() or t.client.error or t.client.exit:
+					if not t.isAlive() or t.error or t.exit:
 						self.threads.remove(t)
 					else:
 						connected_peers += 1
