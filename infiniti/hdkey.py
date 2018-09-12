@@ -20,6 +20,7 @@ from ecdsa.numbertheory import square_root_mod_prime as sqrt_mod
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from infiniti.params import NETWORK, param_query
+from utils.crypto import PRNG
 
 MIN_ENTROPY_LEN = 128        # bits
 HD_HARDEN    = 0x80000000 # choose from hardened set of child keys
@@ -31,7 +32,8 @@ EX_TEST_PRIVATE = [ codecs.decode('04358394', 'hex') ] # Version strings for tes
 EX_TEST_PUBLIC  = [ codecs.decode('043587CF', 'hex') ] # Version strings for testnet extended public keys
 
 class HDKey(object):
-
+    rsa = None
+    rsa_len = 2048
     # Static initializers to create from entropy or external formats
     #
     @staticmethod
@@ -45,7 +47,9 @@ class HDKey(object):
         I = hmac.new(b"Tao seed", entropy, hashlib.sha512).digest()
         Il, Ir = I[:32], I[32:]
         # FIXME test Il for 0 or less than SECP256k1 prime field order
+
         key = HDKey(secret=Il, chain=Ir, depth=0, index=0, fpr=b'\0\0\0\0', public=False, testnet=testnet)
+        key.entropy = entropy
         if public:
             key.SetPublic()
         return key
@@ -148,7 +152,6 @@ class HDKey(object):
         self.index = index
         self.parent_fpr = fpr
         self.testnet = testnet
-
 
     # Internal methods not intended to be called externally
     #
@@ -340,13 +343,13 @@ class HDKey(object):
             return base58.check_encode(raw)
 
     # RSA Functions
-    def GenerateRSA(self):
+    def GenerateRSA(self,entropy):
         bits = 2048
-        self.rsa = RSA.generate(bits, randfunc=PRNG(self.Entropy()))
+        self.rsa = RSA.generate(bits, randfunc=PRNG(entropy))
 
-    def RSAPublic(self):
+    def RSAPublic(self,entropy):
         if self.rsa is None:
-            self.GenerateRSA()
+            self.GenerateRSA(entropy)
         return self.rsa.publickey().exportKey("PEM") 
 
     def RSAPrivate(self):
@@ -379,7 +382,7 @@ class HDKey(object):
 
     # Debugging methods
     #
-    def dump(self):
+    def dump(self,entropy):
         "Dump key fields mimicking the BIP0032 test vector format"
         i = {
             "hex" : b2a_hex(self.Identifier()),
@@ -389,7 +392,6 @@ class HDKey(object):
             "pubkey":  b2a_hex(self.PublicKey()),
             "xpub hex":  b2a_hex(self.ExtendedKey(private=False, encoded=False)),
             "xpub b58":  self.ExtendedKey(private=False, encoded=True),
-            "RSA Pub":  self.RSAPublic(),
         }
         if self.public is False:
             i.update({
@@ -398,6 +400,7 @@ class HDKey(object):
                 "hex":  hexlify(self.PrivateKey()),
                 "chaincode":  b2a_hex(self.C),
                 "wif":  self.WalletImportFormat(),
+                "RSA Pub":  self.RSAPublic(entropy),
                 "RSA Prv":  self.RSAPrivate(),
             })
         return i

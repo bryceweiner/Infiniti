@@ -43,7 +43,7 @@ class Key(object):
         return "k.{0}.{1}".format(self.addr_type(),self.child())        
 
     def db_value(self):
-        return "{0}".format(self.PublicKey().encode())     
+        return "{0}".format(self.key.PublicKey())     
 
     def address(self, ipaddr = False):
         if ipaddr:
@@ -275,7 +275,7 @@ class Wallet(object):
         for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
             addr,addr_type,child = key.split(".")
             if passphrase is not None:
-                _k = Key(int(addr_type),int(child),self._primary.ChildKey(int(addr_type+HD_HARDEN)).ChildKey(int(child)))
+                _k = Key(int(addr_type),int(child),self._primary.ChildKey(int(addr_type)+HD_HARDEN).ChildKey(int(child)))
                 _k.addresses = (_k.key.Address(),_k.key.Address(True))
                 self.Keys.append(_k)     
             else:

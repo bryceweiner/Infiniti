@@ -150,28 +150,33 @@ def listaddresses(fn):
 	a = []
 	for k in keys:
 		a.append((k.address_type(),k.address(), k.address(True)) )
-	d = { "addresses" : a }
+	d = { "addresses" : a.key.dump() }
 	return json.dumps(d, sort_keys=True, indent=4)
 
 def newaddress(fn,passphrase,addr_type=0):
 	"""
 	getnetaddress
 	"""
-	try:
-		wallet = Wallet(fn).fromFile(passphrase)
-		# Address Types
-		# addr_type == 0, deposit
-		# addr_type == 1, change
-		# addr_type == 2, staking
-		# addr_type == 3, Dealer
-		# Address types aren't programmatically important, but help to organize
-		if addr_type is None:
-			addr_type = 0
-		k = wallet.create_address(save=True,addr_type=addr_type)
-		d = { "new_address" : (k.address_type(),k.address(),k.address(True)) }
-		return json.dumps(d, sort_keys=True, indent=4)
-	except:
-		return "Password incorrect."
+	#try:
+	wallet = Wallet(fn).fromFile(passphrase)
+	# Address Types
+	# addr_type == 0, deposit
+	# addr_type == 1, change
+	# addr_type == 2, staking
+	# addr_type == 3, Dealer
+	# Address types aren't programmatically important, but help to organize
+	if addr_type is None:
+		addr_type = 0
+	k = wallet.create_address(save=True,addr_type=addr_type)
+	dump = ({
+			'address_type':k.address_type(),
+			NETWORK : k.address(),
+			'infiniti' : k.address(True),
+		})
+	d = { "address" : dump }
+	return json.dumps(d, sort_keys=True, indent=4)
+	#except:
+	#	return "Password incorrect."
 
 def walletbalance(fn,passphrase):
 	sync(fn,passphrase)

@@ -4,6 +4,22 @@ from hashlib import sha256
 from secp256k1 import ALL_FLAGS
 from infiniti.params import *
 from Crypto.Random import random
+from Crypto.Hash import HMAC
+
+class PRNG(object):
+
+  def __init__(self, seed):
+    self.index = 0
+    self.seed = HMAC.new(seed + b"Infiniti Protocol").digest()
+    self.buffer = b""
+
+  def __call__(self, n):
+    while len(self.buffer) < n:
+        self.buffer += HMAC.new(self.seed +
+                                struct.pack("<I", self.index)).digest()
+        self.index += 1
+    result, self.buffer = self.buffer[:n], self.buffer[n:]
+    return result
 
 def Hash(data):
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
