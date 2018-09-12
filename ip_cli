@@ -16,7 +16,7 @@ if __name__ == "__main__":
 	parser.add_argument("-p","--passphrase", help="The wallet passphrase")
 	parser.add_argument("-m","--message", help="The message to verify")
 	parser.add_argument("-s","--signature", help="The signature of the message to verify")
-	parser.add_argument("-t","--type", help="The address type to create, default = 0",type=int, choices=[0,1,2])
+	parser.add_argument("-t","--type", help="The address type to create, default = 0",type=int, choices=[0,1,2,3])
 	parser.add_argument("-f","--filename", help="A filename",type=str)
 	parser.add_argument("-j","--json", help="A JSON formatted string",type=str)
 
