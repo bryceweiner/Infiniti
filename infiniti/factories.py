@@ -1,8 +1,15 @@
 from utils.db import *
+from infiniti.params import *
 
 def gettransaction(rpc,tx_hash):
 	tx_raw = rpc.getrawtransaction(tx_hash)
 	return rpc.decoderawtransaction(tx_raw)
+
+def save_transaction(tx):
+	pass
+
+def save_block(tx):
+	pass
 
 def process_block(rpc,raw_block):
 	"""

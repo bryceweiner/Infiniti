@@ -14,7 +14,7 @@ from infiniti.logger import *
 from utils.crypto import sign_and_verify, verify_message
 from p2p import version
 from utils.db import *
-from infiniti.factories import process_block
+from infiniti.factories import process_block,process_infiniti
 
 import qrencode, threading
 
@@ -239,7 +239,7 @@ def syncwallets(logger=None):
 		keys = Wallet(wallet_name).pubkeysOnly()
 		for key in keys:
 			# address_list is used as an index for intersections
-			address_obj.append(Address(key.addresses[0],key.pubkey))
+			address_obj.append(Address(key.addresses[0],key.pubkey,wallet_name))
 			address_list.append(key.addresses[0])
 
 	# Loop through blocks from the chaintip to the start height
@@ -259,9 +259,7 @@ def syncwallets(logger=None):
 			if process_block(_CONNECTION,next_block_hash):
 				next_block_hash = block['previousblockhash']
 	
-	# Save our address data to disk.
-
 	# Now that we've collected all outstanding Infiniti TX, let's process them
 	for i in infiniti_tx:
-		pass
+		process_infiniti(i)
 
