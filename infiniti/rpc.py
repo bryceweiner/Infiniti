@@ -1,20 +1,18 @@
 #from __future__ import print_function
 from wallet.wallet import Wallet
-import os
-import time
+import os,sys,ast,time,base64
+import time, json, binascii
 from providers.cryptoid import Cryptoid
 from providers import TaoNode
 from decimal import Decimal, getcontext
 from os import listdir
 from os.path import isfile, join
-import json, binascii
 from utils.encoder import DecimalEncoder
 from infiniti.params import *
 from infiniti.logger import *
 from utils.crypto import sign_and_verify, verify_message
 from p2p import version
 from utils.db import *
-import base64,ast
 
 import qrencode, threading
 
@@ -27,13 +25,15 @@ def importwallet(filename):
 	try:
 		with open(filename,'r') as infile:
 			data = infile.read()
-			data=json.loads(data)
-			import_name = "{0}_import".format(data["wallet"])
-			items = ast.literal_eval(str(base64.b64decode(data["data"])))
-			db = open_db(os.path.join(WALLET_PATH,import_name))
+			data = ast.literal_eval(base64.b64decode(data))
+
+			db = open_db(os.path.join(WALLET_PATH,data["wallet"]))
 			wb = writebatch()
-			for i in items:
-				wb.put(i[0],i[1])
+			wb.put("_root",data["root_id"])
+			wb.put("hmac",data["hmac"])
+			wb.put("entropy",data["entropy"])
+			for k in data["keys"]:
+				wb.put("k.{0}.{1}".format(k[0],k[1]),"\x00")
 			db.write(wb)
 		return "Import successful! Wallet name: {0}".format(import_name)
 	except:
@@ -43,16 +43,32 @@ def exportwallet(wallet):
 	db = open_db(os.path.join(WALLET_PATH,wallet))
 	it = db.iteritems()
 	it.seek_to_first()
-	q = str(list(it))
-	q = json.dumps(
-		{ 
-			"wallet":wallet,
-			"data": q,
-		})
-	result = base64.b64encode(q.encode('ascii')).decode('ascii')
-	result = "ip://" + result
-	qr = qrencode.encode(result,qrencode.QR_ECLEVEL_L)
-	qr[2].save('qrcode_{0}_{1}_{2}.png'.format(qr[0],qr[1],wallet))
+	q = { "wallet" : wallet }
+	a = []
+	for k,v in it:
+		if k[0] =="k":
+			_,addr_type,child = k.split('.')
+			a.append((addr_type,child))
+		elif k == "_root":
+			q.update({
+					"root_id" : v
+				})	
+		elif k == "entropy":
+			q.update({
+					"entropy" : v
+				})	
+		elif k == "hmac":
+			q.update({
+					"hmac" : v
+				})	
+	q.update({
+			"keys" : a
+		})	
+			
+	result = base64.b64encode(str(q).encode('ascii')).decode('ascii')
+	qr_code = "ip://" + result
+	qr = qrencode.encode(qr_code,qrencode.QR_ECLEVEL_L)
+	qr[2].save('wallet_qr_{0}_{1}_{2}.png'.format(qr[0],qr[1],wallet))
 	return result
 
 def get_status(k):

@@ -277,7 +277,9 @@ class Wallet(object):
             if passphrase is not None:
                 _k = Key(int(addr_type),int(child),self._primary.ChildKey(int(addr_type)+HD_HARDEN).ChildKey(int(child)))
                 _k.addresses = (_k.key.Address(),_k.key.Address(True))
-                self.Keys.append(_k)     
+                self.Keys.append(_k) 
+                if value == "\x00": # Imported wallet, recreate the missing key
+                    db.put(key,_k.public_key())    
             else:
                 _k = Key(int(addr_type),int(child),None)
                 _k.has_wif = False
