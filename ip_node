@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from p2p.tao_peer import TaoPeerThread, TaoServerThread
+from p2p.networks.tao import TaoPeerThread, TaoServerThread
 from infiniti.params import *
 from p2p.protocol.serializers import *
 from p2p.protocol.queues import MemPoolManager
@@ -34,7 +34,6 @@ class RPCServerThread(threading.Thread):
 		self.halt = True
 		self.rpc_server.httpd.shutdown()
 		self.logger.info("RPC server shutdown.")
-
 
 class InfinitiDaemon(Daemon):
 	first_run = True

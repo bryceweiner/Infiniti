@@ -13,6 +13,7 @@ if __name__ == "__main__":
 																		"sync","listunspent","reindex","getinfo","importwallet","exportwallet"])
 	parser.add_argument("-w","--wallet", help="The wallet to use")
 	parser.add_argument("-a","--address", help="An address to use")
+	parser.add_argument("-b","--blockchain", help="The blockchain to use",type=str, choices=['tao']) #,'uno','sys','btc','ppc','xpm','flo'])
 	parser.add_argument("-p","--passphrase", help="The wallet passphrase")
 	parser.add_argument("-m","--message", help="The message to verify")
 	parser.add_argument("-s","--signature", help="The signature of the message to verify")
