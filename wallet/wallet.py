@@ -191,7 +191,7 @@ class Wallet(object):
         for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
             addr,addr_type,child = key.split(".")
             key = Key(int(addr_type),child,None)
-            key.addresses = (public_key_to_address(value.decode(),False),public_key_to_address(value.decode(),True))
+            key.addresses = (public_key_to_address(value.decode('utf-8'),False),public_key_to_address(value.decode('utf-8'),True))
             self.Keys.append(key)
         return self.Keys
 
