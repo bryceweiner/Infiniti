@@ -234,7 +234,11 @@ def syncwallets(logger=None):
 	# First, lets gather up the wallet addresses
 	wallet_list = [x[0] for x in os.walk(WALLET_PATH)]	
 	address_obj = []
-	address_list = []		
+	address_list = []
+	if logger is None:
+		print "Gathering addresses."
+	else:
+		logger.info("{0} sync - Gathering addresses.".format(NETWORK))		
 	for wallet_name in wallet_list:
 		keys = Wallet(wallet_name).pubkeysOnly()
 		for key in keys:
@@ -255,6 +259,10 @@ def syncwallets(logger=None):
 			# This should not happen
 			break
 		else:
+			if logger is None:
+				print "Start height: {0}, End height: {1}, Current block: {2}".format(end_height,start_block,block["height"])
+			else:
+				logger.info("{0} sync - Start height: {1}, End height: {2}, Current block: {3}".format(NETWORK,end_height,start_block,block["height"]))		
 			cur_block = block['height']
 			if process_block(_CONNECTION,next_block_hash):
 				next_block_hash = block['previousblockhash']
