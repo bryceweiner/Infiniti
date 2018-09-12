@@ -29,7 +29,7 @@ def process_block(rpc,raw_block):
 		is_infiniti = False
 		for txout in tx["vout"]:
 			# Let's see if it's an Infiniti TX
-			if txout['scriptPubKey']['asm'] = 'OP_RETURN {0}'.format(OP_RETURN_KEY):
+			if txout['scriptPubKey']['asm'] == 'OP_RETURN {0}'.format(OP_RETURN_KEY):
 				is_infiniti=True
 				save_tx = True
 				save_block = True
