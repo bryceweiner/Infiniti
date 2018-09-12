@@ -51,6 +51,7 @@ class TaoClient(object):
 		self.remote_height = 0
 		self.my_ip_address = my_ip_address
 		self.my_port = my_port
+		self.verack = False
 
 	def touch_peer(self, value):
 		db = open_db(peer_db_path,self.logger)
@@ -71,6 +72,8 @@ class TaoClient(object):
 			message_header: The message header
 			message: The message object
 		"""
+		# reset the ping counter
+		self.running = time.time()
 		self.logger.receive("{0} - {1} - {2}".format(self.peerip, message_header.command, str(message)))
 		handle_func_name = "handle_" + message_header.command
 		handle_func = getattr(self, handle_func_name, None)
@@ -93,8 +96,13 @@ class TaoClient(object):
 			self.stop(err.errno,'send_message')
 
 	def send_ping(self): 
-		p = Ping()
-		self.send_message(p)
+		if self.verack:
+			self.send_message(Ping())
+		else:
+			self.verack = True
+			v = VerAck()
+			self.send_message(VerAck())
+			self.send_message(Ping())
 
 	def get_peers(self):
 		ga = GetAddr()
@@ -102,6 +110,7 @@ class TaoClient(object):
 
 	def connected(self):
 		# Get list of peers
+		self.verack = True
 		self.touch_peer(0)
 		self.logger.info("{0} - Connected.".format(self.peerip))
 		gp = GetAddr()
