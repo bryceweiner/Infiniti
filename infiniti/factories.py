@@ -17,8 +17,6 @@ def process_block(rpc,raw_block):
 		A) Tranascations for addresses in our wallet
 		B) Infiniti transactions
 
-	 It's not obvious, but the object is from p2p.serializers
-
 	 The way the P2P network is constructed, all messages
 	 along the wire are deserialized into programmatic objects
 	"""
