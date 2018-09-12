@@ -43,7 +43,7 @@ def process_block(rpc,raw_block):
 					for i in intersection:
 						index = address_list.index(i)
 						address_obj[index].incoming_value += float(x["value"])
-						address_obj[index].utxo.append(tx_hash)
+						address_obj[index].utxo.append((tx_hash,float(x["value"])))
 		for txin in tx["vin"]:
 			# For each txin, find the original TX and see if
 			# it came from one of our addresses and subtract
@@ -58,6 +58,8 @@ def process_block(rpc,raw_block):
 					for i in intersection:
 						index = address_list.index(i)
 						address_obj[index].outgoing_value += float(x["value"])
+						address_obj[index].stxo.append(txin["txid"])
+
 		if is_infiniti:
 			infiniti_tx.append(tx)
 		if save_tx:
