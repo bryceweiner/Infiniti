@@ -100,7 +100,6 @@ class TaoClient(object):
 			self.send_message(Ping())
 		else:
 			self.verack = True
-			v = VerAck()
 			self.send_message(VerAck())
 			self.send_message(Ping())
 
@@ -255,6 +254,7 @@ class TaoPeerThread (TaoClient, threading.Thread):
 
 class TaoServerThread(threading.Thread):
 	def __init__(self, host, port,logger):
+		raise NotImplementedError
 		threading.Thread.__init__(self)
 		self.host = host
 		self.port = port
