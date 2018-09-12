@@ -156,7 +156,7 @@ class InfinitiDaemon(Daemon):
 			self.counter = 0
 			self.last_peers = time.time() - 100
 
-			#self.sync_wallets()
+			self.sync_wallets()
 
 			self.rpc_server = RPCServerThread(self.counter, "RPCServer", self.logger)
 			self.rpc_server.start()
