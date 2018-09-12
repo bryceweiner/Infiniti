@@ -15,7 +15,7 @@ from utils.crypto import sign_and_verify, verify_message
 from p2p import version
 from utils.db import *
 from infiniti.factories import process_block,process_infiniti
-
+from utils.helpers import *
 import qrencode, threading
 
 if USE_RPC:
@@ -210,7 +210,7 @@ def listwallets():
 	return [f for f in listdir(WALLET_PATH) if True]
 
 def getheight():
-	db = open_db(os.path.join(DATA_PATH,"status"),self.logger)
+	db = open_db(join_path(DATA_PATH,"status"))
 	return int(db.get('height'))
 
 def putheight():
@@ -233,6 +233,7 @@ def syncwallets(logger=None):
 	"""
 	# First, lets gather up the wallet addresses
 	wallet_list = [x[0] for x in os.walk(WALLET_PATH)]	
+	wallet_list.remove(WALLET_PATH)
 	address_obj = []
 	address_list = []
 	if logger is None:
