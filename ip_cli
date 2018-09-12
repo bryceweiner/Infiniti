@@ -22,10 +22,11 @@ if __name__ == "__main__":
 	parser.add_argument("-t","--type", help="The address type to create, default = 0",type=int, choices=[0,1,2,3])
 	parser.add_argument("-f","--filename", help="A filename",type=str)
 	parser.add_argument("-j","--json", help="A JSON formatted string",type=str)
-	parser.add_argument("-w","--numaddr", help= "Number of vault addresses to create (default: 10,000)", type=int, default=10000)
+	parser.add_argument("-w","--numaddr", help= "Number of vault addresses to create (default: 10)", type=int)
 	parser.add_argument("-x","--numparts", help= "Number of parts into which to split the vault secret (default: 15)", type=str)
 	parser.add_argument("-y","--numpieces", help= "Minimum number of pieces which may be used to reconstruct a vault (default: 5)", type=str)
 	parser.add_argument("-z","--password_array", help= "An array of passwords, number of elements must equal the number of parts requested, parts encrypted in array order", type=str)
+	parser.add_argument("-0","--verwif_array", help= "An array of [version_byte, wif_byte] for deposit address encoding.", type=str)
 
 	args = parser.parse_args()
 
