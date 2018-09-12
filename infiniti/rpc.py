@@ -16,6 +16,7 @@ from p2p import version
 from utils.db import *
 from infiniti.factories import process_block,process_infiniti
 from utils.helpers import *
+
 import qrencode, threading
 
 if USE_RPC:
@@ -211,10 +212,12 @@ def listwallets():
 
 def getheight():
 	db = open_db(join_path(DATA_PATH,"status"))
-	return int(db.get('height'))
+	h = db.get('height')
+	return int(h) if h is not None else param_query(NETWORK,'start_height')
 
-def putheight():
-	pass
+def putheight(height):
+	db = open_db(join_path(DATA_PATH,"status"))
+	h = db.put('height',str(height))
 
 def syncwallets(logger=None):
 	"""
@@ -265,8 +268,10 @@ def syncwallets(logger=None):
 			else:
 				logger.info("{0} sync - Start height: {1}, End height: {2}, Current block: {3}".format(NETWORK,end_height,start_block,block["height"]))		
 			cur_block = block['height']
-			if process_block(_CONNECTION,next_block_hash):
+			if process_block(_CONNECTION,next_block_hash,address_list,address_obj):
 				next_block_hash = block['previousblockhash']
+			else:
+				break
 	
 	# Now that we've collected all outstanding Infiniti TX, let's process them
 	for i in infiniti_tx:
