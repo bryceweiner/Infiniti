@@ -149,8 +149,12 @@ def listaddresses(fn):
 	keys = Wallet(fn).pubkeysOnly()
 	a = []
 	for k in keys:
-		a.append((k.address_type(),k.address(), k.address(True)) )
-	d = { "addresses" : a.key.dump() }
+		a.append({
+			'address_type':k.address_type(),
+			NETWORK:k.address(), 
+			'infiniti':k.address(True)
+			} )
+	d = { "addresses" : a }
 	return json.dumps(d, sort_keys=True, indent=4)
 
 def newaddress(fn,passphrase,addr_type=0):
