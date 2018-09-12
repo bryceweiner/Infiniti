@@ -268,10 +268,8 @@ def syncwallets(logger=None):
 			else:
 				logger.info("{0} sync - Start height: {1}, End height: {2}, Current block: {3}".format(NETWORK,end_height,start_block,block["height"]))		
 			cur_block = block['height']
-			if process_block(_CONNECTION,next_block_hash,address_list,address_obj):
-				next_block_hash = block['previousblockhash']
-			else:
-				break
+			address_obj = process_block(_CONNECTION,next_block_hash,address_list,address_obj)
+			next_block_hash = block['previousblockhash']
 	
 	# Now that we've collected all outstanding Infiniti TX, let's process them
 	for i in infiniti_tx:

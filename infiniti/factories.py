@@ -6,10 +6,13 @@ def gettransaction(rpc,tx_hash):
 	return rpc.decoderawtransaction(tx_raw)
 
 def save_transaction(tx):
-	pass
+	db = open_db(join_path(join_path(DATA_PATH,NETWORK)),"tx")
 
 def save_block(tx):
-	pass
+	db = open_db(join_path(join_path(DATA_PATH,NETWORK)),"block")
+
+def process_infiniti(tx):
+	db = open_db(join_path(DATA_PATH,'infiniti'))
 
 def process_block(rpc,block_hash,address_list,address_obj):
 	"""
@@ -39,7 +42,7 @@ def process_block(rpc,block_hash,address_list,address_obj):
 					intersection = list(set(txout["scriptPubKey"]["addresses"]) & set(address_list))
 					if len(intersection) > 0:
 						save_tx = True
-						save_block = True
+						_save_block = True
 						for i in intersection:
 							index = address_list.index(i)
 							address_obj[index].incoming_value += float(txout["value"])
@@ -55,23 +58,21 @@ def process_block(rpc,block_hash,address_list,address_obj):
 					intersection = list(set(x["scriptPubKey"]["addresses"]) & set(address_list))
 					if len(intersection) > 0:
 						save_tx = True
-						save_block = True
+						_save_block = True
 						for i in intersection:
 							index = address_list.index(i)
 							address_obj[index].outgoing_value += float(x["value"])
 							address_obj[index].stxo.append(txin["txid"])
 
 		if is_infiniti:
-			infiniti_tx.append(tx)
+			process_infiniti(tx)			
 		if save_tx:
 			#write to disk
-			pass
-	if save_block:
+			save_transaction()
+	if _save_block:
 		#write to disk
-		pass
-	return True
-def process_mempool(raw_tx):
-	pass
+		save_block(block)
+	return address_obj
 
-def process_infiniti(tx):
+def process_mempool(raw_tx):
 	pass
