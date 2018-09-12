@@ -276,3 +276,6 @@ def syncwallets(logger=None):
 		process_infiniti(i)
 	for a in address_obj:
 		a.save()
+
+def createcoldwallet(parts,pieces,addr_count,pwd_array=[]):
+	pass

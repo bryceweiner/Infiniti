@@ -1,4 +1,3 @@
-# Infiniti
-First draft of a new blockchain metaprotocol for assets and metaproofs
+# To Infiniti
 
-Borrows code and concepts from coinbits and peerassets
+and beyond.
