@@ -271,6 +271,9 @@ def syncwallets(logger=None):
 					# For each txin, find the original TX and see if
 					# it came from one of our addresses and subtract
 					# the balance accordingly
-					txin_tx = gettransaction(txin["txid"])  
+					txin_tx = gettransaction(txin["txid"]) 
+					for x in txin_tx['vout']:
+						for a in txout['scriptPubKey']['addresses']:
+						 
 
 			intersection = list(set(txout["scriptPubKey"]["addresses"]) & set(addresses))
