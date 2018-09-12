@@ -274,4 +274,5 @@ def syncwallets(logger=None):
 	# Now that we've collected all outstanding Infiniti TX, let's process them
 	for i in infiniti_tx:
 		process_infiniti(i)
-
+	for a in address_obj:
+		a.save()

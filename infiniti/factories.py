@@ -7,9 +7,11 @@ def gettransaction(rpc,tx_hash):
 
 def save_transaction(tx):
 	db = open_db(join_path(join_path(DATA_PATH,NETWORK)),"tx")
+	db.put(tx["txid"],tx)
 
-def save_block(tx):
+def save_block(block):
 	db = open_db(join_path(join_path(DATA_PATH,NETWORK)),"block")
+	db.put(block["hash"],block)
 
 def process_infiniti(tx):
 	db = open_db(join_path(DATA_PATH,'infiniti'))
@@ -23,7 +25,7 @@ def process_block(rpc,block_hash,address_list,address_obj):
 	 The way the P2P network is constructed, all messages
 	 along the wire are deserialized into programmatic objects
 	"""
-	save_block = False
+	_save_block = False
 	block = rpc.getblock(block_hash)
 	for tx_hash in block['tx']:
 		save_tx = False
@@ -36,7 +38,7 @@ def process_block(rpc,block_hash,address_list,address_obj):
 			if txout['scriptPubKey']['asm'] == 'OP_RETURN {0}'.format(OP_RETURN_KEY):
 				is_infiniti=True
 				save_tx = True
-				save_block = True
+				_save_block = True
 			else:
 				if 'nonstandard' not in txout["scriptPubKey"]['type']:
 					intersection = list(set(txout["scriptPubKey"]["addresses"]) & set(address_list))
