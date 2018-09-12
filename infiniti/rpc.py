@@ -277,5 +277,5 @@ def syncwallets(logger=None):
 	for a in address_obj:
 		a.save()
 
-def createcoldwallet(parts,pieces,addr_count,pwd_array=[],verwif=[]):
+def createvault(parts,pieces,addr_count,pwd_array=[],verwif=[]):
 	pass

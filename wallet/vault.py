@@ -1,26 +1,26 @@
 from wallet.wallet import Wallet
-
-verwif = (
-			{ "DGB" : (30,128) },
-			{ "VIA" : (71,199) },
-			{ "SYS" : (63,128) },
-			{ "BTC" : (0, 128) },
-			{ "UNO" : (130,224) },
-			{ "IOC" : (103, 231) },
-			{ "DOGE" : (30,158) },
-			{ "XTO" : (66,76) },
-			{ "DASH" : (76,204) },
-			{ "MZC" : (50,224) },
-			{ "XVG" : (30,158) },
-			{ "VTC" : (71,128) },
-			{ "XPM" : (23,131) },
-			{ "PPC" : (55,183) },
-			{ "VRC" : (70,198) },
-			{ "FLO" : (35,176) },
-			{ "TX" : (66,153) },
-			{ "PINK" : (3,131) },
-			{ "BLK" : (25,153) },
-		)
+import secretsharing
+VERWIF = { 
+			"DGB" : (30,128) ,
+			"VIA" : (71,199) ,
+			"SYS" : (63,128) ,
+			"BTC" : (0, 128) ,
+			"UNO" : (130,224) ,
+			"IOC" : (103, 231) ,
+			"DOGE" : (30,158) ,
+			"XTO" : (66,76),
+			"DASH" : (76,204) ,
+			"MZC" : (50,224) ,
+			"XVG" : (30,158) ,
+			"VTC" : (71,128) ,
+			"XPM" : (23,131) ,
+			"PPC" : (55,183) ,
+			"VRC" : (70,198) ,
+			"FLO" : (35,176) ,
+			"TX" : (66,153) ,
+			"PINK" : (3,131) ,
+			"BLK" : (25,153) ,
+	}
 
 class Vault(Wallet):
 	"""
@@ -39,9 +39,9 @@ class Vault(Wallet):
 		the storage of any cryptocurrency supported by the Infiniti platform,
 		which happens to be every cryptocurrency that uses a SECP256k1 curve.
 
-		Provide a two dimensional array of python bytestrings (\x00) and the
-		resulting requested addresses will be Base58check encoded for every pair
-		supplied, suitable for use on any matching cryptocurrency network as a
+		Provide anarray of tickers and the
+		resulting requested addresses will be Base58check encoded for every 
+		network supplied, suitable for use on the matching cryptocurrency network as a
 		cold storage deposit address.
 
 		Pre-split JSON:
@@ -54,15 +54,19 @@ class Vault(Wallet):
 	parts = 0
 	pieces = 0
 	pwd_array = 0
+	num_addr=0
 
-	def __init__(self,parts,pieces,verwif=None,pwd_array=None):
-		pass
+	def __init__(self,parts=15,pieces=5,num_addr=0,verwif=None,pwd_array=None):
+		if verwif is not None:
+			self.verwif = verwif
+		else:
+			self.verwif = VERWIF
 
 	def load(self,filename):
 		pass
 
 	def save(self,filename):
-		pass
+		    
 
 
 	if len(pwd_array) != parts:
