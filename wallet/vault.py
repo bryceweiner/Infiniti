@@ -67,7 +67,7 @@ class Vault(Wallet):
 		pass
 
 	def save(self,filename):
-		    
+		pass
 
 
 	if len(pwd_array) != parts:
