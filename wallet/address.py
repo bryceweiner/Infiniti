@@ -22,7 +22,7 @@ class Address(object):
 	def _save_addr_db(self):
 		path = join_path(DATA_PATH,NETWORK)
 		addrdb = open_db(join_path(path,'addresses'))
-		addrdb.put(self.address,"{0}/{1}/{2}".format(self.wallet,str(self.incoming_value),str(self.outgoing_value)))
+		addrdb.put(self.address,"{0}|{1}|{2}".format(self.wallet,str(self.incoming_value),str(self.outgoing_value)))
 
 	def _save_utxo_db(self):
 		wb = writebatch()		
@@ -30,7 +30,7 @@ class Address(object):
 			for stxo in self.stxo:
 				wb.delete(stxo)
 		for utxo in self.utxo:
-			wb.put(utxo[0],utxo[1])
+			wb.put(utxo[0],"{0}|{1}".format(self.address,str(utxo[1])))
 		path = join_path(DATA_PATH,NETWORK)
 		utxodb = open_db(join_path(path,'utxo'))
 		utxodb.write(wb)
