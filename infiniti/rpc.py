@@ -1,5 +1,6 @@
 #from __future__ import print_function
 from wallet.wallet import Wallet
+from wallet.address import Address
 import os,sys,ast,time,base64
 import time, json, binascii
 from providers.cryptoid import Cryptoid
@@ -246,7 +247,8 @@ def syncwallets(logger=None):
 	start_block = _CONNECTION.getinfo()["blocks"]
 	next_block_hash = _CONNECTION.getblockhash(start_block)
 	cur_block = 0xFFFFFFFF
-	tx_out_val = 0
+	incoming_value = 0
+	outgoing_value = 0
 	while cur_block > end_height:
 		try:
 			block = _CONNECTION.getblock(next_block_hash)
@@ -256,7 +258,9 @@ def syncwallets(logger=None):
 		else:
 			next_block_hash = block['previousblockhash']
 			cur_block = block['height']
+			save_block = False
 			for tx_hash in block['tx']:
+				save_tx = False
 				tx_addresses = []
 				tx = gettransaction(tx_hash)
 				is_infiniti = False
@@ -264,16 +268,24 @@ def syncwallets(logger=None):
 					# Let's see if it's an Infiniti TX
 					if txout['scriptPubKey']['asm'] = 'OP_RETURN {0}'.format(OP_RETURN_KEY):
 						is_infiniti=True
+						save_tx = True
+						save_block = True
 					else:
-						for a in txout['scriptPubKey']['addresses']:
-							tx_addresses.append(a)
+						intersection = list(set(x["scriptPubKey"]["addresses"]) & set(address_list))
+						if len(intersection) > 0:
+							save_tx = True
+							save_block = True
+							incoming_value += x["value"]
 				for txin in tx["vin"]:
 					# For each txin, find the original TX and see if
 					# it came from one of our addresses and subtract
 					# the balance accordingly
-					txin_tx = gettransaction(txin["txid"]) 
+					txin_tx = gettransaction(txin["txid"])
+					x_addr = [] 
 					for x in txin_tx['vout']:
-						for a in txout['scriptPubKey']['addresses']:
-						 
-
-			intersection = list(set(txout["scriptPubKey"]["addresses"]) & set(addresses))
+						# Intersect the address list
+						intersection = list(set(x["scriptPubKey"]["addresses"]) & set(address_list))
+						if len(intersection) > 0:
+							save_tx = True
+							save_block = True
+							outgoing_value += x["value"]
