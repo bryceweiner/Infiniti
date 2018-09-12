@@ -1,5 +1,6 @@
 from wallet.wallet import Wallet
 import secretsharing
+
 VERWIF = { 
 			"DGB" : (30,128) ,
 			"VIA" : (71,199) ,
