@@ -87,7 +87,7 @@ def getinfo():
 	}
 	return json.dumps(infiniti,cls=DecimalEncoder, sort_keys=True, indent=4)
 
-def sync(fn,passphrase, reindex=False):
+def sync(reindex=False):
 	syncwallets()
 
 def signmessage(fn,passphrase,address,message):

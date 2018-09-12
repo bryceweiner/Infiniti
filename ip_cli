@@ -72,14 +72,7 @@ if __name__ == "__main__":
 			print listaddresses(args.wallet)
 
 	elif args.command == "sync":      
-		if args.passphrase is None:
-			print "ERROR: No passphrase specified!"
-		elif args.wallet is None:
-				print "ERROR: No wallet specified!"
-		elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
-				print "ERROR: Wallet does not exist!"
-		else:
-			sync(args.wallet,args.passphrase)
+		sync()
 
 	elif args.command == "reindex":      
 		if args.passphrase is None:
