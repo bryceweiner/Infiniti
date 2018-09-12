@@ -43,7 +43,7 @@ class Key(object):
         return "k.{0}.{1}".format(self.addr_type(),self.child())        
 
     def db_value(self):
-        return "{0}".format(binascii.hexlify(pack_time(time.time())))     
+        return "{0}".format(self.PublicKey().encode())     
 
     def address(self, ipaddr = False):
         if ipaddr:
@@ -185,17 +185,13 @@ class Wallet(object):
         """
         db = open_db(self._filename)
         _root_xpubkey = binascii.unhexlify(db.get('_root'))
-        self._root = HDKey.fromExtendedKey(xkey=_root_xpubkey,public=True,encoded=False)
-        self.Keys = []
         it = db.iteritems()
         prefix = b'k.'
         it.seek(prefix)        
-        self._primary = _root.ChildKey(0)
         for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
             addr,addr_type,child = key.split(".")
-            new_key = self._primary.ChildKey(int(addr_type)+HD_HARDEN).ChildKey(int(child))
-            key = Key(int(addr_type),child,new_key)
-            key.addresses = (new_key.Address(),new_key.Address(True))
+            key = Key(int(addr_type),child,None)
+            key.addresses = (public_key_to_address(value.decode(),False),public_key_to_address(value.decode(),True))
             self.Keys.append(key)
         return self.Keys
 

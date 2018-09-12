@@ -13,7 +13,7 @@ def valid_address(data):
     version = raw[:1].encode("hex")
     return (version == str(int(param_query(NETWORK,'address_version').encode('hex')))) or (version == "66")
 
-def public_key_to_bc_address(public_key,ip=False):
+def public_key_to_address(public_key,ip=False):
     i = hashlib.new('ripemd160', hashlib.sha256(public_key).digest()).digest()
     prefix_to_use = str(int(param_query(NETWORK,'address_version').encode('hex'))) if not ip else '66'
     vh160 = prefix_to_use.decode('hex')+i
@@ -150,7 +150,7 @@ def verify_message(address, signature, message, prefix=False):
     # Recover the ECDSA public key.
     recpub = p.ecdsa_recover(hmsg, sig, raw=True)
     pubser = secp256k1.PublicKey(recpub, ctx=None).serialize(compressed=compressed)
-    return public_key_to_bc_address(pubser,prefix) == address
+    return public_key_to_address(pubser,prefix) == address
 
 def sign_and_verify(key, message, infiniti = False, compressed=True):
     s = sign_message(key.PrivateKey(), message, compressed)

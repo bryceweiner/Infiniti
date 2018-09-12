@@ -60,6 +60,8 @@ class HDKey(object):
         # Sanity checks
         if encoded:
             raw = base58.check_decode(xkey)
+        else:
+            raw = xkey
         if len(raw) != 78:
             raise ValueError("extended key format wrong length")
 
