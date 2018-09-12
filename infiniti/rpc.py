@@ -86,11 +86,7 @@ def getinfo():
 	return json.dumps(infiniti,cls=DecimalEncoder, sort_keys=True, indent=4)
 
 def sync(fn,passphrase, reindex=False):
-	try:
-		_CONNECTION.sync(fn,passphrase,reindex)
-	except:
-		# core client is offline
-		pass
+	syncwallets()
 
 def signmessage(fn,passphrase,address,message):
 	w = Wallet(fn).fromFile(passphrase)
@@ -211,3 +207,70 @@ def walletbalance(fn,passphrase):
 def listwallets():
 	return [f for f in listdir(WALLET_PATH) if True]
 
+def getheight():
+	db = open_db(os.path.join(DATA_PATH,"status"),self.logger)
+	return int(db.get('height'))
+
+def putheight():
+	pass
+
+def gettransaction(tx_hash):
+	tx_raw = _CONNECTION.getrawtransaction(tx_hash)
+	return _CONNECTION.decoderawtransaction(tx_raw)
+
+def syncwallets(logger=None):
+	"""
+	For every wallet, find it's height and sync it
+
+	- Get the last block we processed from the status table
+	- For each block:
+		- Loop through the transactions:
+			- If an address involved in either the txin or txout
+				are in any of our wallets, save the block and the transaction
+			- If the transaction is an Infiniti transaction, save the data
+				to tables, as well as the block and transaction
+			- Ignore everything else
+	- We could do this via the P2P network, but it's more convenient
+		through the RPC connection
+	"""
+	# First, lets gather up the wallet addresses
+	wallet_list = [x[0] for x in os.walk(WALLET_PATH)]	
+	address_list = []		
+	for wallet_name in wallet_list:
+		keys = Wallet(wallet_name).pubkeysOnly()
+		for key in keys:
+			address_list.append(key.addresses[0])
+
+	# Loop through blocks from the chaintip to the start height
+	end_height = getheight()
+	start_block = _CONNECTION.getinfo()["blocks"]
+	next_block_hash = _CONNECTION.getblockhash(start_block)
+	cur_block = 0xFFFFFFFF
+	tx_out_val = 0
+	while cur_block > end_height:
+		try:
+			block = _CONNECTION.getblock(next_block_hash)
+		except:
+			# Block not found?
+			pass
+		else:
+			next_block_hash = block['previousblockhash']
+			cur_block = block['height']
+			for tx_hash in block['tx']:
+				tx_addresses = []
+				tx = gettransaction(tx_hash)
+				is_infiniti = False
+				for txout in tx["vout"]:
+					# Let's see if it's an Infiniti TX
+					if txout['scriptPubKey']['asm'] = 'OP_RETURN {0}'.format(OP_RETURN_KEY):
+						is_infiniti=True
+					else:
+						for a in txout['scriptPubKey']['addresses']:
+							tx_addresses.append(a)
+				for txin in tx["vin"]:
+					# For each txin, find the original TX and see if
+					# it came from one of our addresses and subtract
+					# the balance accordingly
+					txin_tx = gettransaction(txin["txid"])  
+
+			intersection = list(set(txout["scriptPubKey"]["addresses"]) & set(addresses))

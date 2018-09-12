@@ -4,6 +4,7 @@ from infiniti.params import *
 from p2p.protocol.serializers import *
 from p2p.protocol.queues import MemPoolManager
 from p2p.rpc import RPCServer, RPCServerThread
+from infiniti.protocol import rpc as RPC
 import threading, socket
 import sys, traceback
 import sched, time, os
@@ -135,12 +136,7 @@ class InfinitiDaemon(Daemon):
 		db = open_db(os.path.join(DATA_PATH,"status"),self.logger,False)
 
 	def sync_wallets(self):
-		# For every wallet, find it's height and sync it
-		wallet_list = [x[0] for x in os.walk(WALLET_PATH)]			
-		for wallet_name in wallet_list:
-			keys = Wallet(wallet_name).pubkeysOnly()
-			for key in keys:
-				pass
+		RPC.syncwallets(self.logger)
 
 	def run(self):
 		self.create_databases()
