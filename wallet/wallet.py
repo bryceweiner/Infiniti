@@ -17,7 +17,7 @@ class Key(object):
     key = None
     has_wif = True
     addresses = []
-
+    pubkey = None
     def __init__(self,addr_type,child,key):
         self._child = child
         self._addr_type = addr_type
@@ -55,7 +55,7 @@ class Key(object):
         if self.has_wif:
             return self.key.PublicKey()
         else:
-            return 0x00
+            return self.pubkey
 
     def private_key(self):
         if self.has_wif:
@@ -191,6 +191,7 @@ class Wallet(object):
         for key, value in list(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
             addr,addr_type,child = key.split(".")
             key = Key(int(addr_type),child,None)
+            key.pubkey = value
             key.addresses = (public_key_to_address(value,False),public_key_to_address(value,True))
             self.Keys.append(key)
         return self.Keys

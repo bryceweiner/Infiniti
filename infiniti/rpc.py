@@ -14,6 +14,7 @@ from infiniti.logger import *
 from utils.crypto import sign_and_verify, verify_message
 from p2p import version
 from utils.db import *
+from infiniti.factories import process_block
 
 import qrencode, threading
 
@@ -215,10 +216,6 @@ def getheight():
 def putheight():
 	pass
 
-def gettransaction(tx_hash):
-	tx_raw = _CONNECTION.getrawtransaction(tx_hash)
-	return _CONNECTION.decoderawtransaction(tx_raw)
-
 def syncwallets(logger=None):
 	"""
 	For every wallet, find it's height and sync it
@@ -242,7 +239,7 @@ def syncwallets(logger=None):
 		keys = Wallet(wallet_name).pubkeysOnly()
 		for key in keys:
 			# address_list is used as an index for intersections
-			address_obj.append(Address(key.addresses[0]))
+			address_obj.append(Address(key.addresses[0],key.pubkey))
 			address_list.append(key.addresses[0])
 
 	# Loop through blocks from the chaintip to the start height
@@ -255,52 +252,16 @@ def syncwallets(logger=None):
 		try:
 			block = _CONNECTION.getblock(next_block_hash)
 		except:
-			# Block not found?
-			pass
+			# This should not happen
+			break
 		else:
-			next_block_hash = block['previousblockhash']
 			cur_block = block['height']
-			save_block = False
-			for tx_hash in block['tx']:
-				save_tx = False
-				is_infiniti = False
-				tx_addresses = []
-				tx = gettransaction(tx_hash)
-				is_infiniti = False
-				for txout in tx["vout"]:
-					# Let's see if it's an Infiniti TX
-					if txout['scriptPubKey']['asm'] = 'OP_RETURN {0}'.format(OP_RETURN_KEY):
-						is_infiniti=True
-						save_tx = True
-						save_block = True
-					else:
-						intersection = list(set(x["scriptPubKey"]["addresses"]) & set(address_list))
-						if len(intersection) > 0:
-							save_tx = True
-							save_block = True
-							for i in intersection:
-								index = address_list.index(i)
-								address_obj[index].incoming_value += float(x["value"])
-				for txin in tx["vin"]:
-					# For each txin, find the original TX and see if
-					# it came from one of our addresses and subtract
-					# the balance accordingly
-					txin_tx = gettransaction(txin["txid"])
-					for x in txin_tx['vout']:
-						# Intersect the address list
-						intersection = list(set(x["scriptPubKey"]["addresses"]) & set(address_list))
-						if len(intersection) > 0:
-							save_tx = True
-							save_block = True
-							for i in intersection:
-								index = address_list.index(i)
-								address_obj[index].outgoing_value += float(x["value"])
-				if is_infiniti:
-					infiniti_tx.append(tx)
-				if save_tx:
-					#write to disk
-					pass
-			if save_block:
-				#write to disk
-				pass
+			if process_block(_CONNECTION,next_block_hash):
+				next_block_hash = block['previousblockhash']
+	
+	# Save our address data to disk.
+
+	# Now that we've collected all outstanding Infiniti TX, let's process them
+	for i in infiniti_tx:
+		pass
 
