@@ -1,6 +1,7 @@
 from utils.db import *
 from infiniti.params import *
 import os
+from utils.helpers import *
 
 class Address(object):
 	incoming_value = 0
@@ -11,10 +12,10 @@ class Address(object):
 	address = None
 	wallet = None
 
-	def __init__(self,address=None,public_key = None,wallet=None):
+	def __init__(self,address=None,public_key = None,wallet_name=None):
 		self.pubkey = public_key
 		self.address = address
-		self.wallet = wallet
+		self.wallet = wallet_name
 
 	def current_balance(self):
 		return self.incoming_value - self.outgoing_value
@@ -26,7 +27,7 @@ class Address(object):
 
 	def _save_utxo_db(self):
 		wb = writebatch()		
-		if len(self.sxto)>0:
+		if len(self.stxo)>0:
 			for stxo in self.stxo:
 				wb.delete(stxo)
 		for utxo in self.utxo:

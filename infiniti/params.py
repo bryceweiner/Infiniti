@@ -3,7 +3,9 @@ from decimal import Decimal
 from sys import platform
 from infiniti.exceptions import *
 import codecs, os, time
+from utils.helpers import *
 
+NETWORK = "Tao"
 BASE_UTXO_ID = 0x100001
 OP_RETURN_KEY = 'd6901b0cbe0f48420fc5814866b7c3de8d08c4e721a7afc655d5b5a0f8534f23'
 
@@ -22,12 +24,13 @@ WALLET_PATH = os.path.join(ROOT_PATH, 'wallets')
 
 if not os.path.exists(DATA_PATH):
     os.makedirs(DATA_PATH)
+if not os.path.exists(join_path(DATA_PATH,NETWORK)):
+    os.makedirs(join_path(DATA_PATH,NETWORK))
 if not os.path.exists(WALLET_PATH):
     os.makedirs(WALLET_PATH)
 
 USE_RPC = True
 
-NETWORK = "Tao"
 
 _params = namedtuple('_params', [
     'network_name',

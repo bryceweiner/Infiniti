@@ -1,3 +1,4 @@
+from utils.helpers import *
 from utils.db import *
 from infiniti.params import *
 
@@ -69,10 +70,8 @@ def process_block(rpc,block_hash,address_list,address_obj):
 		if is_infiniti:
 			process_infiniti(tx)			
 		if save_tx:
-			#write to disk
 			save_transaction()
 	if _save_block:
-		#write to disk
 		save_block(block)
 	return address_obj
 

@@ -247,7 +247,7 @@ def syncwallets(logger=None):
 		keys = Wallet(wallet_name).pubkeysOnly()
 		for key in keys:
 			# address_list is used as an index for intersections
-			address_obj.append(Address(key.addresses[0],key.pubkey,wallet_name))
+			address_obj.append(Address(key.addresses[0],key.pubkey,os.path.basename(os.path.normpath(wallet_name))))
 			address_list.append(key.addresses[0])
 
 	# Loop through blocks from the chaintip to the start height
