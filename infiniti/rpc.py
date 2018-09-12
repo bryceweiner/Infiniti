@@ -236,10 +236,13 @@ def syncwallets(logger=None):
 	"""
 	# First, lets gather up the wallet addresses
 	wallet_list = [x[0] for x in os.walk(WALLET_PATH)]	
+	address_obj = []
 	address_list = []		
 	for wallet_name in wallet_list:
 		keys = Wallet(wallet_name).pubkeysOnly()
 		for key in keys:
+			# address_list is used as an index for intersections
+			address_obj.append(Address(key.addresses[0]))
 			address_list.append(key.addresses[0])
 
 	# Loop through blocks from the chaintip to the start height
@@ -247,8 +250,7 @@ def syncwallets(logger=None):
 	start_block = _CONNECTION.getinfo()["blocks"]
 	next_block_hash = _CONNECTION.getblockhash(start_block)
 	cur_block = 0xFFFFFFFF
-	incoming_value = 0
-	outgoing_value = 0
+	infiniti_tx = []
 	while cur_block > end_height:
 		try:
 			block = _CONNECTION.getblock(next_block_hash)
@@ -261,6 +263,7 @@ def syncwallets(logger=None):
 			save_block = False
 			for tx_hash in block['tx']:
 				save_tx = False
+				is_infiniti = False
 				tx_addresses = []
 				tx = gettransaction(tx_hash)
 				is_infiniti = False
@@ -275,17 +278,29 @@ def syncwallets(logger=None):
 						if len(intersection) > 0:
 							save_tx = True
 							save_block = True
-							incoming_value += x["value"]
+							for i in intersection:
+								index = address_list.index(i)
+								address_obj[index].incoming_value += float(x["value"])
 				for txin in tx["vin"]:
 					# For each txin, find the original TX and see if
 					# it came from one of our addresses and subtract
 					# the balance accordingly
 					txin_tx = gettransaction(txin["txid"])
-					x_addr = [] 
 					for x in txin_tx['vout']:
 						# Intersect the address list
 						intersection = list(set(x["scriptPubKey"]["addresses"]) & set(address_list))
 						if len(intersection) > 0:
 							save_tx = True
 							save_block = True
-							outgoing_value += x["value"]
+							for i in intersection:
+								index = address_list.index(i)
+								address_obj[index].outgoing_value += float(x["value"])
+				if is_infiniti:
+					infiniti_tx.append(tx)
+				if save_tx:
+					#write to disk
+					pass
+			if save_block:
+				#write to disk
+				pass
+
