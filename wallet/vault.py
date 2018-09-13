@@ -2,28 +2,6 @@ from wallet.wallet import Wallet
 import secretsharing
 from Crypto import Random
 
-VERWIF = { 
-			"DGB" : (30,128) ,
-			"VIA" : (71,199) ,
-			"SYS" : (63,128) ,
-			"BTC" : (0, 128) ,
-			"UNO" : (130,224) ,
-			"IOC" : (103, 231) ,
-			"DOGE" : (30,158) ,
-			"XTO" : (66,76),
-			"DASH" : (76,204) ,
-			"MZC" : (50,224) ,
-			"XVG" : (30,158) ,
-			"VTC" : (71,128) ,
-			"XPM" : (23,131) ,
-			"PPC" : (55,183) ,
-			"VRC" : (70,198) ,
-			"FLO" : (35,176) ,
-			"TX" : (66,153) ,
-			"PINK" : (3,131) ,
-			"BLK" : (25,153) ,
-	}
-
 class Vault(Wallet):
 	"""
 		SSS, with a twist
@@ -76,12 +54,12 @@ class Vault(Wallet):
         entropy_from_seed = self.entropy_from_seed(seed,nonce)
         self._root = HDKey.fromEntropy(entropy_from_seed, public, testnet)
         self._primary = self._root.ChildKey(0)
-        deposit = self._primary.ChildKey(0+HD_HARDEN)
+        start_point = self._primary.ChildKey(0+HD_HARDEN)
 
         for vw in self.verwif:
         	x = 0
         	while x < self.num_addr:
-        		pass
+        		key = start_point.ChildKey(x)
         return self
 
 	def save(self,filename):
