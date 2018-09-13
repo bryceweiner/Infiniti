@@ -1,5 +1,6 @@
 from wallet.wallet import Wallet
 import secretsharing
+from Crypto import Random
 
 VERWIF = { 
 			"DGB" : (30,128) ,
@@ -40,7 +41,7 @@ class Vault(Wallet):
 		the storage of any cryptocurrency supported by the Infiniti platform,
 		which happens to be every cryptocurrency that uses a SECP256k1 curve.
 
-		Provide anarray of tickers and the
+		Provide an array of tickers and the
 		resulting requested addresses will be Base58check encoded for every 
 		network supplied, suitable for use on the matching cryptocurrency network as a
 		cold storage deposit address.
@@ -56,19 +57,39 @@ class Vault(Wallet):
 	pieces = 0
 	pwd_array = 0
 	num_addr=0
+	seed = None
+	nonce = 0
 
 	def __init__(self,parts=15,pieces=5,num_addr=0,verwif=None,pwd_array=None):
 		if verwif is not None:
 			self.verwif = verwif
 		else:
 			self.verwif = VERWIF
+		self.num_addr = num_addr
 
 	def load(self,filename):
 		pass
 
+    def create(self, seed, nonce):
+		self.seed, self.nonce = self.create_seed()
+        self.seed = seed
+        entropy_from_seed = self.entropy_from_seed(seed,nonce)
+        self._root = HDKey.fromEntropy(entropy_from_seed, public, testnet)
+        self._primary = self._root.ChildKey(0)
+        deposit = self._primary.ChildKey(0+HD_HARDEN)
+
+        for vw in self.verwif:
+        	x = 0
+        	while x < self.num_addr:
+        		pass
+        return self
+
 	def save(self,filename):
-		pass
+		if len(pwd_array) != parts:
+			return None
 
-
-	if len(pwd_array) != parts:
-		return None
+		max_addr = len(verwif)
+		x = 0
+		while x < num_addr:
+			x++
+			for vw in verwif:
