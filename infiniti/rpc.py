@@ -106,7 +106,7 @@ def signmessage(fn,passphrase,address,message):
 
 def verifymessage(address,message,signature):
 	infiniti = address[:1]=='i'
-	return json.dumps({ "verified" : verify_message(address, signature, message, prefix=infiniti) } )
+	return json.dumps({ "verified" : verify_message(address, signature, message, prefix=VERWIF['XTO'][0]) } )
 
 def listunspent(fn):
 	try:

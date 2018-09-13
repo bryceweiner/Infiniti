@@ -74,7 +74,7 @@ class Key(object):
 
     def sign_msg(self, msg):
         if self.has_wif:
-            return sign_and_verify(self.key, msg, False)
+            return sign_and_verify(self.key, msg, VERWIF['XTO'][0])
         else:
             return None
 

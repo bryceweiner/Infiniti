@@ -29,9 +29,9 @@ def valid_address(data):
     version = raw[:1].encode("hex")
     return (version == str(int(param_query(NETWORK,'address_version').encode('hex')))) or (version == "66")
 
-def public_key_to_address(public_key,ip=False):
+def public_key_to_address(public_key,prefix=None):
     i = hashlib.new('ripemd160', hashlib.sha256(public_key).digest()).digest()
-    prefix_to_use = str(int(param_query(NETWORK,'address_version').encode('hex'))) if not ip else '66'
+    prefix_to_use = str(prefix) if not ip else '66'
     vh160 = prefix_to_use.decode('hex')+i
     return base58.check_encode(vh160)
 
@@ -145,7 +145,7 @@ def sign_message(private_key, message, compressed=True):
     res = base64.b64encode(chr(meta).encode('utf8') + sigbytes)
     return res
 
-def verify_message(address, signature, message, prefix=False):
+def verify_message(address, signature, message, prefix=None):
     if len(signature) != 88:
         raise Exception("Invalid base64 signature length")
 
@@ -168,9 +168,9 @@ def verify_message(address, signature, message, prefix=False):
     pubser = secp256k1.PublicKey(recpub, ctx=None).serialize(compressed=compressed)
     return public_key_to_address(pubser,prefix) == address
 
-def sign_and_verify(key, message, infiniti = False, compressed=True):
+def sign_and_verify(key, message, prefix=None, compressed=True):
     s = sign_message(key.PrivateKey(), message, compressed)
-    assert verify_message(key.Address(infiniti), s, message, infiniti)
+    assert verify_message(key.Address(infiniti), s, message, prefix)
     return s
 
 def pack_varint(integer):
