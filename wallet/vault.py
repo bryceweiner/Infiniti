@@ -80,6 +80,8 @@ class Vault(Wallet):
 		self.shares = SecretSharer.HexToHexSecretSharer(entropy_from_seed,self.shares_required,self.shares)
 
 		#Encrypt the shares if a pwd_array is provided
+		#Shares are encrypte against passwords in the same order provided
+		#This is never revealed during use
 		if self.pwd_array is not None:
 			self.encrypted = True
 			x = 0
