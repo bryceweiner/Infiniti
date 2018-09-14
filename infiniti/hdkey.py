@@ -311,11 +311,11 @@ class HDKey(object):
         return base58.check_encode(prefix + address_bytes)
 
 
-    def WalletImportFormat(self):
+    def WalletImportFormat(self,prefix=76):
         "Returns private key encoded for wallet import"
         if self.public:
             raise Exception("Publicly derived deterministic keys have no private half")
-        addressversion = param_query(NETWORK,'wif_version') if not self.testnet else '\xef'
+        addressversion = prefix if not self.testnet else '\xef'
         raw = addressversion + self.k.to_string() + '\x01' # Always compressed
         return base58.check_encode(raw)
 

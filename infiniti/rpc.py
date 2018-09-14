@@ -12,7 +12,7 @@ from os.path import isfile, join
 from utils.encoder import DecimalEncoder
 from infiniti.params import *
 from infiniti.logger import *
-from utils.crypto import sign_and_verify, verify_message
+from utils.crypto import sign_and_verify, verify_message,public_key_to_address
 from p2p import version
 from utils.db import *
 from infiniti.factories import process_block,process_infiniti
@@ -165,13 +165,17 @@ def listaddresses(fn):
 	keys = Wallet(fn).pubkeysOnly()
 	a = []
 	for k in keys:
-		a.append({
-			'address_type':k.address_type(),
-			NETWORK:k.address(), 
-			'infiniti':k.address(True)
-			} )
-	d = { "addresses" : a }
-	return json.dumps(d, sort_keys=True, indent=4)
+		q = {}
+		for _k,v in VERWIF.iteritems():
+			q.update({
+				_k:k.address(v[0]), 
+				'infiniti':k.address(103)
+				} )
+		a.append({ 	'key'			: 'm/0/{0}h/{1}'.format(k.addr_type(),k.child()),
+					'address_type' 	: k.address_type(),
+					'addresses'		: q
+		 })
+	return json.dumps(a, sort_keys=True, indent=4)
 
 def newaddress(fn,passphrase,addr_type=0):
 	"""
@@ -292,4 +296,6 @@ def createvault(shares,shares_required,num_addr,verwif,pwd_array):
 	v = Vault(shares,shares_required,num_addr,verwif,pwd_array)
 	return v
 
+def importvault(num_addr,shares):
+	pass
 

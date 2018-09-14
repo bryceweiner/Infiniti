@@ -43,13 +43,10 @@ class Key(object):
         return "k.{0}.{1}".format(self.addr_type(),self.child())        
 
     def db_value(self):
-        return "{0}".format(self.key.PublicKey())     
+        return "{0}".format(self.public_key())     
 
-    def address(self, ipaddr = False):
-        if ipaddr:
-            return self.addresses[1]
-        else:
-            return self.addresses[0]
+    def address(self, prefix):
+        return public_key_to_address(self.public_key(),prefix)
 
     def public_key(self):
         if self.has_wif:
@@ -65,7 +62,18 @@ class Key(object):
 
     def wif(self):
         if self.has_wif:
-            return self.key.WalletImportFormat()
+            a = []
+            for k in keys:
+                q = {}
+                for k,v in VERWIF.iteritems():
+                    q.update({
+                        k:self.key.WalletImportFormat(v[1]), 
+                        } )
+                a.append({ 'address_type'   : k.address_type(),
+                            'WIF'     : q
+                 })
+
+            return a 
         else:
             return ''
 
@@ -193,6 +201,7 @@ class Wallet(object):
             key = Key(int(addr_type),child,None)
             key.pubkey = value
             key.addresses = (public_key_to_address(value,VERWIF['XTO'][0]),public_key_to_address(value))
+            key.has_wif = False
             self.Keys.append(key)
         return self.Keys
 
