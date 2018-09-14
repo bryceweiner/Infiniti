@@ -60,7 +60,6 @@ class Vault(Wallet):
 		#Generate the seed
 		self.seed, self.nonce = self.create_seed()
 		entropy_from_seed = self.entropy_from_seed(self.seed,self.nonce)
-		print self.entropy_from_seed
 
 		#Generate deposit addresses
 		self._root = HDKey.fromEntropy(entropy_from_seed)
@@ -102,12 +101,9 @@ class Vault(Wallet):
 			x += 1
 
 		entropy_from_seed = HexToHexSecretSharer.recover_secret(_shares)
-
-		w = self.fromEntropy(entropy_from_seed, passphrase)
+		w = self.fromEntropy(binascii.unhexlify(entropy_from_seed), passphrase)
 		x = 0
-		print num_addr
 		while x < num_addr:
-			print "what the fuck"
 			key = w.create_address(save=True, addr_type=0 )
 			x += 1
 		return w
