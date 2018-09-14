@@ -21,9 +21,8 @@ message DeckSpawn {
     ONCE   = 0x02; // Only one issuance transaction from asset owner allowed
     MULTI  = 0x04; // Multiple issuance transactions from asset owner allowed
     MONO   = 0x08; // All card transaction amounts are equal to 1
-    UNFLUSHABLE  = 0x10; // No card transfer transactions allowed except for the card-issue transaction
-    // A SINGLETON is ( 0x20 | 0x08 MONO )
-    SINGLETON = 0x28; // Initial CardTransfer is serialized, maximum number of Initial CardTransfers (by amount). (ONCE | MULTI)
+    // A SINGLETON is ( 0x10 | 0x08 MONO )
+    SINGLETON = 0x18; // Initial CardTransfer is serialized, maximum number of Initial CardTransfers (by amount). (ONCE | MULTI)
   }
   uint32 issue_mode = 5;
 
