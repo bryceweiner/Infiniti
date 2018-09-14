@@ -151,15 +151,20 @@ def address_in_wallet(fn,passphrase,address):
 			d = { "address_in_wallet" : True }
 	return json.dumps(d, sort_keys=True, indent=4)
 
-def dumpaddress(fn,passphrase,address):
+def dumpaddress(fn,passphrase,address,coin):
 	wallet = Wallet(fn).fromFile(passphrase)
+	d = None
 	for k in wallet.Keys:
-		if k.address() == address:
-			d = k.dump()
-		elif k.address(True) == address:
-			d = k.dump()
+		print VERWIF[coin]
+		print k.address(VERWIF[coin][0])
 
-	return json.dumps(d, sort_keys=True, indent=4)
+		if k.address(VERWIF[coin][0]) == address:
+			d = k.wif(VERWIF[coin][1])
+	if d is None:
+		return "ERROR: address not found!"
+	else:
+		d.update({ 'address':k.address(VERWIF[coin][0]) })
+		return json.dumps(d, sort_keys=True, indent=4)
 
 def listaddresses(fn):
 	keys = Wallet(fn).pubkeysOnly()

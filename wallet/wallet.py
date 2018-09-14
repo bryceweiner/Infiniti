@@ -61,25 +61,16 @@ class Key(object):
         else:
             return 0x00
 
-    def wif(self):
+    def wif(self, prefix):
         if self.has_wif:
-            a = []
-            for k in keys:
-                q = {}
-                for k,v in VERWIF.iteritems():
-                    q.update({
-                        k:self.key.WalletImportFormat(v[1]), 
-                        } )
-                a.append({ 'address_type'   : k.address_type(),
-                            'WIF'     : q
-                 })
-
-            return a 
+            return { 'address_type'   : self.address_type(),
+                        'WIF'     : self.key.WalletImportFormat(prefix)
+             }
         else:
             return ''
 
-    def dump(self):
-        return self.key.dump()
+    def dump(self,wif_prefix):
+        return self.key.dump(self.private_key(),wif_prefix)
 
     def sign_msg(self, msg):
         if self.has_wif:

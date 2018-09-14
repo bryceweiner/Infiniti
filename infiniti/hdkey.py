@@ -9,7 +9,7 @@ import hmac
 import hashlib
 import ecdsa
 import struct
-import codecs
+import codecs, re
 import utils.base58 as base58
 
 from hashlib import sha256
@@ -315,7 +315,7 @@ class HDKey(object):
         "Returns private key encoded for wallet import"
         if self.public:
             raise Exception("Publicly derived deterministic keys have no private half")
-        addressversion = prefix if not self.testnet else '\xef'
+        addressversion = chr(prefix) if not self.testnet else '\xef'
         raw = addressversion + self.k.to_string() + '\x01' # Always compressed
         return base58.check_encode(raw)
 
@@ -382,7 +382,7 @@ class HDKey(object):
 
     # Debugging methods
     #
-    def dump(self,entropy):
+    def dump(self,entropy,wif_prefix):
         "Dump key fields mimicking the BIP0032 test vector format"
         i = {
             "hex" : b2a_hex(self.Identifier()),
@@ -399,7 +399,7 @@ class HDKey(object):
                 "xprv b58":  self.ExtendedKey(private=True, encoded=True),
                 "hex":  hexlify(self.PrivateKey()),
                 "chaincode":  b2a_hex(self.C),
-                "wif":  self.WalletImportFormat(),
+                "wif":  self.WalletImportFormat(wif_prefix),
                 "RSA Pub":  self.RSAPublic(entropy),
                 "RSA Prv":  self.RSAPrivate(),
             })

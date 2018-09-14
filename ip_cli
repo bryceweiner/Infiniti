@@ -3,8 +3,12 @@ from infiniti.rpc import *
 import argparse
 import sys
 from utils.crypto import valid_address
+from infiniti.params import *
 
 if __name__ == "__main__":
+	coins = []
+	for k,v in VERWIF.iteritems():
+		coins.append(k)
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument("command", help="Command to execute", choices=[ "listwallets","walletbalance","getnewaddress",
@@ -15,7 +19,7 @@ if __name__ == "__main__":
 																		])
 	parser.add_argument("-w","--wallet", help="The wallet to use")
 	parser.add_argument("-a","--address", help="An address to use")
-	parser.add_argument("-b","--blockchain", help="The blockchain to use",type=str, choices=['tao']) #,'uno','sys','btc','ppc','xpm','flo'])
+	parser.add_argument("-b","--blockchain", help="The blockchain to use",type=str, choices=coins)
 	parser.add_argument("-p","--passphrase", help="The wallet passphrase")
 	parser.add_argument("-m","--message", help="The message to verify")
 	parser.add_argument("-s","--signature", help="The signature of the message to verify")
@@ -109,15 +113,17 @@ if __name__ == "__main__":
 		if args.address is None:
 			print "ERROR: No address specified!"
 		elif not valid_address(args.address):
-			print "ERROR: Address provided is not a Tao or Infiniti address"
+			print "ERROR: Address provided is not a valid address"
 		elif args.passphrase is None:
 			print "ERROR: No passphrase specified!"
 		elif args.wallet is None:
 			print "ERROR: No wallet specified!"
 		elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
 			print "ERROR: Wallet does not exist!"
+		elif args.blockchain is None:
+			print "ERROR: Blockchain not specified!"
 		else:
-			print dumpaddress(args.wallet,args.passphrase,args.address)
+			print dumpaddress(args.wallet,args.passphrase,args.address,args.blockchain)
 
 	elif args.command == "signmessage":
 		if args.message is None:

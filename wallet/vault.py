@@ -10,7 +10,7 @@ from infiniti.params import *
 
 class Vault(Wallet):
 	"""
-		SSS, with a twist
+		SSSS, with a twist
 
 		Provide a password array which will be used to AES-256 encrypt 
 		each resulting part of the shared secret, output in base64
