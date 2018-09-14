@@ -32,30 +32,31 @@ class Vault(Wallet):
 		}  
 	"""
 	verwif = None
-	parts = 0
-	pieces = 0
+	shares = 0
+	shares_required = 0
 	pwd_array = 0
 	num_addr=0
 	seed = None
 	nonce = 0
-	depost_addresses = {}
+	deposit_addresses = {}
 	shares = []
+	encrypted = False
 
-	def __init__(self,parts=15,pieces=5,num_addr=0,verwif=None,pwd_array=None):
+	def __init__(self,shares=15,shares_required=5,num_addr=0,verwif=None,pwd_array=None):
 		if verwif is not None:
 			self.verwif = verwif
 		else:
 			self.verwif = VERWIF
 		self.num_addr = num_addr
-		self.parts = parts
-		self.pieces = pieces
+		self.shares = shares
+		self.shares_required = shares_required
 		self.pwd_array = pwd_array
 
 	def load(self,filename):
 		pass
 
     def create(self, seed, nonce):
-    	if self.pwd_array is not None and (len(self.pwd_array) != self.parts):
+    	if self.pwd_array is not None and (len(self.pwd_array) != self.shares):
     		return None
 
     	#Generate the seed
@@ -76,21 +77,21 @@ class Vault(Wallet):
         		x += 1
 
         #Split the seed
-		self.shares = SecretSharer.HexToHexSecretSharer(entropy_from_seed,self.pieces,self.parts)
+		self.shares = SecretSharer.HexToHexSecretSharer(entropy_from_seed,self.shares_required,self.shares)
 
-		#Encrypt the parts if a pwd_array is provided
+		#Encrypt the shares if a pwd_array is provided
 		if self.pwd_array is not None:
+			self.encrypted = True
 			x = 0
 			for pwd in pwd_array:
 				self.shares[x] = self.AESEncrypt(pwd,self.shares[x])
 				x += 1
 
-	def save(self,filename):
-		if len(pwd_array) != parts:
-			return None
+	def __repr__(self):
+		return {
+			"deposit_addresses" 	: self.deposit_addresses,
+			"shares"				: self.shares,
+			"shares_required"		: self.pieces,
+			"encrypted"				: self.encrypted,
+		} 
 
-		max_addr = len(verwif)
-		x = 0
-		while x < num_addr:
-			x++
-			for vw in verwif:
