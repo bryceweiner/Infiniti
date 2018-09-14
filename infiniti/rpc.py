@@ -278,7 +278,17 @@ def syncwallets(logger=None):
 	for a in address_obj:
 		a.save()
 
-def createvault(shares=15,shares_required=5,num_addr=5,verwif=VERWIF,pwd_array=None):
+def createvault(shares,shares_required,num_addr,verwif,pwd_array):
+	#shares=15,shares_required=5,num_addr=5,verwif=VERWIF,pwd_array=None
+	if shares is None:
+		shares = 15
+	if shares_required is None:
+		shares_required = 5
+	if num_addr is None:
+		num_addr =5
+	if verwif is None:
+		verwif = VERWIF
+
 	v = Vault(shares,shares_required,num_addr,verwif,pwd_array).create()
 	return json.dumps(v)
 
