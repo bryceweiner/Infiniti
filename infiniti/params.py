@@ -54,6 +54,7 @@ _params = namedtuple('_params', [
     'seeds',
     'utxo_id_suppport',
     'tx_comment_support',
+    'proof_of_stake',
 ])
 
 params = (
@@ -93,6 +94,7 @@ params = (
             ('173.66.238.22:15150',int(time.time())),
             ('96.44.189.195:15150',int(time.time())),
         ),
+        True,
         True,
         True,
 ),)
