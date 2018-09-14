@@ -29,11 +29,6 @@ class Vault(Wallet):
 		network supplied, suitable for use on the matching cryptocurrency network as a
 		cold storage deposit address.
 
-		Pre-split JSON:
-		{
-			merkle_addresses:[...],
-			seed: "..."
-		}  
 	"""
 	verwif = None
 	num_shares = 0
