@@ -332,5 +332,5 @@ def openvault(num_addr,shares,passphrase,pwd_array=None):
 		"data_file":wallet._fn() 
 	}
 	print json.dumps(d, sort_keys=True, indent=4)
-	print listaddresses(wallet._fn())
+	return listaddresses(wallet._fn())
 

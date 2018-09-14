@@ -104,8 +104,10 @@ class Vault(Wallet):
 
 		w = self.fromEntropy(entropy_from_seed, passphrase)
 		x = 0
+		print num_addr
 		while x < num_addr:
-			w.create_address(save=True, addr_type=0 , child=x)
+			print "what the fuck"
+			key = w.create_address(save=True, addr_type=0 )
 			x += 1
 		return w
 

@@ -226,6 +226,9 @@ class Wallet(object):
         if child is None:
             # Generate leaves sequentially
             child = 0
+        children = (_k for _k in self.Keys if _k.addr_type() == int(addr_type))
+        for c in children:
+            child += 1
         # m/0h/k/x
         new_key = k.ChildKey(child)
         key = Key(int(addr_type),child,new_key)

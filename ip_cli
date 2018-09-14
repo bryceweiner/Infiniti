@@ -37,6 +37,8 @@ if __name__ == "__main__":
 	if args.command == "openvault":
 		if args.passphrase is None:
 			print "ERROR: No passphrase provided!"
+		elif args.numaddr is None:
+			print "ERROR: Number of addresses must be greater than zero!"
 		elif args.password_array is None:
 			print openvault(args.numaddr,args.shares_array,args.passphrase)
 		else:
