@@ -59,6 +59,8 @@ class Vault(Wallet):
 
 		#Generate the seed
 		self.seed, self.nonce = self.create_seed()
+		print self.seed
+		print binascii.hexlify(self.nonce)
 		entropy_from_seed = self.entropy_from_seed(self.seed,self.nonce)
 
 		#Generate deposit addresses
