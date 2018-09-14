@@ -304,8 +304,9 @@ def openvault(num_addr,shares,passphrase,pwd_array):
 	v.update_status("updated",str(0))
 	d = {
 		"passphrase":passphrase,
-		"data_file":wallet._fn() 
+		"data_file":v._fn() 
 	}
 	syncwallets()
-	return json.dumps(d, sort_keys=True, indent=4)
+	print json.dumps(d, sort_keys=True, indent=4)
+	print listaddresses(v._fn())
 
