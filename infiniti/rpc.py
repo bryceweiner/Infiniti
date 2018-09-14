@@ -175,7 +175,6 @@ def listaddresses(fn):
 		_chld = 0
 		_keys = []
 		for key in keys:
-			print key
 			a = []
 			_at = key.address_type()
 			_attr = key.addr_type()
@@ -332,7 +331,6 @@ def openvault(num_addr,shares,passphrase,pwd_array=None):
 		"passphrase":passphrase,
 		"data_file":wallet._fn() 
 	}
-	syncwallets()
 	print json.dumps(d, sort_keys=True, indent=4)
 	print listaddresses(wallet._fn())
 
