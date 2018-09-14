@@ -55,6 +55,7 @@ _params = namedtuple('_params', [
     'utxo_id_suppport',
     'tx_comment_support',
     'proof_of_stake',
+    'segwit',
 ])
 
 params = (
@@ -97,6 +98,7 @@ params = (
         True,
         True,
         True,
+        False,
 ),)
 
 VERWIF = { 
