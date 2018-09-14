@@ -52,6 +52,8 @@ _params = namedtuple('_params', [
     'p2p_magic',
     'p2p_port',
     'seeds',
+    'utxo_id_suppport',
+    'tx_comment_support',
 ])
 
 params = (
@@ -91,6 +93,8 @@ params = (
             ('173.66.238.22:15150',int(time.time())),
             ('96.44.189.195:15150',int(time.time())),
         ),
+        True,
+        True,
 ),)
 
 VERWIF = { 
