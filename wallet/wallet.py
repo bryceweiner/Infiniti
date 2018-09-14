@@ -173,10 +173,10 @@ class Wallet(object):
         return self
 
     def fromEntropy(self, entropy, passphrase = ''):
-        self._root = HDKey.fromEntropy(entropy, public, testnet)
+        self._root = HDKey.fromEntropy(entropy, False, False)
         self.encrypt_entropy(sha256(passphrase).digest(),entropy)
         self._primary = self._root.ChildKey(0)
-        self.filename = join_path(WALLET_PATH,self._fn())
+        self._filename = join_path(WALLET_PATH,self._fn())
         self.save()
         return self
 
@@ -217,7 +217,7 @@ class Wallet(object):
     def filename(self):
         return self._filename
 
-    def create_address(self, save=False, addr_type=None , child=0):
+    def create_address(self, save=False, addr_type=None , child=None):
         """
             create_address is a little tricky because it automatically moves to m/0h first
             Addresses are then always m/0h/0/x or 1/x for change addresses
@@ -226,9 +226,6 @@ class Wallet(object):
         if child is None:
             # Generate leaves sequentially
             child = 0
-        children = (_k for _k in self.Keys if _k.addr_type() == int(addr_type))
-        for c in children:
-            child += 1
         # m/0h/k/x
         new_key = k.ChildKey(child)
         key = Key(int(addr_type),child,new_key)

@@ -6,6 +6,7 @@ import sengen, base64, binascii, json
 from infiniti.hdkey import HDKey, HD_HARDEN
 from utils.crypto import public_key_to_address
 from collections import OrderedDict
+from infiniti.params import *
 
 class Vault(Wallet):
 	"""
@@ -101,11 +102,12 @@ class Vault(Wallet):
 
 		entropy_from_seed = HexToHexSecretSharer.recover_secret(_shares)
 
-		self._root = self.fromEntropy(entropy_from_seed, passphrase)
+		w = self.fromEntropy(entropy_from_seed, passphrase)
 		x = 0
-		while x < num_addr - 1:
-			self.create_address(save=True, addr_type=0 , child=x)
+		while x < num_addr:
+			w.create_address(save=True, addr_type=0 , child=x)
 			x += 1
+		return w
 
 	def __repr__(self):
 		return json.dumps({

@@ -163,19 +163,40 @@ def dumpaddress(fn,passphrase,address):
 
 def listaddresses(fn):
 	keys = Wallet(fn).pubkeysOnly()
-	a = []
+	results = []
+
+	q = [[],[],[],[]]
 	for k in keys:
-		q = {}
-		for _k,v in VERWIF.iteritems():
-			q.update({
-				_k:k.address(v[0]), 
-				'infiniti':k.address(103)
-				} )
-		a.append({ 	'key'			: 'm/0/{0}h/{1}'.format(k.addr_type(),k.child()),
-					'address_type' 	: k.address_type(),
-					'addresses'		: q
-		 })
-	return json.dumps(a, sort_keys=True, indent=4)
+		q[k.addr_type()].append(k)
+
+	for keys in q:
+		_at = ''
+		_attr = 0
+		_chld = 0
+		_keys = []
+		for key in keys:
+			print key
+			a = []
+			_at = key.address_type()
+			_attr = key.addr_type()
+			_chld = key.child()
+			for _k,v in VERWIF.iteritems():
+				a.append({
+						_k:k.address(v[0])
+					})
+			a.append({
+					'infiniti':k.address(103)
+				})
+			_keys.append({	'key' 			: 'm/0/{0}h/{1}'.format(_attr,_chld),
+							'addresses'		: a,
+				})
+		_a = {
+				'address_type' 	: _at,
+				'keys':_keys
+			}
+		if len(_keys) > 0:
+			results.append(_a)
+	return json.dumps(results, sort_keys=True, indent=4)
 
 def newaddress(fn,passphrase,addr_type=0):
 	"""
@@ -191,7 +212,11 @@ def newaddress(fn,passphrase,addr_type=0):
 	# Address types aren't programmatically important, but help to organize
 	if addr_type is None:
 		addr_type = 0
-	k = wallet.create_address(save=True,addr_type=addr_type)
+	children = (_k for _k in wallet.Keys if _k.addr_type() == int(addr_type))
+	child = 0
+	for c in children:
+		child += 1
+	k = wallet.create_address(save=True,addr_type=addr_type,child=child)
 	dump = ({
 			'address_type':k.address_type(),
 			NETWORK : k.address(),
@@ -282,7 +307,7 @@ def syncwallets(logger=None):
 	for a in address_obj:
 		a.save()
 
-def createvault(shares,shares_required,num_addr,verwif,pwd_array):
+def createvault(shares,shares_required,num_addr,verwif,pwd_array=None):
 	#shares=15,shares_required=5,num_addr=5,verwif=VERWIF,pwd_array=None
 	if shares is None:
 		shares = 15
@@ -296,17 +321,18 @@ def createvault(shares,shares_required,num_addr,verwif,pwd_array):
 	v = Vault(shares,shares_required,num_addr,verwif,pwd_array)
 	return v
 
-def openvault(num_addr,shares,passphrase,pwd_array):
-	v = Vault().open(num_addr,shares, passphrase, pwd_array=None)
-	v.update_status("height",str(_CONNECTION.parameters.start_height))
-	v.update_status("utxo",json.dumps([]))
-	v.update_status("current","ready")
-	v.update_status("updated",str(0))
+def openvault(num_addr,shares,passphrase,pwd_array=None):
+	# TEST ME
+	wallet = Vault().open(num_addr,ast.literal_eval(shares), passphrase, pwd_array=None)
+	wallet.update_status("height",str(_CONNECTION.parameters.start_height))
+	wallet.update_status("utxo",json.dumps([]))
+	wallet.update_status("current","ready")
+	wallet.update_status("updated",str(0))
 	d = {
 		"passphrase":passphrase,
-		"data_file":v._fn() 
+		"data_file":wallet._fn() 
 	}
 	syncwallets()
 	print json.dumps(d, sort_keys=True, indent=4)
-	print listaddresses(v._fn())
+	print listaddresses(wallet._fn())
 

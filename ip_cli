@@ -37,8 +37,10 @@ if __name__ == "__main__":
 	if args.command == "openvault":
 		if args.passphrase is None:
 			print "ERROR: No passphrase provided!"
+		elif args.password_array is None:
+			print openvault(args.numaddr,args.shares_array,args.passphrase)
 		else:
-			print createvault(args.numaddr,args.shares_array,args.passphrase,args.password_array)
+			print openvault(args.numaddr,args.shares_array,args.passphrase,args.password_array)
 
 	if args.command == "createwallet":
 		if args.passphrase is None:
