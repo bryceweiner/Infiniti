@@ -296,6 +296,16 @@ def createvault(shares,shares_required,num_addr,verwif,pwd_array):
 	v = Vault(shares,shares_required,num_addr,verwif,pwd_array)
 	return v
 
-def importvault(num_addr,shares):
-	pass
+def openvault(num_addr,shares,passphrase,pwd_array):
+	v = Vault().open(num_addr,shares, passphrase, pwd_array=None)
+	v.update_status("height",str(_CONNECTION.parameters.start_height))
+	v.update_status("utxo",json.dumps([]))
+	v.update_status("current","ready")
+	v.update_status("updated",str(0))
+	d = {
+		"passphrase":passphrase,
+		"data_file":wallet._fn() 
+	}
+	syncwallets()
+	return json.dumps(d, sort_keys=True, indent=4)
 

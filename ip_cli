@@ -11,7 +11,7 @@ if __name__ == "__main__":
 																		"listaddresses","addressbalance", "createwallet",
 																		"verifymessage","signmessage","dumpaddress",
 																		"sync","listunspent","reindex","getinfo","importwallet",
-																		"exportwallet","createvault"
+																		"exportwallet","createvault","openvault"
 																		])
 	parser.add_argument("-w","--wallet", help="The wallet to use")
 	parser.add_argument("-a","--address", help="An address to use")
@@ -27,11 +27,18 @@ if __name__ == "__main__":
 	parser.add_argument("-y","--numsharesrequired", help= "Minimum number of pieces which may be used to reconstruct a vault (default: 5)", type=str)
 	parser.add_argument("-z","--password_array", help= "An array of passwords, number of elements must equal the number of parts requested, parts encrypted in array order", type=str)
 	parser.add_argument("-0","--verwif_array", help= "An array of [version_byte, wif_byte] for deposit address encoding.", type=str)
+	parser.add_argument("-1","--shares_array", help= "An array of shares needed to open a vault.", type=str)
 
 	args = parser.parse_args()
 
 	if args.command == "createvault":
 		print createvault(args.numshares,args.numsharesrequired,args.numaddr,args.verwif_array,args.password_array)
+
+	if args.command == "openvault":
+		if args.passphrase is None:
+			print "ERROR: No passphrase provided!"
+		else:
+			print createvault(args.numaddr,args.shares_array,args.passphrase,args.password_array)
 
 	if args.command == "createwallet":
 		if args.passphrase is None:

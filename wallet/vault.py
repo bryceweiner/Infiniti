@@ -87,6 +87,26 @@ class Vault(Wallet):
 				self.shares[x] = self.AESEncrypt(pwd,self.shares[x])
 				x += 1
 
+	def open(self,num_addr,shares, passphrase, pwd_array=None):
+		# Rebuild the seed from shares
+		_shares = []
+		x = 0
+		for share in shares:
+			if pwd_array is not None:
+				_shares.append(self.AESEncrypt(pwd_array[x],share))
+			else:
+				_shares.append(share)
+
+			x += 1
+
+		entropy_from_seed = HexToHexSecretSharer.recover_secret(_shares)
+
+		self._root = self.fromEntropy(entropy_from_seed, passphrase)
+		x = 0
+		while x < num_addr - 1:
+			self.create_address(save=True, addr_type=0 , child=x)
+			x += 1
+
 	def __repr__(self):
 		return json.dumps({
 			"deposit_addresses" 	: self.deposit_addresses,

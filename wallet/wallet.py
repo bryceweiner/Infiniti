@@ -6,6 +6,7 @@ from infiniti.hdkey import HDKey, HD_HARDEN
 from secp256k1 import ALL_FLAGS
 from utils.crypto import *
 from utils.db import *
+from utils.helpers import *
 from infiniti.params import *
 import itertools
 from binascii import b2a_hex
@@ -171,9 +172,12 @@ class Wallet(object):
         self.save()
         return self
 
-    def fromEntropy(self, entropy, wallet_path = '.', public=False, testnet=False):
+    def fromEntropy(self, entropy, passphrase = ''):
         self._root = HDKey.fromEntropy(entropy, public, testnet)
+        self.encrypt_entropy(sha256(passphrase).digest(),entropy)
         self._primary = self._root.ChildKey(0)
+        self.filename = join_path(WALLET_PATH,self._fn())
+        self.save()
         return self
 
     def fromEncryptedEntropy(self, passphrase, entropy, wallet_path = '.', public=False, testnet=False):
