@@ -192,7 +192,7 @@ class Wallet(object):
             addr,addr_type,child = key.split(".")
             key = Key(int(addr_type),child,None)
             key.pubkey = value
-            key.addresses = (public_key_to_address(value,False),public_key_to_address(value,True))
+            key.addresses = (public_key_to_address(value,VERWIF['XTO'][0]),public_key_to_address(value))
             self.Keys.append(key)
         return self.Keys
 

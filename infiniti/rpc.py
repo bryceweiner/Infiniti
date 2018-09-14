@@ -289,7 +289,7 @@ def createvault(shares,shares_required,num_addr,verwif,pwd_array):
 	if verwif is None:
 		verwif = VERWIF
 
-	v = Vault(shares,shares_required,num_addr,verwif,pwd_array).create()
-	return json.dumps(v)
+	v = Vault(shares,shares_required,num_addr,verwif,pwd_array)
+	return v
 
 

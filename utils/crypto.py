@@ -29,10 +29,14 @@ def valid_address(data):
     version = raw[:1].encode("hex")
     return (version == str(int(param_query(NETWORK,'address_version').encode('hex')))) or (version == "66")
 
-def public_key_to_address(public_key,prefix=None):
+def public_key_to_address(public_key,prefix=103):
     i = hashlib.new('ripemd160', hashlib.sha256(public_key).digest()).digest()
-    prefix_to_use = str(prefix) if not ip else '66'
-    vh160 = prefix_to_use.decode('hex')+i
+    prefix = str(hex(prefix)).strip("0x")
+    if prefix == "":
+        prefix = "00"
+    elif len(prefix)<2:
+        prefix="0"+prefix
+    vh160 = prefix.decode('hex')+i
     return base58.check_encode(vh160)
 
 def modular_sqrt(a, p):

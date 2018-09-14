@@ -1,8 +1,11 @@
-from wallet.wallet import Wallet
-from secretsharing import SecretSharer
+from wallet import Wallet
+from secretsharing import HexToHexSecretSharer
 from Crypto import Random
 from Crypto.Cipher import AES
-import sengen
+import sengen, base64, binascii, json
+from infiniti.hdkey import HDKey, HD_HARDEN
+from utils.crypto import public_key_to_address
+from collections import OrderedDict
 
 class Vault(Wallet):
 	"""
@@ -33,7 +36,7 @@ class Vault(Wallet):
 		}  
 	"""
 	verwif = None
-	shares = 0
+	num_shares = 0
 	shares_required = 0
 	pwd_array = 0
 	num_addr=0
@@ -43,39 +46,41 @@ class Vault(Wallet):
 	shares = []
 	encrypted = False
 
-	def __init__(self,shares=15,shares_required=5,num_addr=0,verwif=None,pwd_array=None):
+	def __init__(self,num_shares=15,shares_required=5,num_addr=0,verwif=None,pwd_array=None):
 		if verwif is not None:
 			self.verwif = verwif
 		else:
 			self.verwif = VERWIF
 		self.num_addr = num_addr
-		self.shares = shares
+		self.num_shares = num_shares
 		self.shares_required = shares_required
 		self.pwd_array = pwd_array
+		self.create()
 
-    def create(self):
-    	if self.pwd_array is not None and (len(self.pwd_array) != self.shares):
-    		return None
+	def create(self):
+		if self.pwd_array is not None and (len(self.pwd_array) != self.shares):
+			return None
 
-    	#Generate the seed
+		#Generate the seed
 		self.seed, self.nonce = self.create_seed()
-        self.seed = seed
-        entropy_from_seed = self.entropy_from_seed(seed,nonce)
+		entropy_from_seed = self.entropy_from_seed(self.seed,self.nonce)
 
-        #Generate deposit addresses
-        self._root = HDKey.fromEntropy(entropy_from_seed, public, testnet)
-        self._primary = self._root.ChildKey(0)
-        start_point = self._primary.ChildKey(0+HD_HARDEN)
-        self.deposit_addresses = {}
-        for k,v in self.verwif:
-        	x = 0
-        	while x < self.num_addr:
-        		key = start_point.ChildKey(x)
-        		self.deposit_addresses.update({ k : pubkey_to_address(key.PublicKey(),v[0]) })
-        		x += 1
+		#Generate deposit addresses
+		self._root = HDKey.fromEntropy(entropy_from_seed)
+		self._primary = self._root.ChildKey(0)
+		start_point = self._primary.ChildKey(0+HD_HARDEN)
+		self.deposit_addresses = {}
+		for k in sorted(self.verwif):
+			x = 0
+			addr = []
+			while x < self.num_addr:
+				key = start_point.ChildKey(x)
+				addr.append(public_key_to_address(key.PublicKey(),self.verwif[k][0]))
+				x += 1
+			self.deposit_addresses.update({ k : addr })
 
-        #Split the seed
-		self.shares = SecretSharer.HexToHexSecretSharer(entropy_from_seed,self.shares_required,self.shares)
+		#Split the seed
+		self.shares = HexToHexSecretSharer.split_secret(binascii.hexlify(entropy_from_seed),self.shares_required,self.num_shares)
 
 		#Encrypt the shares if a pwd_array is provided
 		#Shares are encrypte against passwords in the same order provided
@@ -88,10 +93,10 @@ class Vault(Wallet):
 				x += 1
 
 	def __repr__(self):
-		return {
+		return json.dumps({
 			"deposit_addresses" 	: self.deposit_addresses,
 			"shares"				: self.shares,
-			"shares_required"		: self.pieces,
+			"shares_required"		: self.shares_required,
 			"encrypted"				: self.encrypted,
-		} 
+		}, sort_keys=True, indent=4)
 
