@@ -1,6 +1,7 @@
 from wallet.wallet import Wallet
-import secretsharing
+from secretsharing import SecretSharer
 from Crypto import Random
+from Crypto.Cipher import AES
 
 class Vault(Wallet):
 	"""
@@ -37,6 +38,8 @@ class Vault(Wallet):
 	num_addr=0
 	seed = None
 	nonce = 0
+	depost_addresses = {}
+	shares = []
 
 	def __init__(self,parts=15,pieces=5,num_addr=0,verwif=None,pwd_array=None):
 		if verwif is not None:
@@ -44,23 +47,43 @@ class Vault(Wallet):
 		else:
 			self.verwif = VERWIF
 		self.num_addr = num_addr
+		self.parts = parts
+		self.pieces = pieces
+		self.pwd_array = pwd_array
 
 	def load(self,filename):
 		pass
 
     def create(self, seed, nonce):
+    	if self.pwd_array is not None and (len(self.pwd_array) != self.parts):
+    		return None
+
+    	#Generate the seed
 		self.seed, self.nonce = self.create_seed()
         self.seed = seed
         entropy_from_seed = self.entropy_from_seed(seed,nonce)
+
+        #Generate deposit addresses
         self._root = HDKey.fromEntropy(entropy_from_seed, public, testnet)
         self._primary = self._root.ChildKey(0)
         start_point = self._primary.ChildKey(0+HD_HARDEN)
-
-        for vw in self.verwif:
+        self.deposit_addresses = {}
+        for k,v in self.verwif:
         	x = 0
         	while x < self.num_addr:
         		key = start_point.ChildKey(x)
-        return self
+        		self.deposit_addresses.update({ k : pubkey_to_address(key.PublicKey(),v[0]) })
+        		x += 1
+
+        #Split the seed
+		self.shares = SecretSharer.HexToHexSecretSharer(entropy_from_seed,self.pieces,self.parts)
+
+		#Encrypt the parts if a pwd_array is provided
+		if self.pwd_array is not None:
+			x = 0
+			for pwd in pwd_array:
+				self.shares[x] = self.AESEncrypt(pwd,self.shares[x])
+				x += 1
 
 	def save(self,filename):
 		if len(pwd_array) != parts:
