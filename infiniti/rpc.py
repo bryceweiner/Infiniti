@@ -1,5 +1,6 @@
 #from __future__ import print_function
 from wallet.wallet import Wallet
+from wallet.vault import Vault
 from wallet.address import Address
 import os,sys,ast,time,base64
 import time, json, binascii
@@ -277,5 +278,8 @@ def syncwallets(logger=None):
 	for a in address_obj:
 		a.save()
 
-def createvault(parts,pieces,addr_count,pwd_array=[],verwif=[]):
-	pass
+def createvault(shares=15,shares_required=5,num_addr=5,verwif=VERWIF,pwd_array=None):
+	v = Vault(shares,shares_required,num_addr,verwif,pwd_array).create()
+	return json.dumps(v)
+
+

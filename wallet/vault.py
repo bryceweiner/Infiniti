@@ -2,6 +2,7 @@ from wallet.wallet import Wallet
 from secretsharing import SecretSharer
 from Crypto import Random
 from Crypto.Cipher import AES
+import sengen
 
 class Vault(Wallet):
 	"""
@@ -52,10 +53,7 @@ class Vault(Wallet):
 		self.shares_required = shares_required
 		self.pwd_array = pwd_array
 
-	def load(self,filename):
-		pass
-
-    def create(self, seed, nonce):
+    def create(self):
     	if self.pwd_array is not None and (len(self.pwd_array) != self.shares):
     		return None
 
