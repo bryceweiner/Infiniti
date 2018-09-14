@@ -155,9 +155,6 @@ def dumpaddress(fn,passphrase,address,coin):
 	wallet = Wallet(fn).fromFile(passphrase)
 	d = None
 	for k in wallet.Keys:
-		print VERWIF[coin]
-		print k.address(VERWIF[coin][0])
-
 		if k.address(VERWIF[coin][0]) == address:
 			d = k.wif(VERWIF[coin][1])
 	if d is None:
