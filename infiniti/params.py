@@ -5,6 +5,8 @@ from infiniti.exceptions import *
 import codecs, os, time
 from utils.helpers import *
 
+INFINIT_VERSION = 0x000001
+
 NETWORK = "Tao"
 BASE_UTXO_ID = 0x100001
 OP_RETURN_KEY = 'd6901b0cbe0f48420fc5814866b7c3de8d08c4e721a7afc655d5b5a0f8534f23'
