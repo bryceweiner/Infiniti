@@ -1,4 +1,5 @@
 import rocksdb,time
+from infiniti.params import *
 
 MAX_RETRY_CREATE_DB = 100
 
@@ -21,3 +22,7 @@ def open_db(filename, logger=None, read_only=False):
     if retry_count == MAX_RETRY_CREATE_DB:
         raise save_err
     return db
+
+def get_key(db,key,logger=None):
+    db = open_db(join_path(DATA_PATH,db))
+    return db.get(key)
