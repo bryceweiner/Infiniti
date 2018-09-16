@@ -16,7 +16,7 @@ from json import load
 from urllib2 import urlopen
 
 from utils.daemonize import Daemon
-
+from wallet.wallet import Wallet
 import ipfsapi
 
 class IPFSThread(threading.Thread):
@@ -201,13 +201,14 @@ class InfinitiDaemon(Daemon):
 			self.logger.error("Internet connection not found!")
 			sys.exit(0)
 		if not os.path.isdir(join_path(WALLET_PATH,'node')):
-			createwallet(INFINITI_SECRET)
+			self.logger.info("Creating node identity wallet.")
+			createwallet(INFINITI_SECRET,'node')
 		# A node uses a wallet for self-identity
 		# Make sure to change INFINITI_SECRET to keep keys secure!
+		self.logger.info("Loading node identity.")
 		self.wallet = Wallet('node').fromFile(INFINITI_SECRET)
-
 		# Make sure the IPFS key belongs to this node
-		wallet._root.ExportRSAtoIPFS()
+		self.wallet._root.ExportRSAtoIPFS()
 
 		try:
 			uptime = self.get_status('uptime')

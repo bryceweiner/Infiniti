@@ -120,9 +120,9 @@ def listunspent(fn):
 	except:
 		pass
 
-def createwallet(passphrase):
+def createwallet(passphrase,filename=None):
 	seed,nonce = Wallet().create_seed()
-	wallet = Wallet().fromSeed(seed,nonce,passphrase,wallet_path=os.path.dirname(os.path.abspath(__file__)))
+	wallet = Wallet(filename).fromSeed(seed,nonce,passphrase,wallet_path=os.path.dirname(os.path.abspath(__file__)))
 	wallet.update_status("height",str(_CONNECTION.parameters.start_height))
 	wallet.update_status("utxo",json.dumps([]))
 	wallet.update_status("current","ready")

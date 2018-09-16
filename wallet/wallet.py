@@ -98,11 +98,14 @@ class Wallet(object):
     _primary = None
     _filename = None
     _hmac = None
-    _fn = None
+    _fin = None
 
     def __init__(self,filename=None):
+        self._has_fn = False
         if filename is not None:
-            self._filename = os.path.join(WALLET_PATH, filename)
+            self._has_fn = True
+            self._fin = filename
+            self._filename = join_path(WALLET_PATH,filename)
 
     @staticmethod
     def create_seed():
@@ -151,7 +154,10 @@ class Wallet(object):
         return s[:-ord(s[len(s)-1:])]
 
     def _fn(self):
-        return binascii.hexlify(self.encrypted_entropy)[:8]
+        if self._has_fn:
+            return self._fin
+        else:
+            return binascii.hexlify(self.encrypted_entropy)[:8]
 
     def fromSeed(self, seed, nonce, passphrase, wallet_path = '.', public=False, testnet=False):
         self.seed = seed

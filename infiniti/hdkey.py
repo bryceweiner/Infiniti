@@ -402,7 +402,7 @@ class HDKey(object):
 
     def ExportRSAtoIPFS(self):
         if self.rsa is None:
-            self.GenerateRSA()
+            self.GenerateRSA(self.PrivateKey())
         key = self.rsa.exportKey("DER")
         ipfs_key = IPFSKeyMessage(key)
         ipfs_key.Save(hexlify(self.Fingerprint()))
