@@ -202,6 +202,13 @@ class InfinitiDaemon(Daemon):
 			sys.exit(0)
 		if not os.path.isdir(join_path(WALLET_PATH,'node')):
 			createwallet(INFINITI_SECRET)
+		# A node uses a wallet for self-identity
+		# Make sure to change INFINITI_SECRET to keep keys secure!
+		self.wallet = Wallet('node').fromFile(INFINITI_SECRET)
+
+		# Make sure the IPFS key belongs to this node
+		wallet._root.ExportRSAtoIPFS()
+
 		try:
 			uptime = self.get_status('uptime')
 			self.threads = []

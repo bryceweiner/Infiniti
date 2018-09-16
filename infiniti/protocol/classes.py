@@ -27,30 +27,6 @@ image : IPFS CID of image object
 TODO:Deck transfer?
 
 """
-class IPFSKeyMessage():
-    def __init__(self,data,pubkey=False):
-        if pubkey:
-            self.protobuf = ipfskeyproto.PublicKey()
-        else:
-            self.protobuf = ipfskeyproto.PrivateKey()
-        self.protobuf.Type = ipfskeyproto.RSA
-        self.protobuf.Data = data
-
-    def Serialize(self):
-        return self.protobuf.SerializeToString()
-
-    def Save(self,fname):
-        import os
-        try:
-            ipfs_keystore = os.environ['IPFS_PATH'] + '/keystore'
-        except:
-            from os.path import expanduser
-            home = expanduser("~")
-            ipfs_keystore = home + '/.ipfs/keystore'
-        filename = ipfs_keystore + '/' + fname
-        with open(filename,"w") as f:
-            f.write(self.Serialize())
-
 class ObjectStatus(Enum):
     UNREGISTERED = 0    # Not found in the blockchain
     MEMPOOL = 1         # In the mempool, but not yet in a block

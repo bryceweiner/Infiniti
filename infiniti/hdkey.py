@@ -21,6 +21,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from infiniti.params import NETWORK, param_query
 from utils.crypto import PRNG
+import protocol.protobuf.ipfskey_pb2 as ipfskeyproto
 
 MIN_ENTROPY_LEN = 128        # bits
 HD_HARDEN    = 0x80000000 # choose from hardened set of child keys
@@ -30,6 +31,28 @@ FIELD_ORDER     = SECP256k1.curve.p()
 INFINITY        = ecdsa.ellipticcurve.INFINITY
 EX_TEST_PRIVATE = [ codecs.decode('04358394', 'hex') ] # Version strings for testnet extended private keys
 EX_TEST_PUBLIC  = [ codecs.decode('043587CF', 'hex') ] # Version strings for testnet extended public keys
+
+class IPFSKeyMessage():
+    def __init__(self,data,pubkey=False):
+        if pubkey:
+            self.protobuf = ipfskeyproto.PublicKey()
+        else:
+            self.protobuf = ipfskeyproto.PrivateKey()
+        self.protobuf.Type = ipfskeyproto.RSA
+        self.protobuf.Data = data
+
+    def Serialize(self):
+        return self.protobuf.SerializeToString()
+
+    def Save(self,fname):
+        try:
+            ipfs_keystore = os.environ['IPFS_PATH'] + '/keystore'
+        except:
+            home = os.path.expanduser("~")
+            ipfs_keystore = home + '/.ipfs/keystore'
+        filename = ipfs_keystore + '/' + fname
+        with open(filename,"w") as f:
+            f.write(self.Serialize())
 
 class HDKey(object):
     rsa = None
@@ -376,6 +399,13 @@ class HDKey(object):
         sig = self.k.sign_digest(digest, sigencode=ecdsa.util.sigencode_der)
         # 01 is hashtype
         return sig + '\01'
+
+    def ExportRSAtoIPFS(self):
+        if self.rsa is None:
+            self.GenerateRSA()
+        key = self.rsa.exportKey("DER")
+        ipfs_key = IPFSKeyMessage(key)
+        ipfs_key.Save(hexlify(self.Fingerprint()))
 
     def __repr__(self):
         return "<HDKey hexkey=[%s]>" % b2a_hex(self.Identifier())
