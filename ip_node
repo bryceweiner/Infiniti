@@ -4,12 +4,12 @@ from infiniti.params import *
 from p2p.protocol.serializers import *
 from p2p.protocol.queues import MemPoolManager
 from p2p.rpc import RPCServer, RPCServerThread
-from infiniti.rpc import syncwallets
+from infiniti.rpc import syncwallets, createwallet
 import threading, socket
 import sys, traceback, subprocess
 import sched, time, os
 import select
-
+from utils.helpers import *
 from utils.db import open_db, writebatch
 
 from json import load
@@ -200,7 +200,8 @@ class InfinitiDaemon(Daemon):
 		except Exception:
 			self.logger.error("Internet connection not found!")
 			sys.exit(0)
-
+		if not os.path.isdir(join_path(WALLET_PATH,'node')):
+			createwallet(INFINITI_SECRET)
 		try:
 			uptime = self.get_status('uptime')
 			self.threads = []

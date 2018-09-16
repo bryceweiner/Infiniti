@@ -5,6 +5,12 @@ from infiniti.exceptions import *
 import codecs, os, time
 from utils.helpers import *
 
+"""
+CHANGE ME!
+http://nux.net/secret
+"""
+INFINITI_SECRET = 'ae2456221945a10fe4b5f5f045de353dc134752d'
+
 INFINIT_VERSION = 0x000001
 
 NETWORK = "Tao"

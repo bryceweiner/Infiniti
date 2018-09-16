@@ -16,9 +16,41 @@ Issuing a deck requires:
 
 Each object has an active() flag which indicates the confirmation status of the object in the blockchain
 
+Metadata should consist of a JSON object of any combination of the following fields 
+with the following constraints:
+
+real_name : string
+organization : string
+email : properly formatted email address
+image : IPFS CID of image object    
+
 TODO:Deck transfer?
 
 """
+class IPFSKeyMessage():
+    def __init__(self,data,pubkey=False):
+        if pubkey:
+            self.protobuf = ipfskeyproto.PublicKey()
+        else:
+            self.protobuf = ipfskeyproto.PrivateKey()
+        self.protobuf.Type = ipfskeyproto.RSA
+        self.protobuf.Data = data
+
+    def Serialize(self):
+        return self.protobuf.SerializeToString()
+
+    def Save(self,fname):
+        import os
+        try:
+            ipfs_keystore = os.environ['IPFS_PATH'] + '/keystore'
+        except:
+            from os.path import expanduser
+            home = expanduser("~")
+            ipfs_keystore = home + '/.ipfs/keystore'
+        filename = ipfs_keystore + '/' + fname
+        with open(filename,"w") as f:
+            f.write(self.Serialize())
+
 class ObjectStatus(Enum):
     UNREGISTERED = 0    # Not found in the blockchain
     MEMPOOL = 1         # In the mempool, but not yet in a block
@@ -148,7 +180,7 @@ class InfinitiObject(object):
 
         Must implement fee_is_valid nad 
         """
-        return self.is_unique() and self.creator_is_valid() and self.fee_is_valid(self)
+        return self.is_unique() and self.creator_is_valid() and self.fee_is_valid(self) and self.consensus_is_valid()
 
 class Dealer(InfinitiObject):
     """
@@ -190,7 +222,7 @@ class Dealer(InfinitiObject):
 
     def create_metadata(self,real_name,organization,email):
         pass
-        
+
     def parse_metadata(self):
         return json.loads(self._metadata)
 
