@@ -67,6 +67,9 @@ class InfinitiObject(object):
         if self.active():
             pass
 
+    def save(self):
+        return put_infiniti_object(self.object_type,obj)
+
     def uuid(self):
         return self._uuid
     
@@ -216,7 +219,7 @@ class Dealer(InfinitiObject):
         """
         if INFINITI_DEBUG:
             # save to disk only
-            pass
+            self.save()
         else:
             pass
 
