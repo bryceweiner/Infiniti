@@ -21,10 +21,11 @@ TODO:Deck transfer?
 """
 class ObjectStatus(Enum):
     UNREGISTERED = 0    # Not found in the blockchain
-    PENDING = 1         # In the blockchain, but unconfirmed
-    ACTIVE = 2          # Fully confirmed in the blockchain
+    MEMPOOL = 1         # In the mempool, but not yet in a block
+    PENDING = 2         # In the blockchain, but unconfirmed
+    ACTIVE = 3          # Fully confirmed in the blockchain
 
-class Dealer:
+class Dealer(object):
     def __init__(self,uuid=None):
         if uuid is None:
             self._uuid = uuid.uuid4()
@@ -81,5 +82,5 @@ class Dealer:
             'metadata'      : self._metadata,
             })
     
-class Deck:
+class Deck(object):
     pass
