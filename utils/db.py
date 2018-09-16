@@ -1,4 +1,4 @@
-import rocksdb,time
+import rocksdb,time,ast
 from infiniti.params import *
 
 MAX_RETRY_CREATE_DB = 100
@@ -23,6 +23,31 @@ def open_db(filename, logger=None, read_only=False):
         raise save_err
     return db
 
-def get_key(db,key,logger=None):
-    db = open_db(join_path(DATA_PATH,db))
-    return db.get(key)
+def get_infiniti_object(object_db,uuid):
+    """
+    All Inifiniti objects have a unique UUID, so just dump the object
+    """
+    try:
+        _db = open_db(join_path(DATA_PATH,object_db))
+        it = _db.iteritems()
+        it.seek(uuid)
+        result = {}
+        for key,value in dict(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
+            _uuid,_field = key.split('.')
+            _value = value
+            result.update = { _field : _value }
+        return result
+    except Exception as err:
+        raise err
+
+def put_infiniti_object(object_db,obj):
+    try:
+        _db = open_db(join_path(DATA_PATH,object_db))
+        wb = writebatch()
+        for attr in dir(obj):
+            if attr.startswith('_') and not attr.startswith('__'):
+                wb.put("{0}.{1}".format(obj.uuid,attr),getattr(obj,attr))
+        db.write(wb)
+        return True
+     except Exception as err:
+        raise err
