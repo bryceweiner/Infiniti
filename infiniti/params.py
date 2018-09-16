@@ -33,7 +33,7 @@ if not os.path.exists(WALLET_PATH):
 
 USE_RPC = True
 
-INFINITI_DEBUG = TRUE # infiniti object debug mode. No blockchain transaction commits.
+INFINITI_DEBUG = True # infiniti object debug mode. No blockchain transaction commits.
 
 _params = namedtuple('_params', [
     'network_name',

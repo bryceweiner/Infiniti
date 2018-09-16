@@ -93,8 +93,6 @@ class InfinitiObject(object):
 
         The "active" flag is set to True when the Dealer appears in the blockchain
 
-        TODO:blockchain
-
         Saves to DB only
         """
         raise NotImplementedError
@@ -130,13 +128,26 @@ class Dealer(InfinitiObject):
         pass
 
     def fee_is_valid(self):
-        pass
+        """
+        TODO:blockchain
+        """
+        if INFINITI_DEBUG:
+            return True
+        else:
+            pass
 
     def parse_metadata(self):
         pass
 
     def register(self):
-        pass
+        """
+        TODO:blockchain
+        """
+        if INFINITI_DEBUG:
+            # save to disk only
+            pass
+        else:
+            pass
 
     def is_valid(self):
         return self.creator_is_valid() and self.fee_is_valid(self)
