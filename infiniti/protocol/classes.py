@@ -1,4 +1,5 @@
 from ip_deck_pb2 import DeckSpawn
+from ip_identity_pb2 import Identity
 from utils.db import *
 from utils.helpers import *
 from infiniti.params import *
@@ -16,7 +17,7 @@ Issuing a deck requires:
 
 Each object has an active() flag which indicates the confirmation status of the object in the blockchain
 
-Metadata should consist of a JSON object of any combination of the following fields 
+On-wire metadata should consist of a JSON object of any combination of the following fields 
 with the following constraints:
 
 real_name : string
@@ -168,7 +169,7 @@ class Dealer(InfinitiObject):
     A user only ever needs one Dealer identity to spawn an unlimited number of Infiniti Decks.
     """
     object_type = 'dealer'
-    protobuf_class = 'DeckSpawn'
+    protobuf_class = 'Identity'
 
     def __init__(self,uuid=None):
         self._uuid = uuid
@@ -196,8 +197,13 @@ class Dealer(InfinitiObject):
         else:
             return self._fee >= params_query(self._network,'Infiniti_fee')
 
-    def create_metadata(self,real_name,organization,email):
-        pass
+    def create_metadata(self,real_name,organization,email,img_cid):
+        return json.dumps({
+            'real_name':real_name[0:100]
+            'organization':real_name[0:100]
+            'email':real_name[0:100]
+            'img_cid':img_cid[0:46]
+        })
 
     def parse_metadata(self):
         return json.loads(self._metadata)
