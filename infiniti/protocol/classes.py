@@ -30,7 +30,7 @@ class InfinitiObject(object):
         if self._uuid is None:
             self._uuid = uuid.uuid4()
             self._block_height = 0
-            self._network = ''
+            self._network = NETWORK
             self._tx_id = ''
         else:
             self.from_uuid(self._uuid)
@@ -75,12 +75,28 @@ class InfinitiObject(object):
         self._status = ObjectStatus.ACTIVE
         return self._status
 
+    @property
+    def object_type(self):
+        return self._object_type
+    
+    @property
+    def protobuf_class(self):
+        return self._protobuf_class
 
 class Dealer(InfinitiObject):
-    object_type='dealer'
+    object_type = 'dealer'
+    protobuf_class = 'DeckSpawn'
+
     def __init__(self,uuid=None):
         self._uuid = uuid
         super(InfinitiObject,self).__init__()
+        if self.block_height == 0: # Impossible, so new object
+            self._name = ''
+            self._version = 0
+            self._num_decimals = 8
+            self._issue_mode = DeckSpawn.NONE
+            self.metadata = ''
+            self.fee = 100000
 
     def to_json(self):
         return json.dumps({
