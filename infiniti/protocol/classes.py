@@ -82,23 +82,4 @@ class Dealer:
             })
     
 class Deck:
-
-    def from_uuid(uuid):
-        self._tx_id = 0
-        self._timestamp = 0
-        self._dealer = 0
-        pass
-
-    def is_valid(self):
-        """
-        Perform a full consensus check
-        """
-        # Did the TX pay the fee?
-        # 
-
-    def serialize(self):
-        pass
-
-    def deserialize(self):
-        pass
-
+    pass
