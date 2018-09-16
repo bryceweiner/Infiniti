@@ -6,7 +6,7 @@ from p2p.protocol.queues import MemPoolManager
 from p2p.rpc import RPCServer, RPCServerThread
 from infiniti.rpc import syncwallets
 import threading, socket
-import sys, traceback
+import sys, traceback, subprocess
 import sched, time, os
 import select
 
@@ -27,15 +27,31 @@ class IPFSThread(threading.Thread):
 		self.counter = self.threadID
 		self.logger = logger
 		self.halt = False
+		self.process = None
 
 	def run(self):
 		# Make sure we're kosher
-		return_code = subprocess.call("ipfs init", shell=True)  
-		if return_code != 0:
-			# idfk
-			raise ipfsapi.exceptions.Error
-		self.process = subprocess.Popen(["ipfs", "daemon"], stdout=subprocess.PIPE)
+
+		try:
+			self.logger.info("IPFS start.")
+			self.process = subprocess.Popen(["ipfs", "daemon"], stdout=subprocess.PIPE)
+			self.logger.info("IPFS daemon running with PID {0}".format(self.process.pid))
+			self.output, self.error = self.process.communicate()
+			for line in self.output.splitlines():
+				self.logger.info('IPFS - {0}'.format(line))
+			self.status = self.process.returncode
+		except:
+			self.logger.error(traceback.format_exc())
+			self.halt = True
+			self.status = -1
+			self.logger.error("IPFS daemon failed to start!")
+			raise Exception
+
 		while not self.halt:
+			err = self.process.poll()
+			if err is not None:
+				self.halt = True
+				break
 			out,err = self.process.communicate()
 			while len(out) > 0 and len(err) == 0:
 				for line in out.splitlines():
@@ -43,6 +59,8 @@ class IPFSThread(threading.Thread):
 			if len(err) > 0:
 				self.logger.error(err)
 				self.halt = True
+		if err is not None:
+			self.logger.error("IPFS Terminated Unexpectedly With Error Code {0}".format())
 
 	def stop(self):
 		self.halt = True
