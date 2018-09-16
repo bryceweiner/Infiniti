@@ -4,7 +4,7 @@ from infiniti.params import *
 from p2p.protocol.serializers import *
 from p2p.protocol.queues import MemPoolManager
 from p2p.rpc import RPCServer, RPCServerThread
-from infiniti.protocol import rpc as RPC
+from infiniti.rpc import syncwallets
 import threading, socket
 import sys, traceback
 import sched, time, os
@@ -25,8 +25,6 @@ class IPFSThread(threading.Thread):
 		self.threadID = threadID
 		self.name = name
 		self.counter = self.threadID
-		self.ip = ip
-		self.port = port
 		self.logger = logger
 		self.halt = False
 
@@ -171,7 +169,7 @@ class InfinitiDaemon(Daemon):
 		db = open_db(os.path.join(DATA_PATH,"status"),self.logger,False)
 
 	def sync_wallets(self):
-		RPC.syncwallets(self.logger)
+		syncwallets(self.logger)
 
 	def run(self):
 		self.create_databases()
@@ -196,7 +194,7 @@ class InfinitiDaemon(Daemon):
 			self.rpc_server = RPCServerThread(self.counter, "RPCServer", self.logger)
 			self.rpc_server.start()
 			self.counter += 1
-			
+
 			self.ipfs_server = IPFSThread(self.counter, "IPFS", self.logger)
 			self.ipfs_server.start()
 			self.counter += 1
