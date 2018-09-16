@@ -99,9 +99,18 @@ class InfinitiObject(object):
         """
         return self.is_valid() and self.active()
 
-    def fee_is_valid(self):
+    def creator_is_valid(self):
         """
         Verify the fee was paid to create the Infiniti message 
+
+        Returns True or False
+        """
+        raise NotImplementedError
+
+    def fee_is_valid(self):
+        """
+        Verify the fee was paid to create the Infiniti message and that it was 
+        greater to or equal than params_query(self._network,'Infiniti_fee')
 
         Returns True or False
         """
@@ -123,17 +132,32 @@ class InfinitiObject(object):
         """
         raise NotImplementedError
 
+    def consensus_is_valid(self):
+        """
+        Per object consensus validator.
+
+        If not needed, still must be overloaded to return True
+        """
+        raise NotImplementedError
+
     def is_valid(self):
         """
         Run consensus validation on the object: 
 
         Returns True or False
+
+        Must implement fee_is_valid nad 
         """
-        raise NotImplementedError
+        return self.is_unique() and self.creator_is_valid() and self.fee_is_valid(self)
 
 class Dealer(InfinitiObject):
     """
     A Dealer is an identity object required for Deck spawn operations.
+
+    Dealer objects exist for metadata associations as well as to create light friction for 
+    creating Infiniti decks.
+
+    A user only ever needs one Dealer identity to spawn an unlimited number of Infiniti Decks.
     """
     object_type = 'dealer'
     protobuf_class = 'DeckSpawn'
@@ -149,6 +173,9 @@ class Dealer(InfinitiObject):
             self._creator = ''  # for a dealer object, the creator is the address which generated the Infiniti
                                 # transaction, otherwise it's the uuid of identity object, pubkey must match 
                                 # issuer of the deckspan transaction
+    def consensus_is_valid(self):
+        return True
+
     def creator_is_valid(self):
         pass
 
@@ -159,10 +186,13 @@ class Dealer(InfinitiObject):
         if INFINITI_DEBUG:
             return True
         else:
-            pass
+            return self._fee >= params_query(self._network,'Infiniti_fee')
 
-    def parse_metadata(self):
+    def create_metadata(self,real_name,organization,email):
         pass
+        
+    def parse_metadata(self):
+        return json.loads(self._metadata)
 
     def register(self):
         """
@@ -173,9 +203,6 @@ class Dealer(InfinitiObject):
             pass
         else:
             pass
-
-    def is_valid(self):
-        return self.is_unique() and self.creator_is_valid() and self.fee_is_valid(self)
 
     def to_json(self):
         return json.dumps({

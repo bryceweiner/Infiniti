@@ -16,6 +16,41 @@ from json import load
 from urllib2 import urlopen
 
 from utils.daemonize import Daemon
+
+import ipfsapi
+
+class IPFSThread(threading.Thread):
+	def __init__(self, threadID, name, logger):
+		threading.Thread.__init__(self)
+		self.threadID = threadID
+		self.name = name
+		self.counter = self.threadID
+		self.ip = ip
+		self.port = port
+		self.logger = logger
+		self.halt = False
+
+	def run(self):
+		# Make sure we're kosher
+		return_code = subprocess.call("ipfs init", shell=True)  
+		if return_code != 0:
+			# idfk
+			raise ipfsapi.exceptions.Error
+		self.process = subprocess.Popen(["ipfs", "daemon"], stdout=subprocess.PIPE)
+		while not self.halt:
+			out,err = self.process.communicate()
+			while len(out) > 0 and len(err) == 0:
+				for line in out.splitlines():
+					self.logger.info('IPFS - {0}'.format(line))
+			if len(err) > 0:
+				self.logger.error(err)
+				self.halt = True
+
+	def stop(self):
+		self.halt = True
+		self.process.terminate()
+		self.logger.info("IPFS shutdown.")
+
 class RPCServerThread(threading.Thread):
 	def __init__(self, threadID, name, logger, ip='localhost', port=8000):
 		threading.Thread.__init__(self)
@@ -161,6 +196,10 @@ class InfinitiDaemon(Daemon):
 			self.rpc_server = RPCServerThread(self.counter, "RPCServer", self.logger)
 			self.rpc_server.start()
 			self.counter += 1
+			
+			self.ipfs_server = IPFSThread(self.counter, "IPFS", self.logger)
+			self.ipfs_server.start()
+			self.counter += 1
 			wait_time = 0
 			cycle_end = time.time()
 			# Once every 15 minutes, try to reconnect to everyone
@@ -193,6 +232,7 @@ class InfinitiDaemon(Daemon):
 		for t in self.threads:
 			t.stop(0,'halt')
 		self.rpc_server.stop()
+		self.ipfs_server.stop()
 		self.logger.info("Infiniti Shutting down.")
 
 if __name__ == "__main__":
