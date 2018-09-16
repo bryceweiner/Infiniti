@@ -73,17 +73,43 @@ class InfinitiObject(object):
         self._status = ObjectStatus.ACTIVE
         return self._status
 
+    def is_unique(self):
+        """
+        Check that the uuid doesn't match a uuid in the database to prevent "object stomping,"
+        or trying to claim the object by submitting a new transaction with a uuid which is already
+        assigned to an object as a malicious transaction
+        """
+        # Dealer database
+        return not uuid_exists('dealers', self._uuid) and 
+        # Deck database
+            not uuid_exists('decks', self._uuid) and
+        # Card database
+            not uuid_exists('cards', self._uuid) and
+        # Vote datavase 
+            not uuid_exists('votes', self._uuid) and
+        # Metaproof database
+            not uuid_exists('metaproofs', self._uuid) and
+        # Claims database
+            not uuid_exists('claims', self._uuid)
+
+    def is_ready(self):
+        """
+        If the object passes consensus validation on the blockchain and the protocol, it's 
+        ready to be consumed by applications.
+        """
+        return self.is_valid() and self.active()
+
     def fee_is_valid(self):
         """
-            Verify the fee was paid to create the Infiniti message 
+        Verify the fee was paid to create the Infiniti message 
 
-            Returns True or False
+        Returns True or False
         """
         raise NotImplementedError
 
     def parse_metadata(self):
         """
-            Parse the metadata for the object type 
+        Parse the metadata for the object type 
         """
         raise NotImplementedError
 
@@ -99,12 +125,11 @@ class InfinitiObject(object):
 
     def is_valid(self):
         """
-            Run consensus validation on the object: 
+        Run consensus validation on the object: 
 
-            Returns True or False
+        Returns True or False
         """
         raise NotImplementedError
-
 
 class Dealer(InfinitiObject):
     """
@@ -150,7 +175,7 @@ class Dealer(InfinitiObject):
             pass
 
     def is_valid(self):
-        return self.creator_is_valid() and self.fee_is_valid(self)
+        return self.is_unique() and self.creator_is_valid() and self.fee_is_valid(self)
 
     def to_json(self):
         return json.dumps({

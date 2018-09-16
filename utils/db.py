@@ -23,6 +23,16 @@ def open_db(filename, logger=None, read_only=False):
         raise save_err
     return db
 
+def uuid_exists(object_db,uuid):
+    try:
+        _db = open_db(join_path(DATA_PATH,object_db))
+        it = _db.iteritems()
+        it.seek(uuid)
+        items =   dict(itertools.takewhile(lambda item: item[0].startswith(uuid), it))  
+        return len(items) == 0        
+    except Exception as err:
+        raise err
+
 def get_infiniti_object(object_db,uuid):
     """
     All Inifiniti objects have a unique UUID, so just dump the object
@@ -32,7 +42,7 @@ def get_infiniti_object(object_db,uuid):
         it = _db.iteritems()
         it.seek(uuid)
         result = {}
-        for key,value in dict(itertools.takewhile(lambda item: item[0].startswith(prefix), it)):
+        for key,value in dict(itertools.takewhile(lambda item: item[0].startswith(uuid), it)):
             _uuid,_field = key.split('.')
             _value = value
             result.update = { _field : _value }
