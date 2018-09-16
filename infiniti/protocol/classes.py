@@ -89,7 +89,7 @@ class InfinitiObject(object):
         assigned to an object as a malicious transaction
         """
         # Dealer database
-        return not uuid_exists('dealers', self._uuid) and 
+        return not uuid_exists('identity', self._uuid) and 
         # Deck database
             not uuid_exists('decks', self._uuid) and
         # Card database
