@@ -52,13 +52,14 @@ class InfinitiObject(object):
             self._tx_id = ''
             self._status = ObjectStatus.UNREGISTERED
             self._fee = params_query(self._network,'Infiniti_fee')
+            self._timestamp = 0
         else:
             self.from_uuid(self._uuid)
 
     def from_uuid(self,_uuid):
         self._uuid = _uuid
 
-        data = get_infiniti_object('dealer',self._uuid)
+        data = get_infiniti_object(self.object_type,self._uuid)
         for k,v in data:
             setattr(self,k,v)
 
@@ -168,7 +169,7 @@ class Dealer(InfinitiObject):
 
     A user only ever needs one Dealer identity to spawn an unlimited number of Infiniti Decks.
     """
-    object_type = 'dealer'
+    object_type = 'identity'
     protobuf_class = 'Identity'
 
     def __init__(self,uuid=None):
@@ -182,6 +183,7 @@ class Dealer(InfinitiObject):
             self._creator = ''  # for a dealer object, the creator is the address which generated the Infiniti
                                 # transaction, otherwise it's the uuid of identity object, pubkey must match 
                                 # issuer of the deckspan transaction
+
     def consensus_is_valid(self):
         return True
 
