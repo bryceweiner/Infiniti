@@ -25,12 +25,15 @@ class ObjectStatus(Enum):
     PENDING = 2         # In the blockchain, but unconfirmed
     ACTIVE = 3          # Fully confirmed in the blockchain
 
-class Dealer(object):
-    def __init__(self,uuid=None):
-        if uuid is None:
+class InfinitiObject(object):
+    def __init__(self):
+        if self._uuid is None:
             self._uuid = uuid.uuid4()
+            self._block_height = 0
+            self._network = ''
+            self._tx_id = ''
         else:
-            self.from_uuid(uuid)
+            self.from_uuid(self._uuid)
 
     def from_uuid(self,_uuid):
         self._uuid = _uuid
@@ -54,7 +57,7 @@ class Dealer(object):
         Saves to DB only
         """
 
-        pass
+        raise NotImplementedError
 
     def uuid(self):
         return self._uuid
@@ -71,6 +74,13 @@ class Dealer(object):
         """
         self._status = ObjectStatus.ACTIVE
         return self._status
+
+
+class Dealer(InfinitiObject):
+    object_type='dealer'
+    def __init__(self,uuid=None):
+        self._uuid = uuid
+        super(InfinitiObject,self).__init__()
 
     def to_json(self):
         return json.dumps({
