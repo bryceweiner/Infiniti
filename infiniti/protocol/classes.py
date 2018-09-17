@@ -202,7 +202,7 @@ class Dealer(InfinitiObject):
 
     def consensus_is_valid(self):
         """
-        No special consensus for this object.
+        No global state consensus for this object required.
         """
         return True
 
@@ -320,8 +320,12 @@ class Deck(InfinitiObject):
         pass
 
 
-class CardXfer(InfinitiObject):
+class Card(InfinitiObject):
     """
+    Lots of validation here, as this is the core of Infiniti token consensus
+    First, build the state of the deck at a block height for a pubkey
+    Next, make sure the transfer is valid within that state
+    Last, if valid, execute the transfer
     """
     object_type = 'card'
     protobuf_class = 'CardTransfer'
@@ -350,7 +354,16 @@ class CardXfer(InfinitiObject):
     def transfer_permitted(self):
         pass
 
-    def amount_valid_at_height(self):
+    def amount_valid_at_height(self,amount,pubkey,block_height):
+        """
+        Is it possible to have sent this amount at this block height?
+        """
+        pass
+
+    def amount_at_height(self,pubkey,block_height):
+        """
+        How many cards does pubkey own at block height?
+        """
         pass
 
     def consensus_is_valid(self):
@@ -373,4 +386,10 @@ class CardXfer(InfinitiObject):
 
     def deserialize(self):
         pass
+
+    def register(self):
+        pass
+
+    def execute_transfer(self):
+        self.register(self)
 
