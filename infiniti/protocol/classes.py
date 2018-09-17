@@ -6,6 +6,7 @@ from infiniti.params import *
 import uuid
 from Crypto.Random import get_random_bytes
 from enum import Enum
+from p2p.serializers import Tx
 """
 
 All fields of Infiniti objects to be saved to the database should begin with "_"
@@ -178,7 +179,7 @@ class Dealer(InfinitiObject):
     def __init__(self,uuid=None):
         self._uuid = uuid
         super(InfinitiObject,self).__init__()
-        if self.block_height == 0: # Impossible, so must be new object
+        if self._block_height == 0: # Impossible, so must be new object
             self._version = 0
             self._public_key = ''
             self._rsa_public_key = ''
@@ -245,7 +246,7 @@ class Deck(object):
     def __init__(self,uuid=None):
         self._uuid = uuid
         super(InfinitiObject,self).__init__()
-        if self.block_height == 0: # Impossible, so must be new object
+        if self._block_height == 0: # Impossible, so must be new object
             self._creator = ''  # the uuid of identity object, pubkey must match issuer of the deckspan transaction
             self._stxo = ''     # This is the transaction hash of the funding transaction from the blockchain txin
                                 # for the Infiniti transaction which creates the object, which provides the pubkey 
@@ -263,7 +264,7 @@ class Deck(object):
             If Dealer address = STXO address, consensus is valid
         TODO:blockchain
         """  
-        return True
+        return INFINITI_DEBUG
 
     def creator_is_valid(self):
         return self.dealer.is_valid()
@@ -276,9 +277,7 @@ class Deck(object):
 
     def create_metadata(self,real_name,organization,email,img_cid):
         return json.dumps({
-            'real_name':real_name[0:100]
-            'organization':real_name[0:100]
-            'email':real_name[0:100]
+            'app_id':real_name[0:100]
             'img_cid':img_cid[0:46]
         })
 
