@@ -48,6 +48,7 @@ class InfinitiObject(object):
 
     def __init__(self):
         if self._uuid is None:
+            self._version = INFINITI_VERSION
             self._uuid = uuid.uuid4()
             self._block_height = 0
             self._network = NETWORK
@@ -271,7 +272,10 @@ class Deck(InfinitiObject):
                                 # public key.  If no such TX hash exists, or if the addresses do not match, the 
                                 # Dealer object is invalid.
             self.dealer = Dealer(self._creator)
-
+            self._num_decimals = 8
+            self._issue_mode = DeckSpawn.NONE
+            self._metadata = ''
+            self._xfer_fee = self._fee
 
     def consensus_is_valid(self):
         """
@@ -328,6 +332,26 @@ class CardXfer(InfinitiObject):
             self._deck_uuid = deck_uuid
             self.deck = Deck(self._deck_uuid)
 
+    def is_issuance(self):
+        """
+        Sender matches Dealer
+        """
+        pass
+
+    def fee_is_valid(self):
+        """
+        TODO:blockchain
+        """
+        return self._fee >= self.deck._xfer_fee
+
+    def issuance_valid(self);
+        pass
+
+    def transfer_permitted(self):
+        pass
+
+    def amount_valid_at_height(self):
+        pass
 
     def consensus_is_valid(self):
         """
@@ -335,7 +359,14 @@ class CardXfer(InfinitiObject):
 
         TODO:blockchain
         """  
-        return INFINITI_DEBUG
+
+        return self.issuance_valid() and self.transfer_permitted() and self.amount_valid_at_height()
+
+    def creator_is_valid(self):
+        """
+        Nothing to do
+        """
+        return True
 
     def serialize(self):
         pass
