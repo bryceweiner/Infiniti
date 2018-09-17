@@ -1,5 +1,6 @@
 from ip_deck_pb2 import DeckSpawn
 from ip_identity_pb2 import Identity
+from ip_card_pb2 import CardTransfer
 from utils.db import *
 from utils.helpers import *
 from infiniti.params import *
@@ -105,6 +106,16 @@ class InfinitiObject(object):
             not uuid_exists('metaproof', self._uuid) and
         # Claims database
             not uuid_exists('claim', self._uuid)
+
+    def serialize(self):
+        """
+        """
+        raise NotImplementedError
+
+    def deserialize(self):
+        """
+        """
+        raise NotImplementedError
 
     def is_ready(self):
         """
@@ -228,6 +239,12 @@ class Dealer(InfinitiObject):
         if not INFINITI_DEBUG:
             pass 
 
+    def serialize(self):
+        pass
+
+    def deserialize(self):
+        pass
+
     def to_json(self):
         return json.dumps({
             'uuid'          : self._uuid,
@@ -238,7 +255,7 @@ class Dealer(InfinitiObject):
             'metadata'      : self._metadata,
             })
     
-class Deck(object):
+class Deck(InfinitiObject):
     """
     """
     object_type = 'deck'
@@ -291,4 +308,38 @@ class Deck(object):
         self.save()
         if not INFINITI_DEBUG:
             pass 
+
+    def serialize(self):
+        pass
+
+    def deserialize(self):
+        pass
+
+
+class CardXfer(InfinitiObject):
+    """
+    """
+    object_type = 'card'
+    protobuf_class = 'CardTransfer'
+
+    def __init__(self,deck_uuid=None):
+        super(InfinitiObject,self).__init__()
+        if self._block_height == 0: # Impossible, so must be new object
+            self._deck_uuid = deck_uuid
+            self.deck = Deck(self._deck_uuid)
+
+
+    def consensus_is_valid(self):
+        """
+        Pubkey has the amount of tokens to transfer
+
+        TODO:blockchain
+        """  
+        return INFINITI_DEBUG
+
+    def serialize(self):
+        pass
+
+    def deserialize(self):
+        pass
 
