@@ -25,7 +25,7 @@ with the following constraints:
 real_name : string
 organization : string
 email : properly formatted email address
-image : IPFS CID of image object    
+img_cid : IPFS CID of image object    
 
 TODO:Deck transfer?
 
