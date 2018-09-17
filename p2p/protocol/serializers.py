@@ -451,7 +451,7 @@ class TxIn(object):
 
     def save(self,tx_hash,pos):
         db = open_db(TXIN_PATH)
-        db.put(tx_hash + "_" + pos, self.serialize())
+        db.put("{0}_{1}".format(tx_hash, str(pos)), self.serialize())
 
     def __repr__(self):
         return "<%s Sequence=[%d]>" % \
@@ -475,7 +475,7 @@ class TxOut(object):
 
     def save(self,tx_hash,pos):
         db = open_db(TXOUT_PATH)
-        db.put(tx_hash + "_" + pos, self.serialize())
+        db.put("{0}_{1}".format(tx_hash, str(pos)), self.serialize())
 
     def get_value(self):
         return self.value // 100000000 + self.value % 100000000 / 100000000.0
@@ -507,7 +507,7 @@ class Tx(SerializableMessage):
 
     def save(self,block_hash,pos):
         db = open_db(TRANSACTION_PATH)
-        db.put(block_hash + "_" + str(pos), self.calculate_hash() )
+        db.put("{0}_{1}".format(block_hash, str(pos)), self.calculate_hash() )
         db = None # trigger garbage collection
         n = 0
         for txout in self.tx_out:

@@ -95,15 +95,15 @@ class InfinitiObject(object):
         # Dealer database
         return not uuid_exists('identity', self._uuid) and 
         # Deck database
-            not uuid_exists('decks', self._uuid) and
+            not uuid_exists('deck', self._uuid) and
         # Card database
-            not uuid_exists('cards', self._uuid) and
+            not uuid_exists('card', self._uuid) and
         # Vote datavase 
-            not uuid_exists('votes', self._uuid) and
+            not uuid_exists('vote', self._uuid) and
         # Metaproof database
-            not uuid_exists('metaproofs', self._uuid) and
+            not uuid_exists('metaproof', self._uuid) and
         # Claims database
-            not uuid_exists('claims', self._uuid)
+            not uuid_exists('claim', self._uuid)
 
     def is_ready(self):
         """
@@ -188,19 +188,25 @@ class Dealer(InfinitiObject):
                                 # issuer of the deckspan transaction
 
     def consensus_is_valid(self):
+        """
+        No special consensus for this object.
+        """
         return True
 
     def creator_is_valid(self):
-        pass
+        """
+        Make sure we haven't already seen an identity for this pubkey
+        """
+        db = open_db(join_path(DATA_PATH,'identity'))
+        it = db.itervalues()
+        it.seek(self._public_key)
+        return len(list(it)) == 0
 
     def fee_is_valid(self):
         """
         TODO:blockchain
         """
-        if INFINITI_DEBUG:
-            return True
-        else:
-            return self._fee >= params_query(self._network,'Infiniti_fee')
+        return self._fee >= params_query(self._network,'Infiniti_fee')
 
     def create_metadata(self,real_name,organization,email,img_cid):
         return json.dumps({
@@ -217,11 +223,9 @@ class Dealer(InfinitiObject):
         """
         TODO:blockchain
         """
-        if INFINITI_DEBUG:
-            # save to disk only
-            self.save()
-        else:
-            pass
+        self.save()
+        if not INFINITI_DEBUG:
+            pass 
 
     def to_json(self):
         return json.dumps({
@@ -235,14 +239,57 @@ class Dealer(InfinitiObject):
     
 class Deck(object):
     """
-            self._creator = ''  # for a dealer object, the creator is the address which generated the Infiniti
-                                # transaction, otherwise it's the uuid of identity object, pubkey must match 
-                                # issuer of the deckspan transaction
-            self._stxo = '' # This is the transaction hash of the funding transaction from the blockchain txin
-                            # for the Infiniti transaction which creates the object, which provides the pubkey 
-                            # to validate creator, thereby proving the identity of the dealer is the same 
-                            # public key.  If no such TX hash exists, or if the addresses do not match, the 
-                            # Dealer object is invalid.
-
     """
-    pass
+    object_type = 'deck'
+    protobuf_class = 'DeckSpawn'
+    def __init__(self,uuid=None):
+        self._uuid = uuid
+        super(InfinitiObject,self).__init__()
+        if self.block_height == 0: # Impossible, so must be new object
+            self._creator = ''  # the uuid of identity object, pubkey must match issuer of the deckspan transaction
+            self._stxo = ''     # This is the transaction hash of the funding transaction from the blockchain txin
+                                # for the Infiniti transaction which creates the object, which provides the pubkey 
+                                # to validate creator, thereby proving the identity of the dealer is the same 
+                                # public key.  If no such TX hash exists, or if the addresses do not match, the 
+                                # Dealer object is invalid.
+            self.dealer = Dealer(self._creator)
+
+
+    def consensus_is_valid(self):
+        """
+        Load the Dealer via UUID
+        Load the TX matching the funding STXO
+        If TX exists:
+            If Dealer address = STXO address, consensus is valid
+        TODO:blockchain
+        """  
+        return True
+
+    def creator_is_valid(self):
+        return self.dealer.is_valid()
+
+    def fee_is_valid(self):
+        """
+        TODO:blockchain
+        """
+        return self._fee >= params_query(self._network,'Infiniti_fee')
+
+    def create_metadata(self,real_name,organization,email,img_cid):
+        return json.dumps({
+            'real_name':real_name[0:100]
+            'organization':real_name[0:100]
+            'email':real_name[0:100]
+            'img_cid':img_cid[0:46]
+        })
+
+    def parse_metadata(self):
+        return json.loads(self._metadata)
+
+    def register(self):
+        """
+        TODO:blockchain
+        """
+        self.save()
+        if not INFINITI_DEBUG:
+            pass 
+
