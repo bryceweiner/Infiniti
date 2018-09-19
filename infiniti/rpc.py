@@ -132,19 +132,12 @@ def createwallet(passphrase,filename=None):
 	}
 	return json.dumps(d, sort_keys=True, indent=4)
 
-def addressbalance(address,network=NETWORK):
+def addressbalance(address,network=None):
+	if network is None:
+		network = param_query(NETWORK,'network_shortname')
 	return json.dumps({
-		'balance' : balance_by_address(address)
+		'balance' : balance_by_address(address,network)
 		},cls=DecimalEncoder, sort_keys=True, indent=4)
-
-def address_in_wallet(fn,passphrase,address):
-	sync(fn,passphrase)
-	wallet = Wallet(fn).fromFile(passphrase)
-	d = { "address_in_wallet" : False }
-	for k in wallet.Keys:
-		if k.address() == address:
-			d = { "address_in_wallet" : True }
-	return json.dumps(d, sort_keys=True, indent=4)
 
 def dumpaddress(fn,passphrase,address,coin):
 	wallet = Wallet(fn).fromFile(passphrase)
@@ -228,7 +221,9 @@ def newaddress(fn,passphrase,addr_type=0):
 	#except:
 	#	return "Password incorrect."
 
-def walletbalance(wallet_name,network='XTO'):
+def walletbalance(wallet_name,network=None):
+	if network is None:
+		network = param_query(NETWORK,'network_shortname')
 	syncwallets()
 	# Get all of the addresses for the wallet specified 
 	#addresses = addresses_by_wallet(wallet_name)

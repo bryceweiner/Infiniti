@@ -62,18 +62,7 @@ def put_infiniti_object(object_db,obj):
 	except Exception as err:
 		raise err
 
-def addresses_by_wallet(wallet,network=NETWORK):
-	db = open_db(join_path(join_path(DATA_PATH,network),'addresses'))
-	it = db.iteritems()
-	it.seek_to_first()
-	addresses = []
-	for k,v in it:
-		w, t, n = v.split('|')
-		if w == wallet:
-			addresses.append(k)
-	return addresses
-
-def balance_by_address(address,network=NETWORK):
+def balance_by_address(address,network):
 	db = open_db(join_path(join_path(DATA_PATH,network),'utxo'))
 	it = db.iteritems()
 	it.seek_to_first()
