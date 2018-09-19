@@ -273,9 +273,6 @@ def syncwallets(daemon=None):
 			cur_block = block['height']
 			address_obj = process_block(_CONNECTION,next_block_hash,address_list,address_obj)
 			next_block_hash = block['previousblockhash']
-	# Now that we've collected all outstanding Infiniti TX, let's process them
-	for i in infiniti_tx:
-		process_infiniti(i)
 	for a in address_obj:
 		a.save()
 	putheight(start_block)
