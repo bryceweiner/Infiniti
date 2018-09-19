@@ -235,9 +235,7 @@ def walletbalance(wallet_name,network='XTO'):
 	keys = Wallet(wallet_name).pubkeysOnly()
 	balance = 0
 	for key in keys:
-		addr = key.address(VERWIF[network][0])
-		obj = json.loads(addressbalance(addr))
-		balance += obj['balance']
+		balance += json.loads(addressbalance(key.address(VERWIF[network][0])))['balance']
 	return balance 
 
 def listwallets():
