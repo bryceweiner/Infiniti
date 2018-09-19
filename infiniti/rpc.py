@@ -9,7 +9,7 @@ from providers import TaoNode
 from decimal import Decimal, getcontext
 from os import listdir
 from os.path import isfile, join
-from utils.encoder import DecimalEncoder
+from utils.encoder import DecimalEncoder, DecimalDecoder
 from infiniti.params import *
 from infiniti.logger import *
 from utils.crypto import sign_and_verify, verify_message,public_key_to_address
@@ -89,9 +89,6 @@ def getinfo():
 	}
 	return json.dumps(infiniti,cls=DecimalEncoder, sort_keys=True, indent=4)
 
-def sync(reindex=False):
-	syncwallets()
-
 def signmessage(fn,passphrase,address,message):
 	w = Wallet(fn).fromFile(passphrase)
 	#try:
@@ -135,12 +132,10 @@ def createwallet(passphrase,filename=None):
 	}
 	return json.dumps(d, sort_keys=True, indent=4)
 
-def addressbalance(address):
-	c = _CONNECTION
-	balance = 0
-	balance += Decimal(c.getbalance(address))
-	d = { "balance":balance }
-	return json.dumps(d,cls=DecimalEncoder, sort_keys=True, indent=4)
+def addressbalance(address,network=NETWORK):
+	return json.dumps({
+		'balance' : balance_by_address(address)
+		},cls=DecimalEncoder, sort_keys=True, indent=4)
 
 def address_in_wallet(fn,passphrase,address):
 	sync(fn,passphrase)
@@ -233,15 +228,17 @@ def newaddress(fn,passphrase,addr_type=0):
 	#except:
 	#	return "Password incorrect."
 
-def walletbalance(fn,passphrase):
-	sync(fn,passphrase)
-	wallet = Wallet(fn).fromFile(passphrase)
-	c = _CONNECTION
+def walletbalance(wallet_name,network='XTO'):
+	syncwallets()
+	# Get all of the addresses for the wallet specified 
+	#addresses = addresses_by_wallet(wallet_name)
+	keys = Wallet(wallet_name).pubkeysOnly()
 	balance = 0
-	for k in wallet.Keys:
-		balance += Decimal(c.getbalance(k.address()))
-	d = { "balance": balance }
-	return json.dumps(d, cls=DecimalEncoder, sort_keys=True, indent=4)
+	for key in keys:
+		addr = key.address(VERWIF[network][0])
+		obj = json.loads(addressbalance(addr))
+		balance += obj['balance']
+	return balance 
 
 def listwallets():
 	return [f for f in listdir(WALLET_PATH) if True]
@@ -261,27 +258,12 @@ def putheight(height):
 def syncwallets(daemon=None):
 	"""
 	For every wallet, find it's height and sync it
-
-	- Get the last block we processed from the status table
-	- For each block:
-		- Loop through the transactions:
-			- If an address involved in either the txin or txout
-				are in any of our wallets, save the block and the transaction
-			- If the transaction is an Infiniti transaction, save the data
-				to tables, as well as the block and transaction
-			- Ignore everything else
-	- We could do this via the P2P network, but it's more convenient
-		through the RPC connection
 	"""
 	# First, lets gather up the wallet addresses
-	if daemon is None:
-		print "{0} sync - Gathering addresses.".format(NETWORK)		
-	else:
+	if daemon is not None:
 		daemon.logger.info("{0} sync - Gathering addresses.".format(NETWORK))		
 	address_obj, address_list = get_node_addresses()
-	if daemon is None:
-		print "{0} sync - {1} addresses loaded.".format(NETWORK,len(address_obj))		
-	else:
+	if daemon is not None:
 		daemon.logger.info("{0} sync - {1} addresses loaded.".format(NETWORK,len(address_obj)))		
 
 	# Loop through blocks from the chaintip to the start height
@@ -297,9 +279,7 @@ def syncwallets(daemon=None):
 			# This should not happen
 			break
 		else:
-			if daemon is None:
-				print "{0} sync - Start height: {1}, End height: {2}, Current block: {3}".format(NETWORK,end_height,start_block,block["height"])
-			else:
+			if daemon is not None:
 				daemon.logger.info("{0} sync - Start height: {1}, End height: {2}, Current block: {3}".format(NETWORK,end_height,start_block,block["height"]))		
 			cur_block = block['height']
 			address_obj = process_block(_CONNECTION,next_block_hash,address_list,address_obj)
@@ -310,9 +290,7 @@ def syncwallets(daemon=None):
 	for a in address_obj:
 		a.save()
 	putheight(start_block)
-	if daemon is None:
-		print "{0} sync - Up to date.".format(NETWORK)		
-	else:
+	if daemon is not None:
 		daemon.logger.info("{0} sync - Up to date.".format(NETWORK))		
 
 def createvault(shares,shares_required,num_addr,verwif,pwd_array=None):

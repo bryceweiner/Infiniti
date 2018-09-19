@@ -21,6 +21,18 @@ def process_infiniti(tx):
 
 def process_block(rpc,block_hash,address_list,address_obj):
 	"""
+
+	- Get the last block we processed from the status table
+	- For each block:
+		- Loop through the transactions:
+			- If an address involved in either the txin or txout
+				are in any of our wallets, save the block and the transaction
+			- If the transaction is an Infiniti transaction, save the data
+				to tables, as well as the block and transaction
+			- Ignore everything else
+	- We could do this via the P2P network, but it's more convenient
+		through the RPC connection
+
 	 Scan the block for 
 		A) Tranascations for addresses in our wallet
 		B) Infiniti transactions
