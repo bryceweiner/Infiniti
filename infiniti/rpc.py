@@ -132,13 +132,6 @@ def createwallet(passphrase,filename=None):
 	}
 	return json.dumps(d, sort_keys=True, indent=4)
 
-def addressbalance(address,network=None):
-	if network is None:
-		network = param_query(NETWORK,'network_shortname')
-	return json.dumps({
-		'balance' : balance_by_address(address,network)
-		},cls=DecimalEncoder, sort_keys=True, indent=4)
-
 def dumpaddress(fn,passphrase,address,coin):
 	wallet = Wallet(fn).fromFile(passphrase)
 	d = None
@@ -221,16 +214,17 @@ def newaddress(fn,passphrase,addr_type=0):
 	#except:
 	#	return "Password incorrect."
 
-def walletbalance(wallet_name,network=None):
-	if network is None:
-		network = param_query(NETWORK,'network_shortname')
+def addressbalance(address,network=NETWORK):
+	return json.dumps({
+		'balance' : balance_by_address(address,network)
+		},cls=DecimalEncoder, sort_keys=True, indent=4)
+
+def walletbalance(wallet_name,network=NETWORK):
 	syncwallets()
-	# Get all of the addresses for the wallet specified 
-	#addresses = addresses_by_wallet(wallet_name)
 	keys = Wallet(wallet_name).pubkeysOnly()
 	balance = 0
 	for key in keys:
-		balance += json.loads(addressbalance(key.address(VERWIF[network][0])))['balance']
+		balance += json.loads(addressbalance(key.address(VERWIF[param_query(NETWORK,'network_shortname')][0]),network))['balance']
 	return balance 
 
 def listwallets():
