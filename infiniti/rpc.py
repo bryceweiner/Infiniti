@@ -106,16 +106,18 @@ def verifymessage(address,message,signature):
 	infiniti = address[:1]=='i'
 	return json.dumps({ "verified" : verify_message(address, signature, message, prefix=VERWIF['XTO'][0]) } )
 
-def listunspent(fn):
-	try:
-		w = Wallet(fn).fromFile('')
-		utxo = json.loads(w.get_status("utxo"))
-		info = _CONNECTION.getinfo()
-		for u in utxo:
-			u.update({ "confirmations" : str(int(info['blocks']) - int(u["height"]))})
-		return json.dumps(utxo, sort_keys=True, indent=4)
-	except:
-		pass
+def listunspent(wallet_name,network=NETWORK):
+	syncwallets()
+	keys = Wallet(wallet_name).pubkeysOnly()
+	balance = 0
+	sync_height = getheight()
+	results = {}
+	for key in keys:
+		addr = key.address(VERWIF[param_query(network,'network_shortname')][0])
+		r = utxo_by_address(addr,network,sync_height)
+		if r is not None:
+			results.update({addr:r})
+	return json.dumps(results, sort_keys=True, indent=4, cls=DecimalEncoder)
 
 def createwallet(passphrase,filename=None):
 	seed,nonce = Wallet().create_seed()
@@ -224,7 +226,7 @@ def walletbalance(wallet_name,network=NETWORK):
 	keys = Wallet(wallet_name).pubkeysOnly()
 	balance = 0
 	for key in keys:
-		balance += json.loads(addressbalance(key.address(VERWIF[param_query(NETWORK,'network_shortname')][0]),network))['balance']
+		balance += json.loads(addressbalance(key.address(VERWIF[param_query(network,'network_shortname')][0]),network))['balance']
 	return balance 
 
 def listwallets():

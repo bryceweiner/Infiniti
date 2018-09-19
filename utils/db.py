@@ -62,6 +62,26 @@ def put_infiniti_object(object_db,obj):
 	except Exception as err:
 		raise err
 
+def utxo_by_address(address,network,block_height):
+	db = open_db(join_path(join_path(DATA_PATH,network),'utxo'))
+	it = db.iteritems()
+	it.seek_to_first()
+	total = 0
+	utxo = []
+	for k,v in it:
+		addr,amt = v.split('|')
+		height,tx_hash = k.split('.')
+		if address == addr:
+			utxo.append({
+						'amount':Decimal(amt),
+						'confirmations':int(int(block_height)-int(height)),
+						'tx_hash':tx_hash
+					}) 
+	if len(utxo) > 0:
+		return utxo
+	else:
+		return None
+
 def balance_by_address(address,network):
 	db = open_db(join_path(join_path(DATA_PATH,network),'utxo'))
 	it = db.iteritems()

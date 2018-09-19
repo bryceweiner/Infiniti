@@ -31,7 +31,7 @@ class Address(object):
 			for stxo in self.stxo:
 				wb.delete(stxo)
 		for utxo in self.utxo:
-			wb.put(utxo[0],"{0}|{1}".format(self.address,str(utxo[1])))
+			wb.put("{0}.{1}".format(utxo[2],utxo[0]),"{0}|{1}".format(self.address,str(utxo[1])))
 		path = join_path(DATA_PATH,NETWORK)
 		utxodb = open_db(join_path(path,'utxo'))
 		utxodb.write(wb)
