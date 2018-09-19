@@ -16,7 +16,7 @@ from json import load
 from urllib2 import urlopen
 
 from utils.daemonize import Daemon
-from wallet.wallet import Wallet
+from wallet.wallet import Wallet,get_node_addresses
 import ipfsapi
 
 class IPFSThread(threading.Thread):
@@ -187,7 +187,7 @@ class InfinitiDaemon(Daemon):
 		db = open_db(os.path.join(DATA_PATH,"status"),self.logger,False)
 
 	def sync_wallets(self):
-		syncwallets(self.logger)
+		syncwallets(self)
 
 	def run(self):
 		self.create_databases()

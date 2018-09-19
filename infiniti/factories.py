@@ -29,6 +29,7 @@ def process_block(rpc,block_hash,address_list,address_obj):
 	_save_block = False
 	block = rpc.getblock(block_hash)
 	for tx_hash in block['tx']:
+		proof_of_stake = False
 		save_tx = False
 		is_infiniti = False
 		tx_addresses = []
@@ -54,18 +55,20 @@ def process_block(rpc,block_hash,address_list,address_obj):
 			# For each txin, find the original TX and see if
 			# it came from one of our addresses and subtract
 			# the balance accordingly
+            # Let's look back in time and see if this is our address
 			if 'txin' in txin:
 				txin_tx = gettransaction(rpc,txin["txid"])
 				for x in txin_tx['vout']:
-					# Intersect the address list
-					intersection = list(set(x["scriptPubKey"]["addresses"]) & set(address_list))
-					if len(intersection) > 0:
-						save_tx = True
-						_save_block = True
-						for i in intersection:
-							index = address_list.index(i)
-							address_obj[index].outgoing_value += float(x["value"])
-							address_obj[index].stxo.append(txin["txid"])
+					if x['n'] == txin['vout']:
+						# Intersect the address list
+						intersection = list(set(x["scriptPubKey"]["addresses"]) & set(address_list))
+						if len(intersection) > 0:
+							save_tx = True
+							_save_block = True
+							for i in intersection:
+								index = address_list.index(i)
+								address_obj[index].outgoing_value += float(x["value"])
+								address_obj[index].stxo.append(txin["txid"])
 
 		if is_infiniti:
 			process_infiniti(tx)			

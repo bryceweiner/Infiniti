@@ -12,7 +12,7 @@ message CardTransfer {
 
   // Amount to transfer
   repeated uint64 amount = 2;
-  bytes uuid = 3;
+  repeated bytes uuid = 3;
   // Number of decimals
   // Should be equal to the number specified in the deck spawn transaction.
   // Encoded in this message for easy validation

@@ -1,5 +1,5 @@
 #from __future__ import print_function
-from wallet.wallet import Wallet
+from wallet.wallet import Wallet,get_node_addresses
 from wallet.vault import Vault
 from wallet.address import Address
 import os,sys,ast,time,base64
@@ -163,7 +163,7 @@ def dumpaddress(fn,passphrase,address,coin):
 		d.update({ 'address':k.address(VERWIF[coin][0]) })
 		return json.dumps(d, sort_keys=True, indent=4)
 
-def listaddresses(fn):
+def listaddresses(fn,network):
 	keys = Wallet(fn).pubkeysOnly()
 	results = []
 
@@ -181,9 +181,14 @@ def listaddresses(fn):
 			_at = key.address_type()
 			_attr = key.addr_type()
 			_chld = key.child()
-			for _k,v in VERWIF.iteritems():
+			if network is None:
+				for _k,v in VERWIF.iteritems():
+					a.append({
+							_k:k.address(v[0])
+						})
+			else:
 				a.append({
-						_k:k.address(v[0])
+						network:k.address(VERWIF[network][0])
 					})
 			a.append({
 					'infiniti':k.address(103)
@@ -244,13 +249,16 @@ def listwallets():
 def getheight():
 	db = open_db(join_path(DATA_PATH,"status"))
 	h = db.get('height')
-	return int(h) if h is not None else param_query(NETWORK,'start_height')
+	if h is None:
+		h = str(param_query(NETWORK,'start_height'))
+		db.put('height',h)
+	return int(h) 
 
 def putheight(height):
 	db = open_db(join_path(DATA_PATH,"status"))
 	h = db.put('height',str(height))
 
-def syncwallets(logger=None):
+def syncwallets(daemon=None):
 	"""
 	For every wallet, find it's height and sync it
 
@@ -266,26 +274,21 @@ def syncwallets(logger=None):
 		through the RPC connection
 	"""
 	# First, lets gather up the wallet addresses
-	wallet_list = [x[0] for x in os.walk(WALLET_PATH)]	
-	wallet_list.remove(WALLET_PATH)
-	address_obj = []
-	address_list = []
-	if logger is None:
-		print "Gathering addresses."
+	if daemon is None:
+		print "{0} sync - Gathering addresses.".format(NETWORK)		
 	else:
-		logger.info("{0} sync - Gathering addresses.".format(NETWORK))		
-	for wallet_name in wallet_list:
-		keys = Wallet(wallet_name).pubkeysOnly()
-		for key in keys:
-			# address_list is used as an index for intersections
-			address_obj.append(Address(key.addresses[0],key.pubkey,os.path.basename(os.path.normpath(wallet_name))))
-			address_list.append(key.addresses[0])
+		daemon.logger.info("{0} sync - Gathering addresses.".format(NETWORK))		
+	address_obj, address_list = get_node_addresses()
+	if daemon is None:
+		print "{0} sync - {1} addresses loaded.".format(NETWORK,len(address_obj))		
+	else:
+		daemon.logger.info("{0} sync - {1} addresses loaded.".format(NETWORK,len(address_obj)))		
 
 	# Loop through blocks from the chaintip to the start height
 	end_height = getheight()
 	start_block = _CONNECTION.getinfo()["blocks"]
 	next_block_hash = _CONNECTION.getblockhash(start_block)
-	cur_block = 0xFFFFFFFF
+	cur_block = start_block
 	infiniti_tx = []
 	while cur_block > end_height:
 		try:
@@ -294,19 +297,23 @@ def syncwallets(logger=None):
 			# This should not happen
 			break
 		else:
-			if logger is None:
-				print "Start height: {0}, End height: {1}, Current block: {2}".format(end_height,start_block,block["height"])
+			if daemon is None:
+				print "{0} sync - Start height: {1}, End height: {2}, Current block: {3}".format(NETWORK,end_height,start_block,block["height"])
 			else:
-				logger.info("{0} sync - Start height: {1}, End height: {2}, Current block: {3}".format(NETWORK,end_height,start_block,block["height"]))		
+				daemon.logger.info("{0} sync - Start height: {1}, End height: {2}, Current block: {3}".format(NETWORK,end_height,start_block,block["height"]))		
 			cur_block = block['height']
 			address_obj = process_block(_CONNECTION,next_block_hash,address_list,address_obj)
 			next_block_hash = block['previousblockhash']
-	
 	# Now that we've collected all outstanding Infiniti TX, let's process them
 	for i in infiniti_tx:
 		process_infiniti(i)
 	for a in address_obj:
 		a.save()
+	putheight(start_block)
+	if daemon is None:
+		print "{0} sync - Up to date.".format(NETWORK)		
+	else:
+		daemon.logger.info("{0} sync - Up to date.".format(NETWORK))		
 
 def createvault(shares,shares_required,num_addr,verwif,pwd_array=None):
 	#shares=15,shares_required=5,num_addr=5,verwif=VERWIF,pwd_array=None

@@ -11,6 +11,7 @@ from infiniti.params import *
 import itertools
 from binascii import b2a_hex
 MAX_ADDRESS = 0xFFFFFFFF
+from address import Address
 
 class Key(object):
     _child = None
@@ -297,3 +298,18 @@ class Wallet(object):
                 _k.addresses = (_k.key.Address(),_k.key.Address(True))
                 self.Keys.append(_k)     
         self._filename = fn
+
+def get_node_addresses():
+    # First, lets gather up the wallet addresses
+    wallet_list = [x[0] for x in os.walk(WALLET_PATH)]  
+    wallet_list.remove(WALLET_PATH)
+    address_obj = []
+    address_list = []
+    for wallet_name in wallet_list:
+        keys = Wallet(wallet_name).pubkeysOnly()
+        for key in keys:
+            # address_list is used as an index for intersections
+            address_obj.append(Address(key.addresses[0],key.pubkey,os.path.basename(os.path.normpath(wallet_name))))
+            address_list.append(key.addresses[0])
+    return address_obj, address_list
+

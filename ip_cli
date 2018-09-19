@@ -94,7 +94,7 @@ if __name__ == "__main__":
 		elif not os.path.isdir(os.path.join(WALLET_PATH, args.wallet)):
 				print "ERROR: Wallet does not exist!"
 		else:
-			print listaddresses(args.wallet)
+			print listaddresses(args.wallet,args.blockchain)
 
 	elif args.command == "sync":      
 		sync()

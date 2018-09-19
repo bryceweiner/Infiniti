@@ -158,7 +158,7 @@ class InfinitiObject(object):
         """
         raise NotImplementedError
 
-    def consensus_is_valid(self):
+    def object_is_valid(self):
         """
         Per object consensus validator.
 
@@ -171,10 +171,11 @@ class InfinitiObject(object):
         Run consensus validation on the object: 
 
         Returns True or False
-
-        Must implement fee_is_valid nad 
         """
-        return self.is_unique() and self.creator_is_valid() and self.fee_is_valid(self) and self.consensus_is_valid()
+        return self.is_unique() # Infiniti layer object uniqueness 
+                and self.creator_is_valid() 
+                and self.fee_is_valid(self) 
+                and self.object_is_valid()
 
 class Dealer(InfinitiObject):
     """
@@ -200,7 +201,7 @@ class Dealer(InfinitiObject):
                                 # transaction, otherwise it's the uuid of identity object, pubkey must match 
                                 # issuer of the deckspan transaction
 
-    def consensus_is_valid(self):
+    def object_is_valid(self):
         """
         No global state consensus for this object required.
         """
@@ -277,7 +278,7 @@ class Deck(InfinitiObject):
             self._metadata = ''
             self._xfer_fee = self._fee
 
-    def consensus_is_valid(self):
+    def object_is_valid(self):
         """
         Load the Dealer via UUID
         Load the TX matching the funding STXO
@@ -296,9 +297,9 @@ class Deck(InfinitiObject):
         """
         return self._fee >= params_query(self._network,'Infiniti_fee')
 
-    def create_metadata(self,real_name,organization,email,img_cid):
+    def create_metadata(self,app_id,img_cid):
         return json.dumps({
-            'app_id':real_name[0:100]
+            'app_id':app_id[0:100]
             'img_cid':img_cid[0:46]
         })
 
@@ -354,19 +355,19 @@ class Card(InfinitiObject):
     def transfer_permitted(self):
         pass
 
-    def amount_valid_at_height(self,amount,pubkey,block_height):
+    def valid_at_height(self,amount,pubkey,block_height):
         """
-        Is it possible to have sent this amount at this block height?
+        Is this object valid at block height X?
         """
         pass
 
     def amount_at_height(self,pubkey,block_height):
         """
-        How many cards does pubkey own at block height?
+        How many cards does pubkey own at block height X? 
         """
         pass
 
-    def consensus_is_valid(self):
+    def object_is_valid(self):
         """
         Pubkey has the amount of tokens to transfer
 
@@ -391,5 +392,8 @@ class Card(InfinitiObject):
         pass
 
     def execute_transfer(self):
+        """
+        So named for self documentation
+        """
         self.register(self)
 

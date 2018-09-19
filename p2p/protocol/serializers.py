@@ -449,10 +449,6 @@ class TxIn(object):
         # Basically, this field should always be UINT_MAX, i.e. int("ffffffff", 16)
         self.sequence = 4294967295
 
-    def save(self,tx_hash,pos):
-        db = open_db(TXIN_PATH)
-        db.put("{0}_{1}".format(tx_hash, str(pos)), self.serialize())
-
     def __repr__(self):
         return "<%s Sequence=[%d]>" % \
             (self.__class__.__name__, self.sequence)
@@ -504,19 +500,6 @@ class Tx(SerializableMessage):
         self.tx_out = []
         self.lock_time = 0
         self.data = ""
-
-    def save(self,block_hash,pos):
-        db = open_db(TRANSACTION_PATH)
-        db.put("{0}_{1}".format(block_hash, str(pos)), self.calculate_hash() )
-        db = None # trigger garbage collection
-        n = 0
-        for txout in self.tx_out:
-            txout.save(self.calculate_hash())
-            n += 1
-        n = 0
-        for txin in self.tx_in:
-            txin.save(self.calculate_hash())
-            n += 1
 
     def _locktime_to_text(self):
         """Converts the lock-time to textual representation."""
@@ -608,15 +591,6 @@ class Block(BlockHeader):
         self.nonce = 0
         self.txns = []
         self.blocksig = ""
-
-    def save(self,db):
-        db = open_db(BLOCK_PATH)
-        db.put(self.calculate_hash(),self.timestamp)
-        db = None # trigger garbage collection
-        n = 0
-        for tx in self.txns:
-            tx.save(self.calculate_hash(),n)
-            n += 1
 
     def __len__(self):
         return len(self.txns)

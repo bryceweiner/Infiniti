@@ -236,9 +236,9 @@ class TaoPeerThread (TaoClient, threading.Thread):
 			ping_time = 30 * 60
 			# Primary socket loop
 			while (not self.error) and (not self.exit) and (self.is_connected):
-				if time.time() > (self.running + ping_time):
-					self.running = time.time()
-					self.send_message(Ping())
+				#if time.time() > (self.running + ping_time):
+				#	self.running = time.time()
+				#	self.send_message(Ping())
 
 				r, _, _ = select.select([self.socket], [], [])
 				if r:
