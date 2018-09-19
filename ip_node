@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from p2p.networks.tao import TaoPeerThread, TaoServerThread
+from p2p.networks.tao import TaoPeerThread
 from infiniti.params import *
 from p2p.protocol.serializers import *
 from p2p.protocol.queues import MemPoolManager
@@ -68,7 +68,7 @@ class IPFSThread(threading.Thread):
 		self.logger.info("IPFS shutdown.")
 
 class RPCServerThread(threading.Thread):
-	def __init__(self, threadID, name, logger, ip='localhost', port=8000):
+	def __init__(self, threadID, name, logger, ip='localhost', port=8181):
 		threading.Thread.__init__(self)
 		self.threadID = threadID
 		self.name = name
@@ -230,8 +230,6 @@ class InfinitiDaemon(Daemon):
 			# Once every 15 minutes, try to reconnect to everyone
 			reclaim_peers = 15 * 60
 			self.relcaim_peers = time.time()
-			#self.p2p_server = TaoServerThread('localhost',self.my_port,self.logger)
-			#self.p2p_server.start()
 			while not self.got_sigterm():
 				cycle_start = time.time() 
 				wait_time = cycle_end - cycle_start

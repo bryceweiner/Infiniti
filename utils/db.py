@@ -13,8 +13,18 @@ def open_db(filename, logger=None, read_only=False):
 	db = None
 	save_err=None
 	while db is None and retry_count < MAX_RETRY_CREATE_DB:
+		opts = rocksdb.Options()
+		opts.create_if_missing = True
+		opts.max_open_files = -1
+		opts.write_buffer_size = 67108864
+		opts.max_write_buffer_number = 3
+		opts.target_file_size_base = 67108864
+		opts.table_factory = rocksdb.BlockBasedTableFactory(
+		    filter_policy=rocksdb.BloomFilterPolicy(10),
+		    block_cache=rocksdb.LRUCache(2 * (1024 ** 3)),
+		    block_cache_compressed=rocksdb.LRUCache(500 * (1024 ** 2)))
 		try:
-			db = rocksdb.DB(db_path, rocksdb.Options(create_if_missing=True), read_only)
+			db = rocksdb.DB(db_path, opts, read_only)
 		except Exception as err:
 			save_err=err
 			time.sleep(.1)

@@ -230,7 +230,9 @@ class TaoPeerThread (TaoClient, threading.Thread):
 			self.touch_peer(0)
 			# send our version
 			self.is_connected = True
-			self.send_message(Version(self.peerip, self.port, self.my_ip_address,self.my_port))
+			v = Version(self.peerip, self.port, self.my_ip_address,self.my_port)
+			v.start_height = getheight()
+			self.send_message(v)
 			self.running = time.time()
 			# Send a ping every 30 minutes 
 			ping_time = 30 * 60
@@ -251,32 +253,4 @@ class TaoPeerThread (TaoClient, threading.Thread):
 					except Exception as e:
 						self.logger.error("{0} {1}".format(self.peerip, err))
 						self.stop(err)
-
-class TaoServerThread(threading.Thread):
-	def __init__(self, host, port,logger):
-		raise NotImplementedError
-		threading.Thread.__init__(self)
-		self.host = host
-		self.port = port
-		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		self.socket.bind((self.host, self.port))
-		self.exit = False
-		self.error = False
-		self.clients = []
-		self.logger = logger
-
-	def run(self):
-		self.socket.listen(5)
-		while not self.exit and not self.error:
-			for q in self.clients:
-				if not q.isAlive():
-					self.clients.remove(q)
-			c, a = self.sock.accept()
-			c.settimeout(1800) # 30 minutes
-			self.clients.append(threading.Thread(target = TaoClient,args = (self.logger, a, None, self.host, self.port)).start())
-
-	def stop(self):
-		self.exit = True
-		self.error = False
 
