@@ -1,18 +1,20 @@
 from utils.helpers import *
 from utils.db import *
 from infiniti.params import *
+import json
+from utils.encoder import DecimalEncoder
 
 def gettransaction(rpc,tx_hash):
 	tx_raw = rpc.getrawtransaction(tx_hash)
 	return rpc.decoderawtransaction(tx_raw)
 
 def save_transaction(tx):
-	db = open_db(join_path(join_path(DATA_PATH,NETWORK)),"tx")
-	db.put(tx["txid"],tx)
+	db = open_db(join_path(join_path(DATA_PATH,NETWORK),"tx"))
+	db.put(tx["txid"],json.dumps(tx,cls = DecimalEncoder))
 
 def save_block(block):
-	db = open_db(join_path(join_path(DATA_PATH,NETWORK)),"block")
-	db.put(block["hash"],block)
+	db = open_db(join_path(join_path(DATA_PATH,NETWORK),"block"))
+	db.put(block["hash"],json.dumps(block,cls = DecimalEncoder))
 
 def process_infiniti(tx):
 	db = open_db(join_path(DATA_PATH,'infiniti'))
@@ -73,7 +75,7 @@ def process_block(rpc,block_hash,address_list,address_obj):
 		if is_infiniti:
 			process_infiniti(tx)			
 		if save_tx:
-			save_transaction()
+			save_transaction(tx)
 	if _save_block:
 		save_block(block)
 	return address_obj
