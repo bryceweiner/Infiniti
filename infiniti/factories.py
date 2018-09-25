@@ -16,8 +16,55 @@ def save_block(block):
 	db = open_db(join_path(join_path(DATA_PATH,NETWORK),"block"))
 	db.put(block["hash"],json.dumps(block,cls = DecimalEncoder))
 
-def process_infiniti(tx):
+def process_infiniti(tx, mempool):
 	db = open_db(join_path(DATA_PATH,'infiniti'))
+
+def process_transaction(tx, address_list, address_obj, mempool=False):
+	proof_of_stake = False
+	save_tx = False
+	tx_addresses = []
+	is_infiniti = False
+	_save_block = False
+	for txout in tx["vout"]:
+		# Let's see if it's an Infiniti TX
+		if txout['scriptPubKey']['asm'] == 'OP_RETURN {0}'.format(OP_RETURN_KEY):
+			is_infiniti=True
+			save_tx = True
+			_save_block = True
+		else:
+			if 'nonstandard' not in txout["scriptPubKey"]['type']:
+				intersection = list(set(txout["scriptPubKey"]["addresses"]) & set(address_list))
+				if len(intersection) > 0:
+					save_tx = True
+					_save_block = True
+					for i in intersection:
+						index = address_list.index(i)
+						address_obj[index].incoming_value += float(txout["value"])
+						address_obj[index].utxo.append((tx_hash,float(txout["value"]),block["height"]))
+	for txin in tx["vin"]:
+		# For each txin, find the original TX and see if
+		# it came from one of our addresses and subtract
+		# the balance accordingly
+        # Let's look back in time and see if this is our address
+		if 'txin' in txin:
+			txin_tx = gettransaction(rpc,txin["txid"])
+			for x in txin_tx['vout']:
+				if x['n'] == txin['vout']:
+					# Intersect the address list
+					intersection = list(set(x["scriptPubKey"]["addresses"]) & set(address_list))
+					if len(intersection) > 0:
+						save_tx = True
+						_save_block = True
+						for i in intersection:
+							index = address_list.index(i)
+							address_obj[index].outgoing_value += float(x["value"])
+							address_obj[index].stxo.append(txin["txid"])
+
+	if is_infiniti:
+		process_infiniti(tx, mempool)			
+	if save_tx and not mempool:
+		save_transaction(tx)
+	return address_obj, _save_block
 
 def process_block(rpc,block_hash,address_list,address_obj):
 	"""
@@ -43,54 +90,16 @@ def process_block(rpc,block_hash,address_list,address_obj):
 	_save_block = False
 	block = rpc.getblock(block_hash)
 	for tx_hash in block['tx']:
-		proof_of_stake = False
-		save_tx = False
-		is_infiniti = False
-		tx_addresses = []
 		tx = gettransaction(rpc,tx_hash)
-		is_infiniti = False
-		for txout in tx["vout"]:
-			# Let's see if it's an Infiniti TX
-			if txout['scriptPubKey']['asm'] == 'OP_RETURN {0}'.format(OP_RETURN_KEY):
-				is_infiniti=True
-				save_tx = True
-				_save_block = True
-			else:
-				if 'nonstandard' not in txout["scriptPubKey"]['type']:
-					intersection = list(set(txout["scriptPubKey"]["addresses"]) & set(address_list))
-					if len(intersection) > 0:
-						save_tx = True
-						_save_block = True
-						for i in intersection:
-							index = address_list.index(i)
-							address_obj[index].incoming_value += float(txout["value"])
-							address_obj[index].utxo.append((tx_hash,float(txout["value"]),block["height"]))
-		for txin in tx["vin"]:
-			# For each txin, find the original TX and see if
-			# it came from one of our addresses and subtract
-			# the balance accordingly
-            # Let's look back in time and see if this is our address
-			if 'txin' in txin:
-				txin_tx = gettransaction(rpc,txin["txid"])
-				for x in txin_tx['vout']:
-					if x['n'] == txin['vout']:
-						# Intersect the address list
-						intersection = list(set(x["scriptPubKey"]["addresses"]) & set(address_list))
-						if len(intersection) > 0:
-							save_tx = True
-							_save_block = True
-							for i in intersection:
-								index = address_list.index(i)
-								address_obj[index].outgoing_value += float(x["value"])
-								address_obj[index].stxo.append(txin["txid"])
-
-		if is_infiniti:
-			process_infiniti(tx)			
-		if save_tx:
-			save_transaction(tx)
+		address_obj, _s = process_transaction(tx,address_list, address_obj, False)
+		_save_block = _s or _save_block
 	if _save_block:
 		save_block(block)
 	return address_obj
 
-def process_mempool(raw_tx):
-	pass
+def process_mempool(rpc, address_list, address_obj):
+	mempool_tx = rpc.getrawmempool()
+	for tx_hash in mempool_tx:
+		tx = gettransaction(rpc,tx_hash)
+		address_obj, _s = process_transaction(tx,address_obj, True)
+	return address_obj

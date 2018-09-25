@@ -60,7 +60,7 @@ def getinfo(handler):
 class RESTRequestHandler(BaseHTTPRequestHandler):
 	def __init__(self, *args, **kwargs):
 		self.routes = {
-			r'^/$': {'file': 'web/index.html', 'media_type': 'text/html'},
+			#r'^/$': {'file': 'web/index.html', 'media_type': 'text/html'},
 			r'^/api/getinfo$': {'GET': getinfo, 'media_type': 'application/json'},}
 			#r'^/record/': {'GET': get_record, 'PUT': set_record, 'DELETE': delete_record, 'media_type': 'application/json'}}
 		return BaseHTTPServer.BaseHTTPRequestHandler.__init__(self, *args, **kwargs)

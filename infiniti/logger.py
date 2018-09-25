@@ -37,7 +37,7 @@ class LoggerClass(logging.getLoggerClass()):
 
 class LogFormatter(logging.Formatter):
 	err_fmt     = '%(asctime)s ERROR: %(message)s'
-	msg_rcv     = '%(asctime)s RECEIVE: %(message)s'
+	msg_rcv     = '%(asctime)s DEBUG: %(message)s'
 	msg_snd     = '%(asctime)s SEND: %(message)s'
 	default 	= '%(asctime)s - %(message)s'
 

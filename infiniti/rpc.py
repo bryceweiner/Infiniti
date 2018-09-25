@@ -84,7 +84,7 @@ def getinfo():
 	info = _CONNECTION.getinfo()
 	infiniti = {
 		"infiniti_version" : version,
-		"connections" : get_status('connected_peers'),
+		"sync_height" : getheight(),
 		"tao_node_info" : info,
 	}
 	return json.dumps(infiniti,cls=DecimalEncoder, sort_keys=True, indent=4)
@@ -244,17 +244,20 @@ def putheight(height):
 	db = open_db(join_path(DATA_PATH,"status"))
 	h = db.put('height',str(height))
 
+def getmempool():
+	mempool_address_obj, mempool_address_list = get_node_addresses()
+	mempool_address_obj = process_mempool(_CONNECTION, mempool_address_list, mempool_address_obj)	
+
 def syncwallets(daemon=None):
 	"""
 	For every wallet, find it's height and sync it
 	"""
 	# First, lets gather up the wallet addresses
 	if daemon is not None:
-		daemon.logger.info("{0} sync - Gathering addresses.".format(NETWORK))		
+		daemon.logger.debug("{0} sync - Gathering addresses.".format(NETWORK))		
 	address_obj, address_list = get_node_addresses()
 	if daemon is not None:
-		daemon.logger.info("{0} sync - {1} addresses loaded.".format(NETWORK,len(address_obj)))		
-
+		daemon.logger.debug("{0} sync - {1} addresses loaded.".format(NETWORK,len(address_obj)))		
 	# Loop through blocks from the chaintip to the start height
 	end_height = getheight()
 	start_block = _CONNECTION.getinfo()["blocks"]
@@ -269,7 +272,7 @@ def syncwallets(daemon=None):
 			break
 		else:
 			if daemon is not None:
-				daemon.logger.info("{0} sync - Start height: {1}, End height: {2}, Current block: {3}".format(NETWORK,end_height,start_block,block["height"]))		
+				daemon.logger.debug("{0} sync - Start height: {1}, End height: {2}, Current block: {3}".format(NETWORK,end_height,start_block,block["height"]))		
 			cur_block = block['height']
 			address_obj = process_block(_CONNECTION,next_block_hash,address_list,address_obj)
 			next_block_hash = block['previousblockhash']
@@ -277,7 +280,7 @@ def syncwallets(daemon=None):
 		a.save()
 	putheight(start_block)
 	if daemon is not None:
-		daemon.logger.info("{0} sync - Up to date.".format(NETWORK))		
+		daemon.logger.debug("{0} sync - Up to date.".format(NETWORK))		
 
 def createvault(shares,shares_required,num_addr,verwif,pwd_array=None):
 	#shares=15,shares_required=5,num_addr=5,verwif=VERWIF,pwd_array=None

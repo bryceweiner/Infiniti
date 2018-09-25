@@ -11,7 +11,7 @@ import sched, time, os
 import select
 from utils.helpers import *
 from utils.db import open_db, writebatch
-
+from p2p import version
 from json import load
 from urllib2 import urlopen
 
@@ -68,7 +68,7 @@ class IPFSThread(threading.Thread):
 		self.logger.info("IPFS shutdown.")
 
 class RPCServerThread(threading.Thread):
-	def __init__(self, threadID, name, logger, ip='localhost', port=8181):
+	def __init__(self, threadID, name, logger, ip='localhost', port=9090):
 		threading.Thread.__init__(self)
 		self.threadID = threadID
 		self.name = name
@@ -108,7 +108,7 @@ class InfinitiDaemon(Daemon):
 				min_error = 54
 			err,tme = v.split('.')
 			if int(err) <= min_error:
-				if int(tme) < int(time.time()) - error_delay or err==0:
+				if int(tme) < int(time.time()) - error_delay:
 					q.append((k,int(tme)))
 		self.first_run = False
 		return q
@@ -189,6 +189,9 @@ class InfinitiDaemon(Daemon):
 	def sync_wallets(self):
 		syncwallets(self)
 
+	def process_mempool(self):
+		process_mempool()		
+
 	def run(self):
 		self.create_databases()
 		# Register the signal handlers
@@ -225,6 +228,36 @@ class InfinitiDaemon(Daemon):
 			self.ipfs_server = IPFSThread(self.counter, "IPFS", self.logger)
 			self.ipfs_server.start()
 			self.counter += 1
+			"""
+			At this time crypto network P2P is unpredictable.  We're gonna cut
+			this out for now and rely 100% on the RPC of the core client,
+			
+			RPC Rules: 
+				- poll the RPC client every second for mempool
+				- poll getinfo every five seconds for new blocks (block height)
+			""" 
+			wait_time = 0
+			cycle_end = time.time()
+			rpc_sync_counter = 0
+			while not self.got_sigterm():
+				cycle_start = time.time() 
+				wait_time = cycle_end - cycle_start
+				self.uptime += wait_time
+				# Do the thing
+				if rpc_sync_counter == 5:
+					self.sync_wallets()
+					rpc_sync_counter = 0
+				time.sleep(1)
+
+				rpc_sync_counter += 1
+				cycle_end = time.time()
+				cycle_time = time.time() - cycle_start
+				self.uptime += cycle_time
+				self.update_status('uptime',str(self.uptime))
+			self.halt()
+
+
+			"""
 			wait_time = 0
 			cycle_end = time.time()
 			# Once every 15 minutes, try to reconnect to everyone
@@ -245,6 +278,7 @@ class InfinitiDaemon(Daemon):
 				self.uptime += cycle_time
 				self.update_status('uptime',str(self.uptime))
 			self.halt()
+			"""
 		except Exception as e:
 			self.logger.error(e, exc_info=True)
 			self.logger.error("Infiniti Shutting down due to errors.")
@@ -262,8 +296,39 @@ if __name__ == "__main__":
 	infiniti = InfinitiDaemon(PID_FILE)
 	if len(sys.argv) == 2:
 		if 'start' == sys.argv[1]:
-			print "Starting Infiniti on the {0} blockchain...".format(NETWORK)
-			infiniti.start()
+			try:
+				print "                                                                `.-/++ossssssso+/:-.                "
+				print "                `.-//+ooooooo++/:-`                          -/osssssssssssssssssssss+:.            "
+				print "            `-/ossssssssssssssssssso+:.                   ./sssssssssssssssssssssssssssso/.         "
+				print "         `:+ssssssssssssssssssssssssssso/.              -osssssssssssssssssssssssssssssssss+.       "
+				print "       ./osssssssssssssssssssssssssssssssso:.         -osssssssssssssssoo++oossssssssssssssss+.     "
+				print "     `/osssssssssssssssooooosssssssssssssssso+:`    `/sssssssssssso/-.``     ``.:+ossssssssssss:    "
+				print "    -ossssssssssso+/-.```````.-:+ossssssssssssso+-` /sssssssssso/.`               `-/sssssssssss/   "
+				print "   /sssssssssss+-`               `./ossssssssssssso/-.:ossssso:`                     ./ssssssssss+  "
+				print "  /ssssssssss+.       .-:/++o+++/:.``-+sssssssssssssso:../os+.                         -osssssssss: "
+				print " :ssssssssso-        :osssssssssssso+:..:+ssssssssssssso+:.-`                           .osssssssss."
+				print "`osssssssso.          `-+ssssssssssssss+:../ossssssssssssso+-`                           -sssssssss/"
+				print "/sssssssss:              .:+ssssssssssssso+-.-/ossssssssssssso/.                          osssssssso"
+				print "osssssssso                 `./ossssssssssssso/-.:+ssssssssssssss+:`                       /sssssssss"
+				print "sssssssss/                    `-+ossssssssssssso/..:ossssssssssssso+-`                    /sssssssss"
+				print "sssssssss/                       `:+ssssssssssssss+:.-/ossssssssssssso/.`                 osssssssso"
+				print "osssssssso                          ./ossssssssssssso+-.-+osssssssssssss+:.              :sssssssss/"
+				print "/sssssssss-                           `-+ossssssssssssso/..:+osssssssssssso+-`          .ssssssssss`"
+				print ".ssssssssso.                           `-.:+ssssssssssssss+:..:+osssssssssssso:        :ssssssssss: "
+				print " :ssssssssso-                         .+so/..:ossssssssssssss+-``.-//+++++/:-.       .+ssssssssss/  "
+				print "  /ssssssssss/`                     `:osssss+:.-/ossssssssssssso/.`               `-+sssssssssss/   "
+				print "   /sssssssssso/-`               `./ossssssssss/ `-+ossssssssssssso+:-.```````.-/+sssssssssssso-    "
+				print "    :ossssssssssso/:.``     ``.-/ossssssssssss/`    `:+sssssssssssssssssoooosssssssssssssssss/`     "
+				print "     .+sssssssssssssssoo+++oossssssssssssssso-         .:osssssssssssssssssssssssssssssssss/.       "
+				print "       .+ssssssssssssssssssssssssssssssssso-              ./ossssssssssssssssssssssssssso:`         "
+				print "         .:ossssssssssssssssssssssssssso/.                   .:+ossssssssssssssssssso+:`            "
+				print "            .:+ssssssssssssssssssssso/-                          `-:/++oosssoo+//:.`                "
+				print "                .-:/+oosssssso++/-.`                                                          	   "
+				print "                                      Infiniti Node Version {0}".format(version)
+				print "Starting Infiniti on the {0} blockchain...".format(NETWORK)
+				infiniti.start()
+			except:
+				print "Infiniti already running!"
 		elif 'stop' == sys.argv[1]:
 			print "Stopping Infiniti..."
 			infiniti.stop()

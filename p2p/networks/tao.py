@@ -3,6 +3,7 @@ import socket, time,select
 from p2p.protocol.exceptions import NodeDisconnectException
 from p2p.protocol.buffer import ProtocolBuffer
 from p2p.protocol.serializers import *
+from p2p.protocol.fields import *
 from utils.db import open_db,writebatch
 from infiniti.params import *
 import infiniti.rpc as infiniti_rpc
@@ -130,7 +131,13 @@ class TaoClient(object):
 
 	def handle_block(self, message_header, message):
 		self.logger.receive("Received new block {0} from {1}".format(message.calculate_hash(), self.peerip))
-		process_block(message)
+		try:
+			dummy = object()
+			self.logger.info("Processing new block {0}".format(message.calculate_hash()))
+			dummy.logger = self.logger
+			infiniti_rpc.syncwallets(dummy)
+		except Exception as e:
+			self.stop(e.errno,'handle_block')
 
 	def handle_pong(self,messaage_header, message):
 		gp = SmsgPing()
@@ -231,7 +238,7 @@ class TaoPeerThread (TaoClient, threading.Thread):
 			# send our version
 			self.is_connected = True
 			v = Version(self.peerip, self.port, self.my_ip_address,self.my_port)
-			v.start_height = getheight()
+			v.start_height = infiniti_rpc.getheight()
 			self.send_message(v)
 			self.running = time.time()
 			# Send a ping every 30 minutes 
