@@ -30,7 +30,7 @@ post==1.0.2
 prettytable==0.7.2
 protobuf==3.6.1
 public==1.0.3
-py==1.5.2
+py==1.10.0
 pycparser==2.18
 pycryptodome==3.6.6
 pytest==2.5.1
