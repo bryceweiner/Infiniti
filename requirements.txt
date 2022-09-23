@@ -28,7 +28,7 @@ Pillow==5.2.0
 pkginfo==1.4.2
 post==1.0.2
 prettytable==0.7.2
-protobuf==3.6.1
+protobuf==3.18.3
 public==1.0.3
 py==1.5.2
 pycparser==2.18
